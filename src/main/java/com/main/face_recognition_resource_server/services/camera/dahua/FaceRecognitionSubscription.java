@@ -23,13 +23,13 @@ public class FaceRecognitionSubscription implements Runnable {
   @Override
   public void run() {
     NetSDKLib.LLong loginHandle = DahuaLogin.login(
-            "192.168.100.37",
-            80,
-            "admin",
-            "@dmin1234",
+            cameraDTO.getIpAddress(),
+            cameraDTO.getPort(),
+            cameraDTO.getUsername(),
+            cameraDTO.getPassword(),
             sdkInstance
     );
-    NetSDKLib.fAnalyzerDataCallBack analyzerDataCallBack = AnalyzerDataCallback.getInstance(residentCache, nonResidentCache, synchronizationLock);
+    NetSDKLib.fAnalyzerDataCallBack analyzerDataCallBack = AnalyzerDataCallback.getInstance(residentCache, nonResidentCache, synchronizationLock, cameraDTO.getType());
     NetSDKLib.LLong eventHandle = new NetSDKLib.LLong(0);
     FaceRecognitionEventHandler faceRecognitionEventHandler = new FaceRecognitionEventHandler();
     faceRecognitionEventHandler.initFaceRecognitionSubscription(sdkInstance, loginHandle, eventHandle, analyzerDataCallBack);

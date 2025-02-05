@@ -3,7 +3,6 @@ package com.main.face_recognition_resource_server.services.camera;
 import com.main.face_recognition_resource_server.DTOS.CameraDTO;
 import com.main.face_recognition_resource_server.converters.CameraToCameraDTOConvertor;
 import com.main.face_recognition_resource_server.domains.Camera;
-import com.main.face_recognition_resource_server.enums.CameraTypes;
 import com.main.face_recognition_resource_server.helpers.SubscriptionLockInstance;
 import com.main.face_recognition_resource_server.repositories.CameraRepository;
 import com.main.face_recognition_resource_server.services.AttendanceCache;
@@ -32,14 +31,12 @@ public class DahuaCameraServicesImpl implements CameraServices {
     Optional<Camera> optionalCamera = cameraRepository.findCameraByIpAddressAndPort(ipAddress, port);
     optionalCamera.ifPresentOrElse(camera -> {
       CameraDTO cameraDTO = cameraToCameraDTOConvertor.convert(camera);
-      if (cameraDTO.getType() == CameraTypes.IN) {
-        Object synchronizationLock = new Object();
-        AttendanceCache residentCache = new AttendanceCacheImpl(synchronizationLock);
-        FaceRecognitionSubscription subscription = new FaceRecognitionSubscription(residentCache, null, cameraDTO, synchronizationLock);
-        Thread thread = new Thread(subscription);
-        thread.start();
-        subscriptions.put(ipAddress, new SubscriptionLockInstance(synchronizationLock, subscription));
-      }
+      Object synchronizationLock = new Object();
+      AttendanceCache residentCache = new AttendanceCacheImpl(synchronizationLock);
+      FaceRecognitionSubscription subscription = new FaceRecognitionSubscription(residentCache, null, cameraDTO, synchronizationLock);
+      Thread thread = new Thread(subscription);
+      thread.start();
+      subscriptions.put(ipAddress, new SubscriptionLockInstance(synchronizationLock, subscription));
     }, () -> {
       throw new RuntimeException();
     });

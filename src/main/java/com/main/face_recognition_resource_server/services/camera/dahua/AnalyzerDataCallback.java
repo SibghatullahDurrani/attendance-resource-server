@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.services.camera.dahua;
 
+import com.main.face_recognition_resource_server.enums.CameraTypes;
 import com.main.face_recognition_resource_server.services.AttendanceCache;
 import com.netsdk.lib.NetSDKLib;
 import com.netsdk.lib.ToolKits;
@@ -18,11 +19,13 @@ public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
   private final AttendanceCache residentCache;
   private final AttendanceCache nonResidentCache;
   private final Object synchronizationLock;
+  private final CameraTypes cameraType;
 
-  private AnalyzerDataCallback(AttendanceCache residentCache, AttendanceCache nonResidentCache, Object synchronizationLock) {
+  private AnalyzerDataCallback(AttendanceCache residentCache, AttendanceCache nonResidentCache, Object synchronizationLock, CameraTypes cameraType) {
     this.residentCache = residentCache;
     this.nonResidentCache = nonResidentCache;
     this.synchronizationLock = synchronizationLock;
+    this.cameraType = cameraType;
 
     picturePath = new File("./AnalyzerPicture/");
     if (!picturePath.exists()) {
@@ -30,8 +33,8 @@ public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
     }
   }
 
-  public static AnalyzerDataCallback getInstance(AttendanceCache residentCache, AttendanceCache nonResidentCache, Object synchronizationLock) {
-    return AnalyzerDataCBHolder.instance(residentCache, nonResidentCache, synchronizationLock);
+  public static AnalyzerDataCallback getInstance(AttendanceCache residentCache, AttendanceCache nonResidentCache, Object synchronizationLock, CameraTypes cameraType) {
+    return AnalyzerDataCBHolder.instance(residentCache, nonResidentCache, synchronizationLock, cameraType);
   }
 
   @Override
@@ -91,22 +94,36 @@ public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
     return 0;
   }
 
-  private void handleDataWithBothResidentAndNonResidentCache(Long id, Date time) {
-
+  private void handleDataWithBothResidentAndNonResidentCache(Long userId, Date time) {
+    synchronized (synchronizationLock) {
+      if (!residentCache.isUserInCache(userId)) {
+        if (!nonResidentCache.isUserInCache(userId)) {
+          if (cameraType == CameraTypes.IN) {
+            //TODO: add an entry for attendance worker
+            residentCache.addUserToCache(userId);
+          }
+        } else {
+          //TODO: add an entry for attendance worker
+          nonResidentCache.removeUserFromCache(userId);
+          residentCache.addUserToCache(userId);
+        }
+      }
+    }
   }
 
   private void handleDataWithJustResidentCache(Long id, Date time) {
-    synchronized (synchronizationLock){
-      if(!residentCache.isUserInCache(id)){
-
+    synchronized (synchronizationLock) {
+      if (!residentCache.isUserInCache(id)) {
+        //TODO: add an entry for attendance worker
+        residentCache.addUserToCache(id);
       }
     }
   }
 
 
   private static final class AnalyzerDataCBHolder {
-    static AnalyzerDataCallback instance(AttendanceCache residentCache, AttendanceCache nonResidentCache, Object synchronizationLock) {
-      return new AnalyzerDataCallback(residentCache, nonResidentCache, synchronizationLock);
+    static AnalyzerDataCallback instance(AttendanceCache residentCache, AttendanceCache nonResidentCache, Object synchronizationLock, CameraTypes cameraType) {
+      return new AnalyzerDataCallback(residentCache, nonResidentCache, synchronizationLock, cameraType);
     }
   }
 }
