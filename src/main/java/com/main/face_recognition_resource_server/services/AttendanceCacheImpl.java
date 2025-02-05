@@ -32,4 +32,11 @@ public class AttendanceCacheImpl implements AttendanceCache {
       usersRecognizedCache = new TreeSet<>();
     }
   }
+
+  @Override
+  public void removeUserFromCache(Long userId) {
+    synchronized (synchronizationLock) {
+      usersRecognizedCache.remove(userId);
+    }
+  }
 }
