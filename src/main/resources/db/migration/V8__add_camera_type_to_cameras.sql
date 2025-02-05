@@ -1,0 +1,5 @@
+ALTER TABLE cameras
+    ADD type VARCHAR(3);
+
+ALTER TABLE cameras
+    ALTER COLUMN type SET NOT NULL;
