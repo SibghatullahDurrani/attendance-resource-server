@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.services.camera.dahua;
 
 import com.main.face_recognition_resource_server.DTOS.CameraDTO;
-import com.main.face_recognition_resource_server.services.AttendanceCache;
+import com.main.face_recognition_resource_server.components.AttendanceCache;
 import com.netsdk.lib.NetSDKLib;
 
 import java.util.concurrent.CountDownLatch;

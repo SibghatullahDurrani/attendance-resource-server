@@ -5,8 +5,8 @@ import com.main.face_recognition_resource_server.converters.CameraToCameraDTOCon
 import com.main.face_recognition_resource_server.domains.Camera;
 import com.main.face_recognition_resource_server.helpers.SubscriptionLockInstance;
 import com.main.face_recognition_resource_server.repositories.CameraRepository;
-import com.main.face_recognition_resource_server.services.AttendanceCache;
-import com.main.face_recognition_resource_server.services.AttendanceCacheImpl;
+import com.main.face_recognition_resource_server.components.AttendanceCache;
+import com.main.face_recognition_resource_server.components.AttendanceCacheImpl;
 import com.main.face_recognition_resource_server.services.camera.dahua.FaceRecognitionSubscription;
 import org.springframework.stereotype.Service;
 
@@ -40,10 +40,5 @@ public class DahuaCameraServicesImpl implements CameraServices {
     }, () -> {
       throw new RuntimeException();
     });
-
-
-    //TODO: ADD THE REMAINING FUNCTIONALITY TO START LISTENING TO FACE RECOGNITION DATA
-    //TODO: LEARN CONCURRENCY
-
   }
 }

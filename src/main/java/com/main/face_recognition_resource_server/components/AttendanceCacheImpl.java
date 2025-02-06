@@ -1,4 +1,4 @@
-package com.main.face_recognition_resource_server.services;
+package com.main.face_recognition_resource_server.components;
 
 import java.util.Set;
 import java.util.TreeSet;

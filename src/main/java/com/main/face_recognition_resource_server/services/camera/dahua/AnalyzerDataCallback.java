@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.services.camera.dahua;
 
 import com.main.face_recognition_resource_server.enums.CameraTypes;
-import com.main.face_recognition_resource_server.services.AttendanceCache;
+import com.main.face_recognition_resource_server.components.AttendanceCache;
 import com.netsdk.lib.NetSDKLib;
 import com.netsdk.lib.ToolKits;
 import com.sun.jna.Pointer;
@@ -116,6 +116,9 @@ public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
       if (!residentCache.isUserInCache(id)) {
         //TODO: add an entry for attendance worker
         residentCache.addUserToCache(id);
+        System.out.println("user with id: " + id + " added to cache at time: " + time);
+      } else {
+        System.out.println("user with id: " + id + " is already in the cache");
       }
     }
   }
