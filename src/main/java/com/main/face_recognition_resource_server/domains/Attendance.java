@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Builder
 @Getter
@@ -27,4 +28,9 @@ public class Attendance {
   @Column(nullable = false)
   private Date date;
 
+  @OneToMany(mappedBy = "attendance")
+  private List<CheckIn> checkIns;
+
+  @OneToMany(mappedBy = "attendance")
+  private List<CheckOut> checkOuts;
 }
