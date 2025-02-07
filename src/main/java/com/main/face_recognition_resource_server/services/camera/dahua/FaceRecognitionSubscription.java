@@ -1,23 +1,20 @@
 package com.main.face_recognition_resource_server.services.camera.dahua;
 
+import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.DTOS.CameraDTO;
-import com.main.face_recognition_resource_server.components.AttendanceCache;
 import com.netsdk.lib.NetSDKLib;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 
 public class FaceRecognitionSubscription implements Runnable {
   private final NetSDKLib sdkInstance = SDKInstance.getInstance();
   private final CameraDTO cameraDTO;
-  private final AttendanceCache residentCache;
-  private final AttendanceCache nonResidentCache;
-  private final Object synchronizationLock;
+  private final BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue;
 
-  public FaceRecognitionSubscription(AttendanceCache residentCache, AttendanceCache nonResidentCache, CameraDTO cameraDTO, Object synchronizationLock) {
-    this.residentCache = residentCache;
-    this.nonResidentCache = nonResidentCache;
+  public FaceRecognitionSubscription(CameraDTO cameraDTO, BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue) {
     this.cameraDTO = cameraDTO;
-    this.synchronizationLock = synchronizationLock;
+    this.attendanceCacheQueue = attendanceCacheQueue;
   }
 
   @Override
@@ -29,7 +26,7 @@ public class FaceRecognitionSubscription implements Runnable {
             cameraDTO.getPassword(),
             sdkInstance
     );
-    NetSDKLib.fAnalyzerDataCallBack analyzerDataCallBack = AnalyzerDataCallback.getInstance(residentCache, nonResidentCache, synchronizationLock, cameraDTO.getType());
+    NetSDKLib.fAnalyzerDataCallBack analyzerDataCallBack = AnalyzerDataCallback.getInstance(cameraDTO.getType(), attendanceCacheQueue);
     NetSDKLib.LLong eventHandle = new NetSDKLib.LLong(0);
     FaceRecognitionEventHandler faceRecognitionEventHandler = new FaceRecognitionEventHandler();
     faceRecognitionEventHandler.initFaceRecognitionSubscription(sdkInstance, loginHandle, eventHandle, analyzerDataCallBack);
