@@ -1,0 +1,5 @@
+ALTER TABLE cameras
+    ADD camera_status VARCHAR(255) NOT NULL DEFAULT 'INACTIVE';
+
+ALTER TABLE cameras
+    ALTER COLUMN camera_status DROP DEFAULT;
