@@ -24,8 +24,15 @@ public class User {
 
   @Column(name = "username", nullable = false, unique = true)
   private String username;
+  //TODO: generate unique usernames
 
   @Column(name = "role", nullable = false, length = 30)
   @Enumerated(EnumType.STRING)
   private UserRoles role;
+
+  @Column(nullable = false)
+  private String identificationNumber;
+
+  @Column(nullable = false)
+  private String email;
 }
