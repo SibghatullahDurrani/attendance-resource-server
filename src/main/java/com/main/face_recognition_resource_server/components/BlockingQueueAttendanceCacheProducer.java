@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.components;
 
 import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
-import com.main.face_recognition_resource_server.enums.CameraTypes;
+import com.main.face_recognition_resource_server.constants.CameraTypes;
 
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;

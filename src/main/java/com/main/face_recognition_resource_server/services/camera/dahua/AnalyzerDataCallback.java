@@ -2,7 +2,7 @@ package com.main.face_recognition_resource_server.services.camera.dahua;
 
 import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.components.BlockingQueueAttendanceCacheProducer;
-import com.main.face_recognition_resource_server.enums.CameraTypes;
+import com.main.face_recognition_resource_server.constants.CameraTypes;
 import com.netsdk.lib.NetSDKLib;
 import com.netsdk.lib.ToolKits;
 import com.sun.jna.Pointer;

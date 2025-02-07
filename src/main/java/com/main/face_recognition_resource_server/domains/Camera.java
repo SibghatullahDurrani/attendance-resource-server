@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.domains;
 
-import com.main.face_recognition_resource_server.enums.CameraTypes;
+import com.main.face_recognition_resource_server.constants.CameraTypes;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

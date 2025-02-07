@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.DTOS;
 
-import com.main.face_recognition_resource_server.enums.CameraTypes;
+import com.main.face_recognition_resource_server.constants.CameraTypes;
 import lombok.Builder;
 import lombok.Data;
 
