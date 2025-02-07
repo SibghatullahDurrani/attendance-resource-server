@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 public interface UserServices {
-  ResponseEntity<UserDTO> getOwnUserDataByUsername(String username);
+  ResponseEntity<UserDTO> getUserDataByUsername(String username);
 
   ResponseEntity<List<UserDTO>> getAllUsers();
 

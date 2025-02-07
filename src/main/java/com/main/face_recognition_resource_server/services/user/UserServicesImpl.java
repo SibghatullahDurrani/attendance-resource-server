@@ -31,8 +31,8 @@ public class UserServicesImpl implements UserServices {
   }
 
   @Override
-  public ResponseEntity<UserDTO> getOwnUserDataByUsername(String username) {
-    Optional<UserDTO> userDTOOptional = userRepository.getOwnDetails(username);
+  public ResponseEntity<UserDTO> getUserDataByUsername(String username) {
+    Optional<UserDTO> userDTOOptional = userRepository.getUserByUsername(username);
     if (userDTOOptional.isPresent()) {
       UserDTO userDTO = userDTOOptional.get();
       return new ResponseEntity<>(userDTO, HttpStatus.OK);
@@ -43,7 +43,7 @@ public class UserServicesImpl implements UserServices {
 
   @Override
   public ResponseEntity<List<UserDTO>> getAllUsers() {
-    List<UserDTO> allUsers = userRepository.getAllUserDetails();
+    List<UserDTO> allUsers = userRepository.getAllUsers();
     if (allUsers.isEmpty()) {
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }

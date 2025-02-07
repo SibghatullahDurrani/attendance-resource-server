@@ -1,13 +1,15 @@
 package com.main.face_recognition_resource_server.controllers;
 
+import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("organizations")
@@ -19,7 +21,20 @@ public class OrganizationController {
   }
 
   @PostMapping("register-organization")
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
   public ResponseEntity<HttpStatus> registerOrganization(@RequestBody RegisterOrganizationDTO organizationToRegister) {
     return organizationServices.registerOrganization(organizationToRegister);
+  }
+
+  @GetMapping
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<OrganizationDTO> getOwnOrganization(Authentication authentication) {
+    return organizationServices.getOrganizationByUsername(authentication.getName());
+  }
+
+  @GetMapping("all-organizations")
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
+  public ResponseEntity<List<OrganizationDTO>> getAllOrganizations() {
+    return organizationServices.getAllOrganizations();
   }
 }

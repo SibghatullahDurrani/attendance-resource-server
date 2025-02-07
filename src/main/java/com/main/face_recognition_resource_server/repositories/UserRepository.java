@@ -1,6 +1,8 @@
 package com.main.face_recognition_resource_server.repositories;
 
+import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
+import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.domains.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,7 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             u.email, u.department.departmentName, u.department.organization.organizationName
           ) FROM User u WHERE u.username = ?1
           """)
-  Optional<UserDTO> getOwnDetails(String username);
+  Optional<UserDTO> getUserByUsername(String username);
 
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.UserDTO(
@@ -25,8 +27,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
           u.email, u.department.departmentName, u.department.organization.organizationName
           ) FROM User u
           """)
-  List<UserDTO> getAllUserDetails();
+  List<UserDTO> getAllUsers();
 
   @Query(value = "SELECT nextval('username_sequence')", nativeQuery = true)
   Long nextUsernameSequence();
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.OrganizationDTO(
+          u.department.organization.id, u.department.organization.organizationName,
+          u.department.organization.organizationType
+          ) FROM User u WHERE u.username = ?1
+          """)
+  OrganizationDTO getOrganizationByUsername(String username);
 }

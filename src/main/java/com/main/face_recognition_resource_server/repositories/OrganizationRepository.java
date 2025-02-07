@@ -1,8 +1,18 @@
 package com.main.face_recognition_resource_server.repositories;
 
+import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Organization;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
 
 public interface OrganizationRepository extends JpaRepository<Organization, Long> {
 
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.OrganizationDTO(
+          o.id,o.organizationName,o.organizationType
+          ) FROM Organization o
+          """)
+  List<OrganizationDTO> getAllOrganizations();
 }

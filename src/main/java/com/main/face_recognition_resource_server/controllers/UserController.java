@@ -23,7 +23,7 @@ public class UserController {
   @GetMapping
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<UserDTO> getOwnUserData(Authentication authentication) {
-    return userServices.getOwnUserDataByUsername(authentication.getName());
+    return userServices.getUserDataByUsername(authentication.getName());
   }
 
   @GetMapping("all-users")
