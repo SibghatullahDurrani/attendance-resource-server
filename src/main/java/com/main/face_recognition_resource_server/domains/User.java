@@ -4,6 +4,8 @@ import com.main.face_recognition_resource_server.constants.UserRole;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Entity
 @Table(name = "users")
@@ -39,4 +41,7 @@ public class User {
   @ManyToOne
   @JoinColumn(name = "department_id", nullable = false)
   private Department department;
+
+  @OneToMany(mappedBy = "user")
+  private List<Attendance> attendances;
 }
