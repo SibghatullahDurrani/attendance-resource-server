@@ -3,7 +3,7 @@ package com.main.face_recognition_resource_server.converters;
 import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
 import com.main.face_recognition_resource_server.domains.User;
 
-public class UserToRegisterUserDTOConverter {
+public class UserToRegisterUserDTOConvertor {
   public static User convert(RegisterUserDTO registerUserDTO) {
     return User.builder()
             .firstName(registerUserDTO.getFirstName())

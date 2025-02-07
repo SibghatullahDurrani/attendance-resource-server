@@ -13,4 +13,6 @@ public interface UserServices {
   ResponseEntity<List<UserDTO>> getAllUsers();
 
   ResponseEntity<HttpStatus> registerAdmin(RegisterUserDTO userToRegister);
+
+  ResponseEntity<HttpStatus> registerUser(RegisterUserDTO userToRegister);
 }

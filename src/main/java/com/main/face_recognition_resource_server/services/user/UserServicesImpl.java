@@ -4,7 +4,7 @@ package com.main.face_recognition_resource_server.services.user;
 import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
-import com.main.face_recognition_resource_server.converters.UserToRegisterUserDTOConverter;
+import com.main.face_recognition_resource_server.converters.UserToRegisterUserDTOConvertor;
 import com.main.face_recognition_resource_server.domains.Department;
 import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.repositories.DepartmentRepository;
@@ -55,18 +55,33 @@ public class UserServicesImpl implements UserServices {
   public ResponseEntity<HttpStatus> registerAdmin(RegisterUserDTO userToRegister) {
     Optional<Department> optionalDepartment = departmentRepository.getDepartmentById(userToRegister.getDepartmentId());
     if (optionalDepartment.isPresent()) {
-      Department department = optionalDepartment.get();
-      String hashedPassword = passwordEncoder.encode(userToRegister.getPassword());
-      userToRegister.setPassword(hashedPassword);
-      Long usernameSequence = userRepository.nextUsernameSequence();
-      String username = userToRegister.getFirstName() + userToRegister.getSecondName() + "#" + usernameSequence;
-      User user = UserToRegisterUserDTOConverter.convert(userToRegister);
-      user.setDepartment(department);
-      user.setUsername(username);
-      user.setRole(UserRole.ROLE_ADMIN);
+      User user = createUser(userToRegister, optionalDepartment.get(), UserRole.ROLE_ADMIN);
       userRepository.saveAndFlush(user);
       return new ResponseEntity<>(HttpStatus.CREATED);
     }
     return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+  }
+
+  @Override
+  public ResponseEntity<HttpStatus> registerUser(RegisterUserDTO userToRegister) {
+    Optional<Department> optionalDepartment = departmentRepository.getDepartmentById(userToRegister.getDepartmentId());
+    if (optionalDepartment.isPresent()) {
+      User user = createUser(userToRegister, optionalDepartment.get(), UserRole.ROLE_USER);
+      userRepository.saveAndFlush(user);
+      return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+  }
+
+  private User createUser(RegisterUserDTO userToRegister, Department department, UserRole role) {
+    String hashedPassword = passwordEncoder.encode(userToRegister.getPassword());
+    userToRegister.setPassword(hashedPassword);
+    Long usernameSequence = userRepository.nextUsernameSequence();
+    String username = userToRegister.getFirstName() + userToRegister.getSecondName() + "#" + usernameSequence;
+    User user = UserToRegisterUserDTOConvertor.convert(userToRegister);
+    user.setDepartment(department);
+    user.setUsername(username);
+    user.setRole(role);
+    return user;
   }
 }
