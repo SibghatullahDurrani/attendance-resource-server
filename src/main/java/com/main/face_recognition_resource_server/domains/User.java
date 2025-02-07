@@ -2,10 +2,16 @@ package com.main.face_recognition_resource_server.domains;
 
 import com.main.face_recognition_resource_server.constants.UserRole;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Entity
 @Table(name = "users")

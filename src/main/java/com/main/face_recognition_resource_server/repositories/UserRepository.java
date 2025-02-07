@@ -26,4 +26,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
           ) FROM User u
           """)
   List<UserDTO> getAllUserDetails();
+
+  @Query(value = "SELECT nextval('username_sequence')", nativeQuery = true)
+  Long nextUsernameSequence();
 }

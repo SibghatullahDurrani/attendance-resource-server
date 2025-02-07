@@ -21,13 +21,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Service
 public class DahuaCameraServicesImpl implements CameraServices {
   private final CameraRepository cameraRepository;
-  private final CameraToCameraDTOConvertor cameraToCameraDTOConvertor;
   private Map<String, SubscriptionLockInstance> subscriptions = new HashMap<>();
 
 
-  public DahuaCameraServicesImpl(CameraRepository cameraRepository, CameraToCameraDTOConvertor cameraToCameraDTOConvertor) {
+  public DahuaCameraServicesImpl(CameraRepository cameraRepository) {
     this.cameraRepository = cameraRepository;
-    this.cameraToCameraDTOConvertor = cameraToCameraDTOConvertor;
   }
 
   @Override
@@ -38,7 +36,7 @@ public class DahuaCameraServicesImpl implements CameraServices {
       Object synchronizationLock = new Object();
       AttendanceCache residentCache = new AttendanceCacheImpl(synchronizationLock);
       BlockingQueueAttendanceCacheConsumer attendanceCacheConsumer = new BlockingQueueAttendanceCacheConsumer(attendanceCacheQueue, residentCache, null, synchronizationLock);
-      CameraDTO cameraDTO = cameraToCameraDTOConvertor.convert(camera);
+      CameraDTO cameraDTO = CameraToCameraDTOConvertor.convert(camera);
       FaceRecognitionSubscription subscription = new FaceRecognitionSubscription(cameraDTO, attendanceCacheQueue);
       Thread faceSubscriptionThread = new Thread(subscription);
       Thread attendanceCacheConsumerThread = new Thread(attendanceCacheConsumer);
