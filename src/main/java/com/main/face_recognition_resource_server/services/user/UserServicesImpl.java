@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,5 +27,14 @@ public class UserServicesImpl implements UserServices {
     } else {
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
+  }
+
+  @Override
+  public ResponseEntity<List<UserDTO>> getAllUsers() {
+    List<UserDTO> allUsers = userRepository.getAllUserDetails();
+    if (allUsers.isEmpty()) {
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+    return new ResponseEntity<>(allUsers, HttpStatus.OK);
   }
 }
