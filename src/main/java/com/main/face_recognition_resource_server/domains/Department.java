@@ -29,4 +29,7 @@ public class Department {
 
   @OneToMany(mappedBy = "department")
   private List<User> users;
+
+  @ManyToMany(mappedBy = "departments")
+  private List<Camera> cameras;
 }
