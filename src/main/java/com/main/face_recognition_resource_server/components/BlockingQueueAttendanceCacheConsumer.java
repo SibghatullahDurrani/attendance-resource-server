@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.components;
 
 import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
-import com.main.face_recognition_resource_server.constants.CameraTypes;
+import com.main.face_recognition_resource_server.constants.CameraType;
 
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
@@ -37,11 +37,11 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
     }
   }
 
-  private void handleDataWithBothResidentAndNonResidentCache(Long userId, Date time, CameraTypes cameraType) {
+  private void handleDataWithBothResidentAndNonResidentCache(Long userId, Date time, CameraType cameraType) {
     synchronized (synchronizationLock) {
       if (!residentCache.isUserInCache(userId)) {
         if (!nonResidentCache.isUserInCache(userId)) {
-          if (cameraType == CameraTypes.IN) {
+          if (cameraType == CameraType.IN) {
             //TODO: add an entry for attendance worker
             residentCache.addUserToCache(userId);
           }

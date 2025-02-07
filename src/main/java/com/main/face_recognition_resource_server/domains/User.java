@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.domains;
 
-import com.main.face_recognition_resource_server.constants.UserRoles;
+import com.main.face_recognition_resource_server.constants.UserRole;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -28,7 +28,7 @@ public class User {
 
   @Column(name = "role", nullable = false, length = 30)
   @Enumerated(EnumType.STRING)
-  private UserRoles role;
+  private UserRole role;
 
   @Column(nullable = false)
   private String identificationNumber;

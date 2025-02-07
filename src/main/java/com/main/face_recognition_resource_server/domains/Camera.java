@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.domains;
 
-import com.main.face_recognition_resource_server.constants.CameraTypes;
+import com.main.face_recognition_resource_server.constants.CameraType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,5 +33,5 @@ public class Camera {
 
   @Column(nullable = false, length = 3)
   @Enumerated(EnumType.STRING)
-  private CameraTypes type;
+  private CameraType type;
 }

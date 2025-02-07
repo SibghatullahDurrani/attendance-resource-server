@@ -2,7 +2,7 @@ package com.main.face_recognition_resource_server.services.camera.dahua;
 
 import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.components.BlockingQueueAttendanceCacheProducer;
-import com.main.face_recognition_resource_server.constants.CameraTypes;
+import com.main.face_recognition_resource_server.constants.CameraType;
 import com.netsdk.lib.NetSDKLib;
 import com.netsdk.lib.ToolKits;
 import com.sun.jna.Pointer;
@@ -18,11 +18,11 @@ import java.util.concurrent.BlockingQueue;
 
 public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
   private final File picturePath;
-  private final CameraTypes cameraType;
+  private final CameraType cameraType;
   private final BlockingQueueAttendanceCacheProducer attendanceCacheProducer;
   private final BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue;
 
-  private AnalyzerDataCallback(CameraTypes cameraType, BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue) {
+  private AnalyzerDataCallback(CameraType cameraType, BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue) {
     this.attendanceCacheQueue = attendanceCacheQueue;
     attendanceCacheProducer = new BlockingQueueAttendanceCacheProducer(attendanceCacheQueue);
     this.cameraType = cameraType;
@@ -33,7 +33,7 @@ public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
     }
   }
 
-  public static AnalyzerDataCallback getInstance(CameraTypes cameraType, BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue) {
+  public static AnalyzerDataCallback getInstance(CameraType cameraType, BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue) {
     return AnalyzerDataCBHolder.instance(cameraType, attendanceCacheQueue);
   }
 
@@ -128,7 +128,7 @@ public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
 
 
   private static final class AnalyzerDataCBHolder {
-    static AnalyzerDataCallback instance(CameraTypes cameraType, BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue) {
+    static AnalyzerDataCallback instance(CameraType cameraType, BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue) {
       return new AnalyzerDataCallback(cameraType, attendanceCacheQueue);
     }
   }

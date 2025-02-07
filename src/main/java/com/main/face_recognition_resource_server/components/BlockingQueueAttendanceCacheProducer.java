@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.components;
 
 import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
-import com.main.face_recognition_resource_server.constants.CameraTypes;
+import com.main.face_recognition_resource_server.constants.CameraType;
 
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
@@ -14,7 +14,7 @@ public class BlockingQueueAttendanceCacheProducer implements AttendanceCacheProd
   }
 
   @Override
-  public void produceCache(Long userId, Date time, CameraTypes cameraType) throws InterruptedException {
+  public void produceCache(Long userId, Date time, CameraType cameraType) throws InterruptedException {
     attendanceCacheQueue.put(AttendanceCacheDTO.builder()
             .userId(userId)
             .time(time)

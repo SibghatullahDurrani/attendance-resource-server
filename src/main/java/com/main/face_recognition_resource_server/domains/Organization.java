@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.domains;
 
-import com.main.face_recognition_resource_server.constants.OrganizationTypes;
+import com.main.face_recognition_resource_server.constants.OrganizationType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +26,7 @@ public class Organization {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private OrganizationTypes organizationType;
+  private OrganizationType organizationType;
 
   @OneToMany(mappedBy = "organization")
   private List<Department> departments;
