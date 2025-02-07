@@ -1,0 +1,8 @@
+ALTER TABLE users
+    ADD department_id BIGINT NOT NULL DEFAULT 1;
+
+ALTER TABLE users
+    ALTER COLUMN department_id DROP DEFAULT;
+
+ALTER TABLE users
+    ADD CONSTRAINT FK_USERS_ON_DEPARTMENT FOREIGN KEY (department_id) REFERENCES departments (id);
