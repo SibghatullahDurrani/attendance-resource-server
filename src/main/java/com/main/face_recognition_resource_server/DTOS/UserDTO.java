@@ -3,8 +3,10 @@ package com.main.face_recognition_resource_server.DTOS;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
+@NoArgsConstructor
 @Data
 public class UserDTO {
   private Long id;

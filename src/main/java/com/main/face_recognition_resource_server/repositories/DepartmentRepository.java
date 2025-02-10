@@ -6,10 +6,10 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
 
-public interface DepartmentRepository extends JpaRepository<Department,Long> {
+public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
   @Query("""
-          Select d FROM Department d WHERE d.id = ?1
+          SELECT d.organization.id FROM Department d WHERE d.id = ?1
           """)
-  Optional<Department> getDepartmentById(Long departmentId);
+  Optional<Long> getDepartmentOrganizationIdByDepartmentId(Long departmentId);
 }

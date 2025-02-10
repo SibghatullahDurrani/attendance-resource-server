@@ -14,5 +14,5 @@ public interface UserServices {
 
   ResponseEntity<HttpStatus> registerAdmin(RegisterUserDTO userToRegister);
 
-  ResponseEntity<HttpStatus> registerUser(RegisterUserDTO userToRegister);
+  ResponseEntity<HttpStatus> registerUser(RegisterUserDTO userToRegister, String adminUsername);
 }

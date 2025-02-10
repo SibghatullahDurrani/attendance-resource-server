@@ -4,9 +4,9 @@ package com.main.face_recognition_resource_server.services.user;
 import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
-import com.main.face_recognition_resource_server.converters.UserToRegisterUserDTOConvertor;
-import com.main.face_recognition_resource_server.domains.Department;
-import com.main.face_recognition_resource_server.domains.User;
+import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
+import com.main.face_recognition_resource_server.exceptions.DepartmentNotFoundException;
+import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
 import com.main.face_recognition_resource_server.repositories.DepartmentRepository;
 import com.main.face_recognition_resource_server.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -53,35 +53,48 @@ public class UserServicesImpl implements UserServices {
   @Override
   @Transactional
   public ResponseEntity<HttpStatus> registerAdmin(RegisterUserDTO userToRegister) {
-    Optional<Department> optionalDepartment = departmentRepository.getDepartmentById(userToRegister.getDepartmentId());
-    if (optionalDepartment.isPresent()) {
-      User user = createUser(userToRegister, optionalDepartment.get(), UserRole.ROLE_ADMIN);
-      userRepository.saveAndFlush(user);
+    boolean doesDepartmentExist = departmentRepository.existsById(userToRegister.getDepartmentId());
+    if (!doesDepartmentExist) {
+      throw new DepartmentNotFoundException();
+    } else {
+      registerUser(userToRegister, UserRole.ROLE_ADMIN);
       return new ResponseEntity<>(HttpStatus.CREATED);
     }
-    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
   }
 
   @Override
-  public ResponseEntity<HttpStatus> registerUser(RegisterUserDTO userToRegister) {
-    Optional<Department> optionalDepartment = departmentRepository.getDepartmentById(userToRegister.getDepartmentId());
-    if (optionalDepartment.isPresent()) {
-      User user = createUser(userToRegister, optionalDepartment.get(), UserRole.ROLE_USER);
-      userRepository.saveAndFlush(user);
+  @Transactional
+  public ResponseEntity<HttpStatus> registerUser(RegisterUserDTO userToRegister, String adminUsername) {
+    Optional<Long> organizationId = departmentRepository.getDepartmentOrganizationIdByDepartmentId(userToRegister.getDepartmentId());
+    if (organizationId.isEmpty()) {
+      throw new DepartmentNotFoundException();
+    }
+    Long adminOrganizationId = userRepository.getUserOrganizationId(adminUsername);
+    if (!organizationId.get().equals(adminOrganizationId)) {
+      throw new DepartmentDoesntBelongToYourOrganizationException();
+    }
+    boolean doesUserExistWithEmail = userRepository.existsByEmailAndRole(userToRegister.getEmail(), UserRole.ROLE_USER);
+    if (doesUserExistWithEmail) {
+      throw new UserAlreadyExistsException("User account has already been made with this email");
+    } else {
+      registerUser(userToRegister, UserRole.ROLE_USER);
       return new ResponseEntity<>(HttpStatus.CREATED);
     }
-    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
   }
 
-  private User createUser(RegisterUserDTO userToRegister, Department department, UserRole role) {
+  private void registerUser(RegisterUserDTO userToRegister, UserRole role) {
     String hashedPassword = passwordEncoder.encode(userToRegister.getPassword());
-    userToRegister.setPassword(hashedPassword);
     Long usernameSequence = userRepository.nextUsernameSequence();
     String username = userToRegister.getFirstName() + userToRegister.getSecondName() + "#" + usernameSequence;
-    User user = UserToRegisterUserDTOConvertor.convert(userToRegister);
-    user.setDepartment(department);
-    user.setUsername(username);
-    user.setRole(role);
-    return user;
+    userRepository.registerUser(
+            userToRegister.getFirstName(),
+            userToRegister.getSecondName(),
+            hashedPassword,
+            username,
+            role.toString(),
+            userToRegister.getIdentificationNumber(),
+            userToRegister.getEmail(),
+            userToRegister.getDepartmentId()
+    );
   }
 }

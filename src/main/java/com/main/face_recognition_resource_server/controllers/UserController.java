@@ -39,8 +39,8 @@ public class UserController {
   }
 
   @PostMapping("register-user")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<HttpStatus> registerUser(@RequestBody RegisterUserDTO userToRegister) {
-    return userServices.registerUser(userToRegister);
+  @PreAuthorize("{hasRole('ADMIN')}")
+  public ResponseEntity<HttpStatus> registerUser(@RequestBody RegisterUserDTO userToRegister, Authentication authentication) {
+    return userServices.registerUser(userToRegister, authentication.getName());
   }
 }

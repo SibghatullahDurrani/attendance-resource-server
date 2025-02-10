@@ -2,11 +2,13 @@ package com.main.face_recognition_resource_server.repositories;
 
 import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
-import com.main.face_recognition_resource_server.domains.Organization;
+import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.domains.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,4 +41,26 @@ public interface UserRepository extends JpaRepository<User, Long> {
           ) FROM User u WHERE u.username = ?1
           """)
   OrganizationDTO getOrganizationByUsername(String username);
+
+  @Query(
+          """
+                  SELECT u.department.organization.id FROM User u WHERE u.username = ?1
+                  """
+  )
+  Long getUserOrganizationId(String username);
+
+  boolean existsByEmailAndRole(String email, UserRole role);
+
+  @Query(value = "INSERT INTO users (first_name, second_name,password,username,role,identification_number,email,department_id)" +
+          "VALUES (?1,?2,?3,?4,?5,?6,?7,?8)", nativeQuery = true)
+  @Transactional
+  @Modifying
+  void registerUser(String firstName,
+                    String secondName,
+                    String hashedPassword,
+                    String username,
+                    String role,
+                    String identificationNumber,
+                    String email,
+                    Long departmentId);
 }
