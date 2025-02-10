@@ -93,4 +93,46 @@ class UserRepositoryTest extends AbstractPostgreSQLTestContainer {
 
     Assertions.assertThat(organizationByUsername.getOrganizationName()).isEqualTo(organization.getOrganizationName());
   }
+
+  @Test
+  public void getUserOrganizationId_ReturnOrganizationId() {
+    Organization organization = DataUtil.getOrganization();
+    Department department = DataUtil.getDepartment(organization);
+    organizationRepository.saveAndFlush(organization);
+    departmentRepository.saveAndFlush(department);
+    User user = DataUtil.getUser(department);
+
+    userRepository.saveAndFlush(user);
+    Long organizationId = userRepository.getUserOrganizationId(user.getUsername());
+
+    Assertions.assertThat(organizationId).isEqualTo(1L);
+  }
+
+  @Test
+  public void existsByEmailAndRole_ReturnTrue_IfExists() {
+    Organization organization = DataUtil.getOrganization();
+    Department department = DataUtil.getDepartment(organization);
+    organizationRepository.saveAndFlush(organization);
+    departmentRepository.saveAndFlush(department);
+    User user = DataUtil.getUser(department);
+
+    userRepository.saveAndFlush(user);
+    boolean exists = userRepository.existsByEmailAndRole(user.getEmail(), user.getRole());
+
+    Assertions.assertThat(exists).isEqualTo(true);
+  }
+
+  @Test
+  public void existsByEmailAndRole_ReturnFalse_IfNotExists() {
+    Organization organization = DataUtil.getOrganization();
+    Department department = DataUtil.getDepartment(organization);
+    organizationRepository.saveAndFlush(organization);
+    departmentRepository.saveAndFlush(department);
+    User user = DataUtil.getUser(department);
+
+    userRepository.saveAndFlush(user);
+    boolean exists = userRepository.existsByEmailAndRole(user.getEmail(), UserRole.ROLE_SUPER_ADMIN);
+
+    Assertions.assertThat(exists).isEqualTo(false);
+  }
 }
