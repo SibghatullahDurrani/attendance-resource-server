@@ -56,6 +56,10 @@ public class UserServicesImpl implements UserServices {
     boolean doesDepartmentExist = departmentRepository.existsById(userToRegister.getDepartmentId());
     if (!doesDepartmentExist) {
       throw new DepartmentNotFoundException();
+    }
+    boolean doesUserExistsWithEmail = userRepository.existsByEmailAndRole(userToRegister.getEmail(), UserRole.ROLE_ADMIN);
+    if (doesUserExistsWithEmail) {
+      throw new UserAlreadyExistsException("Admin account has already been made with this email");
     } else {
       registerUser(userToRegister, UserRole.ROLE_ADMIN);
       return new ResponseEntity<>(HttpStatus.CREATED);

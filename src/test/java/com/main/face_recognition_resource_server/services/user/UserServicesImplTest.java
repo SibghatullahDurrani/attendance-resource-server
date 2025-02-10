@@ -84,11 +84,25 @@ class UserServicesImplTest {
   }
 
   @Test
+  public void registerAdmin_ThrowsUserAlreadyExistsException_WhenUserAlreadyExists() {
+    RegisterUserDTO registerUser = RegisterUserDTO.builder()
+            .departmentId(Mockito.anyLong())
+            .email("")
+            .build();
+    when(departmentRepository.existsById(registerUser.getDepartmentId())).thenReturn(true);
+    when(userRepository.existsByEmailAndRole(registerUser.getEmail(), UserRole.ROLE_ADMIN)).thenReturn(true);
+    assertThrows(UserAlreadyExistsException.class, () -> userServices.registerAdmin(registerUser));
+
+  }
+
+  @Test
   public void registerAdmin_ReturnsHttpCreated_WhenDepartmentExists() {
     RegisterUserDTO registerUser = RegisterUserDTO.builder()
             .departmentId(Mockito.anyLong())
+            .email("")
             .build();
     when(departmentRepository.existsById(registerUser.getDepartmentId())).thenReturn(true);
+    when(userRepository.existsByEmailAndRole(registerUser.getEmail(), UserRole.ROLE_ADMIN)).thenReturn(false);
     ResponseEntity<HttpStatus> registerAdminResponse = userServices.registerAdmin(registerUser);
 
     Assertions.assertThat(registerAdminResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
