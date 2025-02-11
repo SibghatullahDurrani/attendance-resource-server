@@ -4,13 +4,14 @@ import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.domains.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -29,7 +30,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
           u.email, u.department.departmentName, u.department.organization.organizationName
           ) FROM User u
           """)
-  List<UserDTO> getAllUsers();
+  Page<UserDTO> getAllUsers(Pageable pageable);
 
   @Query(value = "SELECT nextval('username_sequence')", nativeQuery = true)
   Long nextUsernameSequence();

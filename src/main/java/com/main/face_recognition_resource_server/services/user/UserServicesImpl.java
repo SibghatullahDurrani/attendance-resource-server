@@ -9,13 +9,14 @@ import com.main.face_recognition_resource_server.exceptions.DepartmentNotFoundEx
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
 import com.main.face_recognition_resource_server.repositories.DepartmentRepository;
 import com.main.face_recognition_resource_server.repositories.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -42,9 +43,9 @@ public class UserServicesImpl implements UserServices {
   }
 
   @Override
-  public ResponseEntity<List<UserDTO>> getAllUsers() {
-    List<UserDTO> allUsers = userRepository.getAllUsers();
-    if (allUsers.isEmpty()) {
+  public ResponseEntity<Page<UserDTO>> getAllUsers(Pageable pageable) {
+    Page<UserDTO> allUsers = userRepository.getAllUsers(pageable);
+    if (allUsers.getTotalElements() == 0) {
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
     return new ResponseEntity<>(allUsers, HttpStatus.OK);

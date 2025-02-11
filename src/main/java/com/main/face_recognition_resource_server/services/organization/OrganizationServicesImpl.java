@@ -6,6 +6,8 @@ import com.main.face_recognition_resource_server.converters.OrganizationToRegist
 import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.repositories.OrganizationRepository;
 import com.main.face_recognition_resource_server.repositories.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -36,8 +38,8 @@ public class OrganizationServicesImpl implements OrganizationServices {
   }
 
   @Override
-  public ResponseEntity<List<OrganizationDTO>> getAllOrganizations() {
-    List<OrganizationDTO> organizationsDTOs = organizationRepository.getAllOrganizations();
+  public ResponseEntity<Page<OrganizationDTO>> getAllOrganizations(Pageable pageable) {
+    Page<OrganizationDTO> organizationsDTOs = organizationRepository.getAllOrganizations(pageable);
     return new ResponseEntity<>(organizationsDTOs, HttpStatus.OK);
   }
 }

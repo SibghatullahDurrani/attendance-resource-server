@@ -3,13 +3,13 @@ package com.main.face_recognition_resource_server.controllers;
 import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
 import com.main.face_recognition_resource_server.services.user.UserServices;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("users")
@@ -28,8 +28,9 @@ public class UserController {
 
   @GetMapping("all-users")
   @PreAuthorize("hasRole('SUPER_ADMIN')")
-  public ResponseEntity<List<UserDTO>> getAllUsers() {
-    return userServices.getAllUsers();
+  public ResponseEntity<Page<UserDTO>> getAllUsers(@RequestParam int page, @RequestParam int size) {
+    PageRequest pageRequest = PageRequest.of(page, size);
+    return userServices.getAllUsers(pageRequest);
   }
 
   @PostMapping("register-admin")

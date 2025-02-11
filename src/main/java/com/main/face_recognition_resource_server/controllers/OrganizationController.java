@@ -3,13 +3,13 @@ package com.main.face_recognition_resource_server.controllers;
 import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("organizations")
@@ -34,7 +34,8 @@ public class OrganizationController {
 
   @GetMapping("all-organizations")
   @PreAuthorize("hasRole('SUPER_ADMIN')")
-  public ResponseEntity<List<OrganizationDTO>> getAllOrganizations() {
-    return organizationServices.getAllOrganizations();
+  public ResponseEntity<Page<OrganizationDTO>> getAllOrganizations(@RequestParam int page, @RequestParam int size) {
+    PageRequest pageRequest = PageRequest.of(page, size);
+    return organizationServices.getAllOrganizations(pageRequest);
   }
 }

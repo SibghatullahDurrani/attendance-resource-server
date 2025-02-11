@@ -15,11 +15,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -32,7 +35,6 @@ class UserServicesImplTest {
   @Mock
   private DepartmentRepository departmentRepository;
   @Mock
-  private PasswordEncoder passwordEncoder;
 
   @InjectMocks
   private UserServicesImpl userServices;
@@ -58,18 +60,20 @@ class UserServicesImplTest {
 
   @Test
   public void getAllUsers_ReturnsHttpOK_WhenThereAreUsers() {
+    PageRequest pageRequest = PageRequest.of(1, 10);
     UserDTO userDTO = UserDTO.builder().build();
-    when(userRepository.getAllUsers()).thenReturn(List.of(userDTO));
-    ResponseEntity<List<UserDTO>> allUsers = userServices.getAllUsers();
+    when(userRepository.getAllUsers(pageRequest)).thenReturn(new PageImpl<>(List.of(userDTO)));
+    ResponseEntity<Page<UserDTO>> allUsers = userServices.getAllUsers(pageRequest);
 
     Assertions.assertThat(allUsers.getStatusCode()).isEqualTo(HttpStatus.OK);
-    Assertions.assertThat(allUsers.getBody()).isNotEmpty();
+    Assertions.assertThat(Objects.requireNonNull(allUsers.getBody()).getTotalElements()).isEqualTo(1);
   }
 
   @Test
   public void getAllUsers_ReturnsHttpNotFound_WhenThereAreNoUsers() {
-    when(userRepository.getAllUsers()).thenReturn(List.of());
-    ResponseEntity<List<UserDTO>> allUsers = userServices.getAllUsers();
+    PageRequest pageRequest = PageRequest.of(1, 10);
+    when(userRepository.getAllUsers(pageRequest)).thenReturn(Page.empty());
+    ResponseEntity<Page<UserDTO>> allUsers = userServices.getAllUsers(pageRequest);
 
     Assertions.assertThat(allUsers.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
   }
