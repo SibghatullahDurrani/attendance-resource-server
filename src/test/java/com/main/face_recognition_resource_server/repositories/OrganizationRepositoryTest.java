@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import java.util.Optional;
+
 class OrganizationRepositoryTest extends AbstractPostgreSQLTestContainer {
 
   @Autowired
@@ -42,4 +44,18 @@ class OrganizationRepositoryTest extends AbstractPostgreSQLTestContainer {
     Assertions.assertThat(organizations.getTotalElements()).isEqualTo(2);
   }
 
+  @Test
+  public void getOrganizationById_ReturnsOrganization() {
+    Organization organization = DataUtil.getOrganization();
+
+    Optional<OrganizationDTO> organizationDTO = organizationRepository.getOrganizationById(1L);
+
+    Assertions.assertThat(organizationDTO).isEmpty();
+
+    organizationRepository.saveAndFlush(organization);
+
+    organizationDTO = organizationRepository.getOrganizationById(1L);
+
+    Assertions.assertThat(organizationDTO).isPresent();
+  }
 }

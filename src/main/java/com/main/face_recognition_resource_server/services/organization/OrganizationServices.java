@@ -13,4 +13,7 @@ public interface OrganizationServices {
   ResponseEntity<OrganizationDTO> getOrganizationByUsername(String username);
 
   ResponseEntity<Page<OrganizationDTO>> getAllOrganizations(Pageable pageable);
+
+  ResponseEntity<OrganizationDTO> getOrganizationById(Long id);
+
 }

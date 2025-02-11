@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface OrganizationRepository extends JpaRepository<Organization, Long> {
 
@@ -17,4 +18,11 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
           ) FROM Organization o
           """)
   Page<OrganizationDTO> getAllOrganizations(Pageable pageable);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.OrganizationDTO(
+          o.id,o.organizationName,o.organizationType
+          ) FROM Organization o WHERE o.id = ?1
+          """)
+  Optional<OrganizationDTO> getOrganizationById(Long id);
 }

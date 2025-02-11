@@ -38,4 +38,10 @@ public class OrganizationController {
     PageRequest pageRequest = PageRequest.of(page, size);
     return organizationServices.getAllOrganizations(pageRequest);
   }
+
+  @GetMapping("{id}")
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
+  public ResponseEntity<OrganizationDTO> getOrganizationById(@PathVariable Long id) {
+    return organizationServices.getOrganizationById(id);
+  }
 }

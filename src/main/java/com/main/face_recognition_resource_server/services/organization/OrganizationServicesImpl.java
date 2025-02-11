@@ -12,7 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Optional;
+
 
 @Service
 public class OrganizationServicesImpl implements OrganizationServices {
@@ -41,5 +42,12 @@ public class OrganizationServicesImpl implements OrganizationServices {
   public ResponseEntity<Page<OrganizationDTO>> getAllOrganizations(Pageable pageable) {
     Page<OrganizationDTO> organizationsDTOs = organizationRepository.getAllOrganizations(pageable);
     return new ResponseEntity<>(organizationsDTOs, HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<OrganizationDTO> getOrganizationById(Long id) {
+    Optional<OrganizationDTO> optionalOrganization = organizationRepository.getOrganizationById(id);
+    return optionalOrganization.map(organizationDTO -> new ResponseEntity<>(organizationDTO, HttpStatus.OK))
+            .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
   }
 }
