@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.controllers;
 
 import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.OrganizationDepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import org.springframework.data.domain.Page;
@@ -44,4 +45,12 @@ public class OrganizationController {
   public ResponseEntity<OrganizationDTO> getOrganizationById(@PathVariable Long id) {
     return organizationServices.getOrganizationById(id);
   }
+
+  @GetMapping("departments")
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
+  public ResponseEntity<Page<OrganizationDepartmentDTO>> getAllOrganizationsWithDepartments(@RequestParam int page, @RequestParam int size) {
+    PageRequest pageRequest = PageRequest.of(page, size);
+    return organizationServices.getAllOrganizationsWithItsDepartments(pageRequest);
+  }
+
 }

@@ -1,6 +1,8 @@
 package com.main.face_recognition_resource_server.services.organization;
 
+import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.OrganizationDepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.converters.OrganizationToRegisterOrganizationDTOConvertor;
 import com.main.face_recognition_resource_server.domains.Organization;
@@ -12,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -40,8 +43,8 @@ public class OrganizationServicesImpl implements OrganizationServices {
 
   @Override
   public ResponseEntity<Page<OrganizationDTO>> getAllOrganizations(Pageable pageable) {
-    Page<OrganizationDTO> organizationsDTOs = organizationRepository.getAllOrganizations(pageable);
-    return new ResponseEntity<>(organizationsDTOs, HttpStatus.OK);
+    Page<OrganizationDTO> organizationDTOS = organizationRepository.getAllOrganizations(pageable);
+    return new ResponseEntity<>(organizationDTOS, HttpStatus.OK);
   }
 
   @Override
@@ -49,5 +52,24 @@ public class OrganizationServicesImpl implements OrganizationServices {
     Optional<OrganizationDTO> optionalOrganization = organizationRepository.getOrganizationById(id);
     return optionalOrganization.map(organizationDTO -> new ResponseEntity<>(organizationDTO, HttpStatus.OK))
             .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+  }
+
+  @Override
+  public ResponseEntity<Page<OrganizationDepartmentDTO>> getAllOrganizationsWithItsDepartments(Pageable pageable) {
+    Page<Organization> organizationPage = organizationRepository.getAllOrganizationsWithDepartments(pageable);
+    Page<OrganizationDepartmentDTO> organizationDepartmentDTOPage = organizationPage.map(organization -> {
+      List<DepartmentDTO> departments = organization.getDepartments().stream()
+              .map(department -> new DepartmentDTO(
+                      department.getId(),
+                      department.getDepartmentName())
+              ).toList();
+      return new OrganizationDepartmentDTO(
+              organization.getId(),
+              organization.getOrganizationName(),
+              organization.getOrganizationType(),
+              departments
+      );
+    });
+    return new ResponseEntity<>(organizationDepartmentDTOPage, HttpStatus.OK);
   }
 }

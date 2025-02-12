@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.services.organization;
 
 import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.OrganizationDepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterOrganizationDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,5 +16,7 @@ public interface OrganizationServices {
   ResponseEntity<Page<OrganizationDTO>> getAllOrganizations(Pageable pageable);
 
   ResponseEntity<OrganizationDTO> getOrganizationById(Long id);
+
+  ResponseEntity<Page<OrganizationDepartmentDTO>> getAllOrganizationsWithItsDepartments(Pageable pageable);
 
 }
