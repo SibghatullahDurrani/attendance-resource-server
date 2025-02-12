@@ -32,7 +32,7 @@ public class DepartmentController {
     if (isSuperAdmin) {
       return departmentServices.registerDepartmentAsSuperAdmin(departmentToRegister);
     } else {
-      return null;
+      return departmentServices.registerDepartmentAsAdmin(departmentToRegister, authentication.getName());
     }
   }
 

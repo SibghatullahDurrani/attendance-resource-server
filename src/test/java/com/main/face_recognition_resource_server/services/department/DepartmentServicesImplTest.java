@@ -74,4 +74,11 @@ class DepartmentServicesImplTest {
     assertThrows(OrganizationDoesntExistException.class, () -> departmentServices.registerDepartmentAsSuperAdmin(registerDepartmentDTO));
   }
 
+  @Test
+  public void registerDepartmentAsAdmin_ThrowsOrganizationDoesntExistException() {
+    RegisterDepartmentDTO registerDepartmentDTO = DataUtil.getRegisterDepartmentDTO();
+    String username = "ASDF";
+    when(organizationRepository.existsById(registerDepartmentDTO.getOrganizationId())).thenReturn(false);
+    assertThrows(OrganizationDoesntExistException.class, () -> departmentServices.registerDepartmentAsAdmin(registerDepartmentDTO, username));
+  }
 }

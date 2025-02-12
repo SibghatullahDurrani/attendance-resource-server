@@ -10,4 +10,5 @@ public interface DepartmentServices {
 
   ResponseEntity<HttpStatus> registerDepartmentAsSuperAdmin(RegisterDepartmentDTO departmentToRegister);
 
+  ResponseEntity<HttpStatus> registerDepartmentAsAdmin(RegisterDepartmentDTO departmentToRegister, String name);
 }

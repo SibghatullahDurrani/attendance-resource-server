@@ -2,6 +2,7 @@ package com.main.face_recognition_resource_server.services.department;
 
 import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterDepartmentDTO;
+import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.DepartmentRepository;
 import com.main.face_recognition_resource_server.repositories.OrganizationRepository;
@@ -37,6 +38,20 @@ public class DepartmentServicesImpl implements DepartmentServices {
     boolean organizationExists = organizationRepository.existsById(departmentToRegister.getOrganizationId());
     if (!organizationExists) {
       throw new OrganizationDoesntExistException();
+    }
+    departmentRepository.registerDepartment(departmentToRegister.getDepartmentName(), departmentToRegister.getOrganizationId());
+    return new ResponseEntity<>(HttpStatus.CREATED);
+  }
+
+  @Override
+  public ResponseEntity<HttpStatus> registerDepartmentAsAdmin(RegisterDepartmentDTO departmentToRegister, String username) {
+    boolean organizationExists = organizationRepository.existsById(departmentToRegister.getOrganizationId());
+    if (!organizationExists) {
+      throw new OrganizationDoesntExistException();
+    }
+    Long organizationId = userRepository.getUserOrganizationId(username);
+    if (!organizationId.equals(departmentToRegister.getOrganizationId())) {
+      throw new OrganizationDoesntBelongToYouException();
     }
     departmentRepository.registerDepartment(departmentToRegister.getDepartmentName(), departmentToRegister.getOrganizationId());
     return new ResponseEntity<>(HttpStatus.CREATED);
