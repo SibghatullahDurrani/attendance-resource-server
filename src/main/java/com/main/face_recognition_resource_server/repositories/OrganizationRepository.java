@@ -28,5 +28,10 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
   @Query("""
           SELECT o FROM Organization o
           """)
+  /*
+  HACK: selecting the entire entity and all its data. now it is required
+  but in the future if the entity changes and more data is available
+  I will have to change this...
+  */
   Page<Organization> getAllOrganizationsWithDepartments(Pageable pageable);
 }

@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.repositories;
 
+import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
@@ -41,7 +42,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
           u.department.organization.organizationType
           ) FROM User u WHERE u.username = ?1
           """)
-  OrganizationDTO getOrganizationByUsername(String username);
+  Optional<OrganizationDTO> getOrganizationByUsername(String username);
 
   @Query(
           """
@@ -64,4 +65,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
                     String identificationNumber,
                     String email,
                     Long departmentId);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.DepartmentDTO(
+                    u.department.id, u.department.departmentName
+          ) FROM User u WHERE u.username = ?1
+          """)
+  Optional<DepartmentDTO> getDepartmentByUsername(String username);
 }

@@ -37,8 +37,9 @@ public class OrganizationServicesImpl implements OrganizationServices {
 
   @Override
   public ResponseEntity<OrganizationDTO> getOrganizationByUsername(String username) {
-    OrganizationDTO organizationDTO = userRepository.getOrganizationByUsername(username);
-    return new ResponseEntity<>(organizationDTO, HttpStatus.OK);
+    Optional<OrganizationDTO> optionalOrganization = userRepository.getOrganizationByUsername(username);
+    return optionalOrganization.map(organizationDTO -> new ResponseEntity<>(organizationDTO, HttpStatus.OK))
+            .orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
   }
 
   @Override

@@ -21,7 +21,7 @@ public class OrganizationController {
     this.organizationServices = organizationServices;
   }
 
-  @PostMapping("register-organization")
+  @PostMapping()
   @PreAuthorize("hasRole('SUPER_ADMIN')")
   public ResponseEntity<HttpStatus> registerOrganization(@RequestBody RegisterOrganizationDTO organizationToRegister) {
     return organizationServices.registerOrganization(organizationToRegister);
@@ -33,7 +33,7 @@ public class OrganizationController {
     return organizationServices.getOrganizationByUsername(authentication.getName());
   }
 
-  @GetMapping("all-organizations")
+  @GetMapping("all")
   @PreAuthorize("hasRole('SUPER_ADMIN')")
   public ResponseEntity<Page<OrganizationDTO>> getAllOrganizations(@RequestParam int page, @RequestParam int size) {
     PageRequest pageRequest = PageRequest.of(page, size);

@@ -18,5 +18,4 @@ public interface OrganizationServices {
   ResponseEntity<OrganizationDTO> getOrganizationById(Long id);
 
   ResponseEntity<Page<OrganizationDepartmentDTO>> getAllOrganizationsWithItsDepartments(Pageable pageable);
-
 }

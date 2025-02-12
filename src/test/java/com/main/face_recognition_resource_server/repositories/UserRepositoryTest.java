@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.repositories;
 
+import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
@@ -89,9 +90,10 @@ class UserRepositoryTest extends AbstractPostgreSQLTestContainer {
 
     userRepository.saveAndFlush(user);
 
-    OrganizationDTO organizationByUsername = userRepository.getOrganizationByUsername(user.getUsername());
+    Optional<OrganizationDTO> organizationByUsername = userRepository.getOrganizationByUsername(user.getUsername());
 
-    Assertions.assertThat(organizationByUsername.getOrganizationName()).isEqualTo(organization.getOrganizationName());
+    Assertions.assertThat(organizationByUsername).isPresent();
+    Assertions.assertThat(organizationByUsername.get().getOrganizationName()).isEqualTo(organization.getOrganizationName());
   }
 
   @Test
@@ -134,5 +136,20 @@ class UserRepositoryTest extends AbstractPostgreSQLTestContainer {
     boolean exists = userRepository.existsByEmailAndRole(user.getEmail(), UserRole.ROLE_SUPER_ADMIN);
 
     Assertions.assertThat(exists).isEqualTo(false);
+  }
+
+  @Test
+  public void getDepartmentByUsername_returnsDepartment() {
+    Organization organization = DataUtil.getOrganization();
+    Department department = DataUtil.getDepartment(organization);
+    organizationRepository.saveAndFlush(organization);
+    departmentRepository.saveAndFlush(department);
+    User user = DataUtil.getUser(department);
+
+    userRepository.saveAndFlush(user);
+    Optional<DepartmentDTO> departmentDTO = userRepository.getDepartmentByUsername(user.getUsername());
+
+    Assertions.assertThat(departmentDTO).isNotEmpty();
+    Assertions.assertThat(departmentDTO.get().getDepartmentName()).isEqualTo(department.getDepartmentName());
   }
 }

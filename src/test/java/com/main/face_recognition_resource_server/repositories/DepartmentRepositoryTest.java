@@ -27,23 +27,41 @@ class DepartmentRepositoryTest extends AbstractPostgreSQLTestContainer {
   }
 
   @Test
-  public void getDepartmentOrganizationIdByDepartmentId_ReturnOrganizationId_IfExists() {
+  public void getDepartmentOrganizationIdById_ReturnOrganizationId_OfDepartment_IfExists() {
     Organization organization = DataUtil.getOrganization();
     Department department = DataUtil.getDepartment(organization);
 
     organizationRepository.saveAndFlush(organization);
     departmentRepository.saveAndFlush(department);
 
-    Optional<Long> departmentId = departmentRepository.getDepartmentOrganizationIdByDepartmentId(department.getId());
+    Optional<Long> departmentId = departmentRepository.getOrganizationIdOfDepartment(department.getId());
 
     Assertions.assertThat(departmentId).isPresent();
     Assertions.assertThat(departmentId.get()).isEqualTo(organization.getId());
   }
 
   @Test
-  public void getDepartmentOrganizationIdByDepartmentId_ReturnNothing_IFNotExists() {
-    Optional<Long> departmentId = departmentRepository.getDepartmentOrganizationIdByDepartmentId(1L);
+  public void getOrganizationId_OfDepartment_ReturnNothing_IFNotExists() {
+    Optional<Long> departmentId = departmentRepository.getOrganizationIdOfDepartment(1L);
 
     Assertions.assertThat(departmentId).isEmpty();
+  }
+
+  @Test
+  public void registerDepartment_RegistersDepartment() {
+    Organization organization = DataUtil.getOrganization();
+    Department department = DataUtil.getDepartment(organization);
+
+    Optional<Department> departmentOptional = departmentRepository.findById(1L);
+
+    Assertions.assertThat(departmentOptional).isEmpty();
+
+    organizationRepository.saveAndFlush(organization);
+
+    departmentRepository.registerDepartment(department.getDepartmentName(), 1L);
+
+    departmentOptional = departmentRepository.findById(1L);
+
+    Assertions.assertThat(departmentOptional).isPresent();
   }
 }

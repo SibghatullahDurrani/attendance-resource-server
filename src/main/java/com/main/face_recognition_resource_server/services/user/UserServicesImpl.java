@@ -5,7 +5,7 @@ import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
-import com.main.face_recognition_resource_server.exceptions.DepartmentNotFoundException;
+import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
 import com.main.face_recognition_resource_server.repositories.DepartmentRepository;
 import com.main.face_recognition_resource_server.repositories.UserRepository;
@@ -54,9 +54,9 @@ public class UserServicesImpl implements UserServices {
   @Override
   @Transactional
   public ResponseEntity<HttpStatus> registerAdmin(RegisterUserDTO userToRegister) {
-    boolean doesDepartmentExist = departmentRepository.existsById(userToRegister.getDepartmentId());
-    if (!doesDepartmentExist) {
-      throw new DepartmentNotFoundException();
+    boolean departmentExists = departmentRepository.existsById(userToRegister.getDepartmentId());
+    if (!departmentExists) {
+      throw new DepartmentDoesntExistException();
     }
     boolean doesUserExistsWithEmail = userRepository.existsByEmailAndRole(userToRegister.getEmail(), UserRole.ROLE_ADMIN);
     if (doesUserExistsWithEmail) {
@@ -70,9 +70,9 @@ public class UserServicesImpl implements UserServices {
   @Override
   @Transactional
   public ResponseEntity<HttpStatus> registerUser(RegisterUserDTO userToRegister, String adminUsername) {
-    Optional<Long> organizationId = departmentRepository.getDepartmentOrganizationIdByDepartmentId(userToRegister.getDepartmentId());
+    Optional<Long> organizationId = departmentRepository.getOrganizationIdOfDepartment(userToRegister.getDepartmentId());
     if (organizationId.isEmpty()) {
-      throw new DepartmentNotFoundException();
+      throw new DepartmentDoesntExistException();
     }
     Long adminOrganizationId = userRepository.getUserOrganizationId(adminUsername);
     if (!organizationId.get().equals(adminOrganizationId)) {

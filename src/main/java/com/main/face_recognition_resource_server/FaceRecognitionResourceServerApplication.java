@@ -9,5 +9,4 @@ public class FaceRecognitionResourceServerApplication {
   public static void main(String[] args) {
     SpringApplication.run(FaceRecognitionResourceServerApplication.class, args);
   }
-
 }
