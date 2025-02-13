@@ -82,35 +82,35 @@ class UserServicesImplTest {
   }
 
   @Test
-  public void registerAdmin_throwsDepartmentNotFoundException_WhenDepartmentDoesntExist() {
+  public void registerUser_throwsDepartmentNotFoundException_WhenDepartmentDoesntExist() {
     RegisterUserDTO registerUser = RegisterUserDTO.builder()
             .departmentId(Mockito.anyLong())
             .build();
     when(departmentRepository.existsById(registerUser.getDepartmentId())).thenReturn(false);
-    assertThrows(DepartmentDoesntExistException.class, () -> userServices.registerAdmin(registerUser));
+    assertThrows(DepartmentDoesntExistException.class, () -> userServices.registerUser(registerUser));
   }
 
   @Test
-  public void registerAdmin_ThrowsUserAlreadyExistsException_WhenUserAlreadyExists() {
+  public void registerUser_ThrowsUserAlreadyExistsException_WhenUserAlreadyExists() {
     RegisterUserDTO registerUser = RegisterUserDTO.builder()
             .departmentId(Mockito.anyLong())
             .email("")
             .build();
     when(departmentRepository.existsById(registerUser.getDepartmentId())).thenReturn(true);
     when(userRepository.existsByEmailAndRole(registerUser.getEmail(), UserRole.ROLE_ADMIN)).thenReturn(true);
-    assertThrows(UserAlreadyExistsException.class, () -> userServices.registerAdmin(registerUser));
+    assertThrows(UserAlreadyExistsException.class, () -> userServices.registerUser(registerUser));
 
   }
 
   @Test
-  public void registerAdmin_ReturnsHttpCreated_WhenDepartmentExists() {
+  public void registerUser_ReturnsHttpCreated_WhenDepartmentExists() {
     RegisterUserDTO registerUser = RegisterUserDTO.builder()
             .departmentId(Mockito.anyLong())
             .email("")
             .build();
     when(departmentRepository.existsById(registerUser.getDepartmentId())).thenReturn(true);
     when(userRepository.existsByEmailAndRole(registerUser.getEmail(), UserRole.ROLE_ADMIN)).thenReturn(false);
-    ResponseEntity<HttpStatus> registerAdminResponse = userServices.registerAdmin(registerUser);
+    ResponseEntity<HttpStatus> registerAdminResponse = userServices.registerUser(registerUser);
 
     Assertions.assertThat(registerAdminResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
   }

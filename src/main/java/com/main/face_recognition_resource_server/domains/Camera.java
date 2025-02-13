@@ -23,10 +23,12 @@ public class Camera {
   @SequenceGenerator(name = "camera_id_generator", sequenceName = "camera_id__sequence", allocationSize = 1)
   private Long id;
 
-  @Column(name = "ip_address", unique = true, nullable = false, length = 15)
+  @Column(name = "ip_address", nullable = false, length = 15)
   private String ipAddress;
 
   private int port;
+
+  private int channel;
 
   @Column(nullable = false)
   private String username;

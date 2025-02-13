@@ -49,7 +49,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                   SELECT u.department.organization.id FROM User u WHERE u.username = ?1
                   """
   )
-  Long getUserOrganizationId(String username);
+  Optional<Long> getUserOrganizationId(String username);
 
   boolean existsByEmailAndRole(String email, UserRole role);
 

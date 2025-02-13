@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 public interface OrganizationServices {
+
   ResponseEntity<HttpStatus> registerOrganization(RegisterOrganizationDTO organizationToRegister);
 
   ResponseEntity<OrganizationDTO> getOrganizationByUsername(String username);

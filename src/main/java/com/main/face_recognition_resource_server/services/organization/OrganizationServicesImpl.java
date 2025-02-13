@@ -6,6 +6,7 @@ import com.main.face_recognition_resource_server.DTOS.OrganizationDepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.converters.OrganizationToRegisterOrganizationDTOConvertor;
 import com.main.face_recognition_resource_server.domains.Organization;
+import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
 import com.main.face_recognition_resource_server.repositories.OrganizationRepository;
 import com.main.face_recognition_resource_server.repositories.UserRepository;
 import org.springframework.data.domain.Page;

@@ -2,17 +2,21 @@ package com.main.face_recognition_resource_server.services.user;
 
 import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
+import com.main.face_recognition_resource_server.constants.UserRole;
+import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
+import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 public interface UserServices {
-  ResponseEntity<UserDTO> getUserDataByUsername(String username);
+  UserDTO getUserDataByUsername(String username) throws UserDoesntExistException;
 
-  ResponseEntity<Page<UserDTO>> getAllUsers(Pageable pageable);
+  Page<UserDTO> getAllUsers(Pageable pageable);
 
-  ResponseEntity<HttpStatus> registerAdmin(RegisterUserDTO userToRegister);
+  void registerUser(RegisterUserDTO userToRegister);
 
-  ResponseEntity<HttpStatus> registerUser(RegisterUserDTO userToRegister, String adminUsername);
+  boolean userExistsWithEmailAndRole(String email, UserRole role) throws UserAlreadyExistsException;
+
+  Long getUserOrganizationId(String username) throws UserDoesntExistException;
+
 }

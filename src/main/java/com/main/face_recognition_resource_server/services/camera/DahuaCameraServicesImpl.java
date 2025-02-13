@@ -2,6 +2,7 @@ package com.main.face_recognition_resource_server.services.camera;
 
 import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.DTOS.CameraDTO;
+import com.main.face_recognition_resource_server.DTOS.DepartmentCameraDTO;
 import com.main.face_recognition_resource_server.components.AttendanceCache;
 import com.main.face_recognition_resource_server.components.AttendanceCacheImpl;
 import com.main.face_recognition_resource_server.components.BlockingQueueAttendanceCacheConsumer;
@@ -10,9 +11,11 @@ import com.main.face_recognition_resource_server.domains.Camera;
 import com.main.face_recognition_resource_server.helpers.SubscriptionLockInstance;
 import com.main.face_recognition_resource_server.repositories.CameraRepository;
 import com.main.face_recognition_resource_server.services.camera.dahua.FaceRecognitionSubscription;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
@@ -30,7 +33,7 @@ public class DahuaCameraServicesImpl implements CameraServices {
 
   @Override
   public void startInFaceRecognitionSubscription(String ipAddress, int port) {
-    Optional<Camera> optionalCamera = cameraRepository.findCameraByIpAddressAndPort(ipAddress, port);
+    Optional<Camera> optionalCamera = cameraRepository.getCameraByIpAddressAndPort(ipAddress, port);
     optionalCamera.ifPresentOrElse(camera -> {
       BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue = new LinkedBlockingQueue<>();
       Object synchronizationLock = new Object();
@@ -47,4 +50,10 @@ public class DahuaCameraServicesImpl implements CameraServices {
       throw new RuntimeException();
     });
   }
+
+  @Override
+  public ResponseEntity<List<DepartmentCameraDTO>> getCamerasOfDepartment(Long departmentId) {
+
+  }
+
 }

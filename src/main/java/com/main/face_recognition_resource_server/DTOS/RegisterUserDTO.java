@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.DTOS;
 
+import com.main.face_recognition_resource_server.constants.UserRole;
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,4 +13,5 @@ public class RegisterUserDTO {
   private String identificationNumber;
   private String email;
   private Long departmentId;
+  private UserRole role;
 }

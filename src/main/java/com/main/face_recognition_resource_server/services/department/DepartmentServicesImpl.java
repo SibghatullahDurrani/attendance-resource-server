@@ -2,6 +2,8 @@ package com.main.face_recognition_resource_server.services.department;
 
 import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterDepartmentDTO;
+import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
+import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.DepartmentRepository;
@@ -24,6 +26,29 @@ public class DepartmentServicesImpl implements DepartmentServices {
     this.departmentRepository = departmentRepository;
     this.userRepository = userRepository;
     this.organizationRepository = organizationRepository;
+  }
+
+  @Override
+  public boolean departmentExist(Long departmentId) throws DepartmentDoesntExistException {
+    boolean exists = departmentRepository.existsById(departmentId);
+    if (!exists) {
+      throw new DepartmentDoesntExistException();
+    } else {
+      return true;
+    }
+  }
+
+  @Override
+  public boolean departmentBelongsToOrganization(Long departmentId, Long organizationId) throws DepartmentDoesntExistException, DepartmentDoesntBelongToYourOrganizationException {
+    Optional<Long> organizationIdOfDepartment = departmentRepository.getOrganizationIdOfDepartment(departmentId);
+    if (organizationIdOfDepartment.isEmpty()) {
+      throw new DepartmentDoesntExistException();
+    } else {
+      if (!organizationIdOfDepartment.get().equals(organizationId)) {
+        throw new DepartmentDoesntBelongToYourOrganizationException();
+      }
+    }
+    return true;
   }
 
   @Override
