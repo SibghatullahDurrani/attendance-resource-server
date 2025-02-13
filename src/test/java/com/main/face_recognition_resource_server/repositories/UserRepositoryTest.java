@@ -104,10 +104,16 @@ class UserRepositoryTest extends AbstractPostgreSQLTestContainer {
     departmentRepository.saveAndFlush(department);
     User user = DataUtil.getUser(department);
 
-    userRepository.saveAndFlush(user);
-    Long organizationId = userRepository.getUserOrganizationId(user.getUsername());
+    Optional<Long> organizationId = userRepository.getUserOrganizationId(user.getUsername());
 
-    Assertions.assertThat(organizationId).isEqualTo(1L);
+    Assertions.assertThat(organizationId).isEmpty();
+
+    userRepository.saveAndFlush(user);
+
+    organizationId = userRepository.getUserOrganizationId(user.getUsername());
+
+    Assertions.assertThat(organizationId).isPresent();
+    Assertions.assertThat(organizationId.get()).isEqualTo(1L);
   }
 
   @Test

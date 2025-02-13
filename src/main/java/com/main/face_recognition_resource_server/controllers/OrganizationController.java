@@ -60,5 +60,4 @@ public class OrganizationController {
     Page<OrganizationDepartmentDTO> allOrganizationsWithItsDepartments = organizationServices.getAllOrganizationsWithItsDepartments(pageRequest);
     return new ResponseEntity<>(allOrganizationsWithItsDepartments, HttpStatus.OK);
   }
-
 }

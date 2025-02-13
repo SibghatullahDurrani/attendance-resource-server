@@ -53,7 +53,7 @@ public class DahuaCameraServicesImpl implements CameraServices {
 
   @Override
   public ResponseEntity<List<DepartmentCameraDTO>> getCamerasOfDepartment(Long departmentId) {
-
+    return null;
   }
 
 }

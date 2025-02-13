@@ -1,13 +1,13 @@
 package com.main.face_recognition_resource_server.services.user;
 
+import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
-import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
-import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
-import com.main.face_recognition_resource_server.repositories.DepartmentRepository;
+import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.UserRepository;
+import com.main.face_recognition_resource_server.utils.DataUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,15 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -33,8 +26,6 @@ import static org.mockito.Mockito.when;
 class UserServicesImplTest {
   @Mock
   private UserRepository userRepository;
-  @Mock
-  private DepartmentRepository departmentRepository;
 
   @Mock
   private PasswordEncoder passwordEncoder;
@@ -43,121 +34,68 @@ class UserServicesImplTest {
   private UserServicesImpl userServices;
 
   @Test
-  public void getUserDataByUsername_ReturnsHttpOkAndUserDTO_WhenUserIsPresent() {
+  public void getUserDataByUsername_ThrowsUserDoesntExistException() {
+    String username = Mockito.anyString();
+    when(userRepository.getUserByUsername(username)).thenReturn(Optional.empty());
+    assertThrows(UserDoesntExistException.class, () -> userServices.getUserDataByUsername(username));
+  }
+
+  @Test
+  public void getUserDataByUsername_returnsUser() {
     String username = Mockito.anyString();
     UserDTO userDTO = UserDTO.builder().build();
     when(userRepository.getUserByUsername(username)).thenReturn(Optional.of(userDTO));
-    ResponseEntity<UserDTO> userDataByUsername = userServices.getUserDataByUsername(username);
+    UserDTO user = userServices.getUserDataByUsername(username);
 
-    Assertions.assertThat(userDataByUsername.getStatusCode()).isEqualTo(HttpStatus.OK);
-    Assertions.assertThat(userDataByUsername.getBody()).isNotNull();
-  }
-
-  @Test
-  public void getUserDataByUsername_ReturnsHttpNotFound_WhenUserIsNotPresent() {
-    when(userRepository.getUserByUsername(Mockito.anyString())).thenReturn(Optional.empty());
-    ResponseEntity<UserDTO> userDataByUsername = userServices.getUserDataByUsername(Mockito.anyString());
-
-    Assertions.assertThat(userDataByUsername.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-  }
-
-  @Test
-  public void getAllUsers_ReturnsHttpOK_WhenThereAreUsers() {
-    PageRequest pageRequest = PageRequest.of(1, 10);
-    UserDTO userDTO = UserDTO.builder().build();
-    when(userRepository.getAllUsers(pageRequest)).thenReturn(new PageImpl<>(List.of(userDTO)));
-    ResponseEntity<Page<UserDTO>> allUsers = userServices.getAllUsers(pageRequest);
-
-    Assertions.assertThat(allUsers.getStatusCode()).isEqualTo(HttpStatus.OK);
-    Assertions.assertThat(Objects.requireNonNull(allUsers.getBody()).getTotalElements()).isEqualTo(1);
-  }
-
-  @Test
-  public void getAllUsers_ReturnsHttpNotFound_WhenThereAreNoUsers() {
-    PageRequest pageRequest = PageRequest.of(1, 10);
-    when(userRepository.getAllUsers(pageRequest)).thenReturn(Page.empty());
-    ResponseEntity<Page<UserDTO>> allUsers = userServices.getAllUsers(pageRequest);
-
-    Assertions.assertThat(allUsers.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-  }
-
-  @Test
-  public void registerUser_throwsDepartmentNotFoundException_WhenDepartmentDoesntExist() {
-    RegisterUserDTO registerUser = RegisterUserDTO.builder()
-            .departmentId(Mockito.anyLong())
-            .build();
-    when(departmentRepository.existsById(registerUser.getDepartmentId())).thenReturn(false);
-    assertThrows(DepartmentDoesntExistException.class, () -> userServices.registerUser(registerUser));
-  }
-
-  @Test
-  public void registerUser_ThrowsUserAlreadyExistsException_WhenUserAlreadyExists() {
-    RegisterUserDTO registerUser = RegisterUserDTO.builder()
-            .departmentId(Mockito.anyLong())
-            .email("")
-            .build();
-    when(departmentRepository.existsById(registerUser.getDepartmentId())).thenReturn(true);
-    when(userRepository.existsByEmailAndRole(registerUser.getEmail(), UserRole.ROLE_ADMIN)).thenReturn(true);
-    assertThrows(UserAlreadyExistsException.class, () -> userServices.registerUser(registerUser));
-
-  }
-
-  @Test
-  public void registerUser_ReturnsHttpCreated_WhenDepartmentExists() {
-    RegisterUserDTO registerUser = RegisterUserDTO.builder()
-            .departmentId(Mockito.anyLong())
-            .email("")
-            .build();
-    when(departmentRepository.existsById(registerUser.getDepartmentId())).thenReturn(true);
-    when(userRepository.existsByEmailAndRole(registerUser.getEmail(), UserRole.ROLE_ADMIN)).thenReturn(false);
-    ResponseEntity<HttpStatus> registerAdminResponse = userServices.registerUser(registerUser);
-
-    Assertions.assertThat(registerAdminResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-  }
-
-  @Test
-  public void registerUser_ThrowsDepartmentNotFoundException_WhenDepartmentDoesntExist() {
-    RegisterUserDTO registerUser = RegisterUserDTO.builder()
-            .departmentId(Mockito.anyLong())
-            .build();
-    when(departmentRepository.getOrganizationIdOfDepartment(registerUser.getDepartmentId())).thenReturn(Optional.empty());
-    assertThrows(DepartmentDoesntExistException.class, () -> userServices.registerUser(registerUser, Mockito.anyString()));
-  }
-
-  @Test
-  public void registerUser_ThrowsDepartmentDoesntBelongToYourOrganizationException() {
-    RegisterUserDTO registerUser = RegisterUserDTO.builder()
-            .departmentId(Mockito.anyLong())
-            .build();
-    when(departmentRepository.getOrganizationIdOfDepartment(registerUser.getDepartmentId())).thenReturn(Optional.of(1L));
-    when(userRepository.getUserOrganizationId(Mockito.anyString())).thenReturn(2L);
-    assertThrows(DepartmentDoesntBelongToYourOrganizationException.class, () -> userServices.registerUser(registerUser, Mockito.anyString()));
+    Assertions.assertThat(user).isSameAs(userDTO);
   }
 
   @Test
   public void registerUser_ThrowsUserAlreadyExistsException() {
-    RegisterUserDTO registerUser = RegisterUserDTO.builder()
-            .departmentId(Mockito.anyLong())
-            .email("")
-            .build();
-    when(departmentRepository.getOrganizationIdOfDepartment(registerUser.getDepartmentId())).thenReturn(Optional.of(1L));
-    when(userRepository.getUserOrganizationId(Mockito.anyString())).thenReturn(1L);
-    when(userRepository.existsByEmailAndRole(registerUser.getEmail(), UserRole.ROLE_USER)).thenReturn(true);
-    assertThrows(UserAlreadyExistsException.class, () -> userServices.registerUser(registerUser, Mockito.anyString()));
+    RegisterUserDTO registerUserDTO = DataUtil.getRegisterUserDTO();
+    when(userServices.userExistsWithEmailAndRole(registerUserDTO.getEmail(), registerUserDTO.getRole())).thenThrow(UserAlreadyExistsException.class);
+    assertThrows(UserAlreadyExistsException.class, () -> userServices.registerUser(registerUserDTO));
   }
 
   @Test
-  public void registerUser_ReturnsHttpCreated() {
-    RegisterUserDTO registerUser = RegisterUserDTO.builder()
-            .departmentId(Mockito.anyLong())
-            .email("")
-            .build();
-    when(departmentRepository.getOrganizationIdOfDepartment(registerUser.getDepartmentId())).thenReturn(Optional.of(1L));
-    when(userRepository.getUserOrganizationId(Mockito.anyString())).thenReturn(1L);
-    when(userRepository.existsByEmailAndRole(registerUser.getEmail(), UserRole.ROLE_USER)).thenReturn(false);
-
-    ResponseEntity<HttpStatus> registerUserResponse = userServices.registerUser(registerUser, Mockito.anyString());
-
-    Assertions.assertThat(registerUserResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+  public void userExistsWithEmailAndRole_ThrowsUserAlreadyExistsException() {
+    String email = "XYZ";
+    UserRole role = UserRole.ROLE_USER;
+    when(userRepository.existsByEmailAndRole(email, role)).thenReturn(true);
+    assertThrows(UserAlreadyExistsException.class, () -> userServices.userExistsWithEmailAndRole(email, role));
   }
+
+  @Test
+  public void getUserOrganizationId_ThrowsUserDoesExistException() {
+    String username = Mockito.anyString();
+    when(userRepository.getUserOrganizationId(username)).thenReturn(Optional.empty());
+    assertThrows(UserDoesntExistException.class, () -> userServices.getUserOrganizationId(username));
+  }
+
+  @Test
+  public void getUserOrganizationId_ReturnsOrganizationId() {
+    String username = Mockito.anyString();
+    Long organizationId = 1L;
+    when(userRepository.getUserOrganizationId(username)).thenReturn(Optional.of(organizationId));
+    Long organizationIdRes = userServices.getUserOrganizationId(username);
+
+    Assertions.assertThat(organizationIdRes).isEqualTo(organizationId);
+  }
+
+  @Test
+  public void getDepartmentByUsername_ThrowsUserDoesntExistException() {
+    String username = Mockito.anyString();
+    when(userRepository.getDepartmentByUsername(username)).thenReturn(Optional.empty());
+    assertThrows(UserDoesntExistException.class, () -> userServices.getDepartmentByUsername(username));
+  }
+
+  @Test
+  public void getDepartmentByUsername_ReturnsDepartment() {
+    String username = Mockito.anyString();
+    DepartmentDTO departmentDTO = DataUtil.getDepartmentDTO();
+    when(userRepository.getDepartmentByUsername(username)).thenReturn(Optional.of(departmentDTO));
+    DepartmentDTO department = userServices.getDepartmentByUsername(username);
+    Assertions.assertThat(department).isSameAs(departmentDTO);
+  }
+
 }
