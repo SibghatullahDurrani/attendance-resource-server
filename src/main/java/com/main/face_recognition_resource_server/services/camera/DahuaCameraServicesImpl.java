@@ -11,7 +11,6 @@ import com.main.face_recognition_resource_server.domains.Camera;
 import com.main.face_recognition_resource_server.helpers.SubscriptionLockInstance;
 import com.main.face_recognition_resource_server.repositories.CameraRepository;
 import com.main.face_recognition_resource_server.services.camera.dahua.FaceRecognitionSubscription;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -52,8 +51,8 @@ public class DahuaCameraServicesImpl implements CameraServices {
   }
 
   @Override
-  public ResponseEntity<List<DepartmentCameraDTO>> getCamerasOfDepartment(Long departmentId) {
-    return null;
+  public List<DepartmentCameraDTO> getCamerasOfDepartment(Long departmentId) {
+    return cameraRepository.getCamerasOfDepartment(departmentId);
   }
 
 }

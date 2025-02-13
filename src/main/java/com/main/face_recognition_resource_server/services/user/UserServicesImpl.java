@@ -103,4 +103,14 @@ public class UserServicesImpl implements UserServices {
     }
   }
 
+  @Override
+  public Long getUserDepartmentId(String username) throws UserDoesntExistException {
+    Optional<Long> departmentId = userRepository.getUserDepartmentId(username);
+    if(departmentId.isEmpty()){
+      throw new UserDoesntExistException();
+    }else{
+      return departmentId.get();
+    }
+  }
+
 }

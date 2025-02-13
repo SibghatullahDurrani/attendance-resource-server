@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.services.department;
 
+import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
-import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.repositories.DepartmentRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -52,7 +52,7 @@ class DepartmentServicesImplTest {
     Long departmentId = 1L;
     Long organizationId = 1L;
     when(departmentRepository.getOrganizationIdOfDepartment(departmentId)).thenReturn(Optional.of(2L));
-    assertThrows(OrganizationDoesntBelongToYouException.class, () -> departmentServices.departmentBelongsToOrganization(departmentId, organizationId));
+    assertThrows(DepartmentDoesntBelongToYourOrganizationException.class, () -> departmentServices.departmentBelongsToOrganization(departmentId, organizationId));
   }
 
   @Test

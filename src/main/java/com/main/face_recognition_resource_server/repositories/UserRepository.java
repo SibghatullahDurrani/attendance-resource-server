@@ -72,4 +72,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
           ) FROM User u WHERE u.username = ?1
           """)
   Optional<DepartmentDTO> getDepartmentByUsername(String username);
+
+  @Query("""
+          SELECT u.department.id FROM User u WHERE u.username = ?1
+          """)
+  Optional<Long> getUserDepartmentId(String username);
 }

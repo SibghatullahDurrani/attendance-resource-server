@@ -25,4 +25,5 @@ public interface UserServices {
 
   OrganizationDTO getOrganizationByUsername(String username) throws UserDoesntExistException;
 
+  Long getUserDepartmentId(String username) throws UserDoesntExistException;
 }
