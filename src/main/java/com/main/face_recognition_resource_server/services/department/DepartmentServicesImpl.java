@@ -12,7 +12,6 @@ import java.util.Optional;
 public class DepartmentServicesImpl implements DepartmentServices {
   private final DepartmentRepository departmentRepository;
 
-
   public DepartmentServicesImpl(DepartmentRepository departmentRepository) {
     this.departmentRepository = departmentRepository;
   }
