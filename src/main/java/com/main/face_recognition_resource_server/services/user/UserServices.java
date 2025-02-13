@@ -1,5 +1,7 @@
 package com.main.face_recognition_resource_server.services.user;
 
+import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
@@ -18,5 +20,9 @@ public interface UserServices {
   boolean userExistsWithEmailAndRole(String email, UserRole role) throws UserAlreadyExistsException;
 
   Long getUserOrganizationId(String username) throws UserDoesntExistException;
+
+  DepartmentDTO getDepartmentByUsername(String username) throws UserDoesntExistException;
+
+  OrganizationDTO getOrganizationByUsername(String username) throws UserDoesntExistException;
 
 }

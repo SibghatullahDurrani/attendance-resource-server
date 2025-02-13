@@ -3,20 +3,18 @@ package com.main.face_recognition_resource_server.services.organization;
 import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.OrganizationDepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterOrganizationDTO;
+import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 public interface OrganizationServices {
+  boolean organizationExists(Long organizationId) throws OrganizationDoesntExistException;
 
-  ResponseEntity<HttpStatus> registerOrganization(RegisterOrganizationDTO organizationToRegister);
+  void registerOrganization(RegisterOrganizationDTO organizationToRegister);
 
-  ResponseEntity<OrganizationDTO> getOrganizationByUsername(String username);
+  Page<OrganizationDTO> getAllOrganizations(Pageable pageable);
 
-  ResponseEntity<Page<OrganizationDTO>> getAllOrganizations(Pageable pageable);
+  OrganizationDTO getOrganizationById(Long id) throws OrganizationDoesntExistException;
 
-  ResponseEntity<OrganizationDTO> getOrganizationById(Long id);
-
-  ResponseEntity<Page<OrganizationDepartmentDTO>> getAllOrganizationsWithItsDepartments(Pageable pageable);
+  Page<OrganizationDepartmentDTO> getAllOrganizationsWithItsDepartments(Pageable pageable);
 }

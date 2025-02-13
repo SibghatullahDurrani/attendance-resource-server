@@ -1,6 +1,5 @@
 package com.main.face_recognition_resource_server.services.department;
 
-import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterDepartmentDTO;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
@@ -52,33 +51,7 @@ public class DepartmentServicesImpl implements DepartmentServices {
   }
 
   @Override
-  public ResponseEntity<DepartmentDTO> getDepartmentByUsername(String username) {
-    Optional<DepartmentDTO> optionalDepartment = userRepository.getDepartmentByUsername(username);
-    return optionalDepartment.map(department -> new ResponseEntity<>(department, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
-  }
-
-
-  @Override
-  public ResponseEntity<HttpStatus> registerDepartmentAsSuperAdmin(RegisterDepartmentDTO departmentToRegister) {
-    boolean organizationExists = organizationRepository.existsById(departmentToRegister.getOrganizationId());
-    if (!organizationExists) {
-      throw new OrganizationDoesntExistException();
-    }
+  public void registerDepartment(RegisterDepartmentDTO departmentToRegister) {
     departmentRepository.registerDepartment(departmentToRegister.getDepartmentName(), departmentToRegister.getOrganizationId());
-    return new ResponseEntity<>(HttpStatus.CREATED);
-  }
-
-  @Override
-  public ResponseEntity<HttpStatus> registerDepartmentAsAdmin(RegisterDepartmentDTO departmentToRegister, String username) {
-    boolean organizationExists = organizationRepository.existsById(departmentToRegister.getOrganizationId());
-    if (!organizationExists) {
-      throw new OrganizationDoesntExistException();
-    }
-    Long organizationId = userRepository.getUserOrganizationId(username);
-    if (!organizationId.equals(departmentToRegister.getOrganizationId())) {
-      throw new OrganizationDoesntBelongToYouException();
-    }
-    departmentRepository.registerDepartment(departmentToRegister.getDepartmentName(), departmentToRegister.getOrganizationId());
-    return new ResponseEntity<>(HttpStatus.CREATED);
   }
 }

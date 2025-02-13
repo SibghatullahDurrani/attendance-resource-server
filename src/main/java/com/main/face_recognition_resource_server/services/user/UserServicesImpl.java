@@ -1,6 +1,8 @@
 package com.main.face_recognition_resource_server.services.user;
 
 
+import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
@@ -78,6 +80,26 @@ public class UserServicesImpl implements UserServices {
       throw new UserDoesntExistException();
     } else {
       return userOrganizationId.get();
+    }
+  }
+
+  @Override
+  public DepartmentDTO getDepartmentByUsername(String username) throws UserDoesntExistException {
+    Optional<DepartmentDTO> department = userRepository.getDepartmentByUsername(username);
+    if (department.isEmpty()) {
+      throw new UserDoesntExistException();
+    } else {
+      return department.get();
+    }
+  }
+
+  @Override
+  public OrganizationDTO getOrganizationByUsername(String username) throws UserDoesntExistException {
+    Optional<OrganizationDTO> organizationByUsername = userRepository.getOrganizationByUsername(username);
+    if (organizationByUsername.isEmpty()) {
+      throw new UserDoesntExistException();
+    } else {
+      return organizationByUsername.get();
     }
   }
 

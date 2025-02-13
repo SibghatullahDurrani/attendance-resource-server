@@ -58,20 +58,20 @@ class DepartmentServicesImplTest {
   }
 
   @Test
-  public void registerDepartmentAsSuperAdmin_ReturnsHttpStatusCreated() {
+  public void registerDepartment_ReturnsHttpStatusCreated() {
     RegisterDepartmentDTO registerDepartmentDTO = DataUtil.getRegisterDepartmentDTO();
     when(organizationRepository.existsById(registerDepartmentDTO.getOrganizationId())).thenReturn(true);
 
-    ResponseEntity<HttpStatus> response = departmentServices.registerDepartmentAsSuperAdmin(registerDepartmentDTO);
+    ResponseEntity<HttpStatus> response = departmentServices.registerDepartment(registerDepartmentDTO);
 
     Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
   }
 
   @Test
-  public void registerDepartmentAsSuperAdmin_ThrowsOrganizationDoesntExistException() {
+  public void registerDepartment_ThrowsOrganizationDoesntExistException() {
     RegisterDepartmentDTO registerDepartmentDTO = DataUtil.getRegisterDepartmentDTO();
     when(organizationRepository.existsById(registerDepartmentDTO.getOrganizationId())).thenReturn(false);
-    assertThrows(OrganizationDoesntExistException.class, () -> departmentServices.registerDepartmentAsSuperAdmin(registerDepartmentDTO));
+    assertThrows(OrganizationDoesntExistException.class, () -> departmentServices.registerDepartment(registerDepartmentDTO));
   }
 
   @Test
