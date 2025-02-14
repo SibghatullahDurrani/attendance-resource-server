@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.DTOS;
 
+import com.main.face_recognition_resource_server.constants.CameraMode;
 import com.main.face_recognition_resource_server.constants.CameraType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,5 +18,6 @@ public class RegisterCameraDTO {
   private String username;
   private String password;
   private CameraType type;
-  private Long departmentId;
+  private CameraMode mode;
+  private Long id;
 }

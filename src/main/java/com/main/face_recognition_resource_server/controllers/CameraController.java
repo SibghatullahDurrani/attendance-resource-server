@@ -2,9 +2,13 @@ package com.main.face_recognition_resource_server.controllers;
 
 import com.main.face_recognition_resource_server.DTOS.DepartmentCameraDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterCameraDTO;
+import com.main.face_recognition_resource_server.constants.CameraMode;
 import com.main.face_recognition_resource_server.domains.Department;
+import com.main.face_recognition_resource_server.domains.Organization;
+import com.main.face_recognition_resource_server.exceptions.CameraAlreadyExistsInOrganizationException;
 import com.main.face_recognition_resource_server.services.camera.CameraServices;
 import com.main.face_recognition_resource_server.services.department.DepartmentServices;
+import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import com.main.face_recognition_resource_server.services.user.UserServices;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +24,13 @@ public class CameraController {
   private final CameraServices cameraServices;
   private final UserServices userServices;
   private final DepartmentServices departmentServices;
+  private final OrganizationServices organizationServices;
 
-  public CameraController(CameraServices cameraServices, UserServices userServices, DepartmentServices departmentServices) {
+  public CameraController(CameraServices cameraServices, UserServices userServices, DepartmentServices departmentServices, OrganizationServices organizationServices) {
     this.cameraServices = cameraServices;
     this.userServices = userServices;
     this.departmentServices = departmentServices;
+    this.organizationServices = organizationServices;
   }
 
   @GetMapping("department")
@@ -48,9 +54,14 @@ public class CameraController {
 
   @PostMapping()
   @PreAuthorize("hasRole('SUPER_ADMIN')")
-  public ResponseEntity<HttpStatus> registerCamera(@RequestBody RegisterCameraDTO cameraToRegister) {
-    Department department = departmentServices.getDepartment(cameraToRegister.getDepartmentId());
-    cameraServices.registerCamera(cameraToRegister, department);
+  public ResponseEntity<HttpStatus> registerCamera(@RequestBody RegisterCameraDTO cameraToRegister) throws CameraAlreadyExistsInOrganizationException {
+    if (cameraToRegister.getMode() == CameraMode.DEPARTMENTAL) {
+      Department department = departmentServices.getDepartment(cameraToRegister.getId());
+      cameraServices.registerCamera(cameraToRegister, department);
+    } else {
+      Organization organization = organizationServices.getOrganization(cameraToRegister.getId());
+      cameraServices.registerCamera(cameraToRegister, organization);
+    }
     return new ResponseEntity<>(HttpStatus.CREATED);
   }
 }

@@ -49,12 +49,22 @@ public class OrganizationServicesImpl implements OrganizationServices {
   }
 
   @Override
-  public OrganizationDTO getOrganizationById(Long id) throws OrganizationDoesntExistException {
+  public OrganizationDTO getOrganizationDTO(Long id) throws OrganizationDoesntExistException {
     Optional<OrganizationDTO> organizationDTO = organizationRepository.getOrganizationById(id);
     if (organizationDTO.isEmpty()) {
       throw new OrganizationDoesntExistException();
     } else {
       return organizationDTO.get();
+    }
+  }
+
+  @Override
+  public Organization getOrganization(Long id) throws OrganizationDoesntExistException {
+    Optional<Organization> organization = organizationRepository.findById(id);
+    if (organization.isEmpty()) {
+      throw new OrganizationDoesntExistException();
+    } else {
+      return organization.get();
     }
   }
 

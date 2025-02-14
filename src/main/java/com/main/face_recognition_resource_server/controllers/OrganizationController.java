@@ -49,7 +49,7 @@ public class OrganizationController {
   @GetMapping("{id}")
   @PreAuthorize("hasRole('SUPER_ADMIN')")
   public ResponseEntity<OrganizationDTO> getOrganizationById(@PathVariable Long id) {
-    OrganizationDTO organization = organizationServices.getOrganizationById(id);
+    OrganizationDTO organization = organizationServices.getOrganizationDTO(id);
     return new ResponseEntity<>(organization, HttpStatus.OK);
   }
 

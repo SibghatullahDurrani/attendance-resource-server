@@ -1,13 +1,9 @@
 package com.main.face_recognition_resource_server.repositories;
 
 import com.main.face_recognition_resource_server.DTOS.DepartmentCameraDTO;
-import com.main.face_recognition_resource_server.constants.CameraType;
 import com.main.face_recognition_resource_server.domains.Camera;
-import org.apache.ibatis.annotations.Options;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,4 +31,10 @@ public interface CameraRepository extends JpaRepository<Camera, Long> {
           WHERE c.ipAddress = ?1 AND c.port = ?2 AND c.channel = ?3 AND d.id = ?4
           """)
   boolean existsByIpAddressAndPortAndChannelAndDepartmentId(String ipAddress, int port, int channel, Long departmentId);
+
+  @Query("""
+          SELECT CASE WHEN COUNT(c) > 0 THEN TRUE ELSE FALSE END FROM Camera c JOIN c.organization o
+          WHERE c.ipAddress =   ?1 AND c.port = ?2 AND c.channel = ?3 AND o.id = ?4
+          """)
+  boolean existsByIpAddressPortChannelAndOrganizationId(String ipAddress, int port, int channel, Long organizationId);
 }
