@@ -45,10 +45,10 @@ public class Camera {
   private CameraStatus cameraStatus;
 
   @ManyToMany
-  @JoinTable(
-          name = "departments_cameras",
-          joinColumns = @JoinColumn(name = "department_id"),
-          inverseJoinColumns = @JoinColumn(name = "camera_id")
-  )
+  @JoinTable(name = "departments_cameras", joinColumns = @JoinColumn(name = "department_id"), inverseJoinColumns = @JoinColumn(name = "camera_id"))
   private List<Department> departments;
+
+  @ManyToOne
+  @JoinColumn(name = "organization_id", nullable = true)
+  private Organization organization;
 }

@@ -30,4 +30,7 @@ public class Organization {
 
   @OneToMany(mappedBy = "organization")
   private List<Department> departments;
+
+  @OneToMany(mappedBy = "organization")
+  private List<Camera> cameras;
 }
