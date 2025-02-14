@@ -2,7 +2,7 @@ package com.main.face_recognition_resource_server.services.camera;
 
 import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.DTOS.CameraDTO;
-import com.main.face_recognition_resource_server.DTOS.DepartmentCameraDTO;
+import com.main.face_recognition_resource_server.DTOS.GetCameraDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterCameraDTO;
 import com.main.face_recognition_resource_server.components.AttendanceCache;
 import com.main.face_recognition_resource_server.components.AttendanceCacheImpl;
@@ -60,7 +60,7 @@ public class CameraServicesImpl implements CameraServices {
   }
 
   @Override
-  public List<DepartmentCameraDTO> getCamerasOfDepartment(Long departmentId) {
+  public List<GetCameraDTO> getCamerasOfDepartment(Long departmentId) {
     return cameraRepository.getCamerasOfDepartment(departmentId);
   }
 
@@ -125,6 +125,9 @@ public class CameraServicesImpl implements CameraServices {
             cameraToRegister.getChannel()
     );
     if (optionalCamera.isPresent()) {
+      if (optionalCamera.get().getType() != cameraToRegister.getType()) {
+        throw new CameraCanOnlyBelongToOneTypeException();
+      }
       if (!optionalCamera.get().getDepartments().isEmpty()) {
         throw new CameraCanOnlyBelongToOrganizationOrDepartmentException();
       } else {
@@ -144,5 +147,10 @@ public class CameraServicesImpl implements CameraServices {
 
       cameraRepository.saveAndFlush(camera);
     }
+  }
+
+  @Override
+  public List<GetCameraDTO> getCamerasOfOrganization(Long organizationId) {
+    return cameraRepository.getCamerasOfOrganization(organizationId);
   }
 }

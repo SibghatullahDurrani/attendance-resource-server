@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class DepartmentCameraDTO {
+public class GetCameraDTO {
   private Long id;
   private String ipAddress;
   private int port;

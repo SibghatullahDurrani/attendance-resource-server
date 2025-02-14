@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.controllers;
 
-import com.main.face_recognition_resource_server.DTOS.DepartmentCameraDTO;
+import com.main.face_recognition_resource_server.DTOS.GetCameraDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterCameraDTO;
 import com.main.face_recognition_resource_server.constants.CameraMode;
 import com.main.face_recognition_resource_server.domains.Department;
@@ -35,18 +35,18 @@ public class CameraController {
 
   @GetMapping("department")
   @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
-  public ResponseEntity<List<DepartmentCameraDTO>> getCameraOfOwnDepartment(Authentication authentication) {
+  public ResponseEntity<List<GetCameraDTO>> getCameraOfOwnDepartment(Authentication authentication) {
     Long departmentId = userServices.getUserDepartmentId(authentication.getName());
-    List<DepartmentCameraDTO> departmentCameras = cameraServices.getCamerasOfDepartment(departmentId);
+    List<GetCameraDTO> departmentCameras = cameraServices.getCamerasOfDepartment(departmentId);
     return new ResponseEntity<>(departmentCameras, HttpStatus.OK);
   }
 
   @GetMapping("department/{id}")
   @PreAuthorize("hasRole('SUPER_ADMIN')")
-  public ResponseEntity<List<DepartmentCameraDTO>> getCameraOfDepartment(@PathVariable Long id) {
+  public ResponseEntity<List<GetCameraDTO>> getCameraOfDepartment(@PathVariable Long id) {
     boolean departmentExists = departmentServices.departmentExist(id);
     if (departmentExists) {
-      List<DepartmentCameraDTO> departmentCameras = cameraServices.getCamerasOfDepartment(id);
+      List<GetCameraDTO> departmentCameras = cameraServices.getCamerasOfDepartment(id);
       return new ResponseEntity<>(departmentCameras, HttpStatus.OK);
     }
     return null;
@@ -63,5 +63,24 @@ public class CameraController {
       cameraServices.registerCamera(cameraToRegister, organization);
     }
     return new ResponseEntity<>(HttpStatus.CREATED);
+  }
+
+  @GetMapping("organization")
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
+  public ResponseEntity<List<GetCameraDTO>> getCameraOfOwnOrganization(Authentication authentication) {
+    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+    List<GetCameraDTO> organizationCameras = cameraServices.getCamerasOfOrganization(organizationId);
+    return new ResponseEntity<>(organizationCameras, HttpStatus.OK);
+  }
+
+  @GetMapping("organization/{organizationId}")
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
+  public ResponseEntity<List<GetCameraDTO>> getCameraOfOrganization(@PathVariable Long organizationId) {
+    boolean organizationExists = organizationServices.organizationExists(organizationId);
+    if (organizationExists) {
+      List<GetCameraDTO> organizationCameras = cameraServices.getCamerasOfOrganization(organizationId);
+      return new ResponseEntity<>(organizationCameras, HttpStatus.OK);
+    }
+    return null;
   }
 }

@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.repositories;
 
-import com.main.face_recognition_resource_server.DTOS.DepartmentCameraDTO;
+import com.main.face_recognition_resource_server.DTOS.GetCameraDTO;
 import com.main.face_recognition_resource_server.domains.Camera;
 import com.main.face_recognition_resource_server.domains.Department;
 import com.main.face_recognition_resource_server.domains.Organization;
@@ -46,8 +46,8 @@ class CameraRepositoryTest extends AbstractPostgreSQLTestContainer {
     Camera camera2 = DataUtil.getCamera(departments1);
     cameraRepository.saveAndFlush(camera2);
 
-    List<DepartmentCameraDTO> camerasOfDepartment = cameraRepository.getCamerasOfDepartment(1L);
-    List<DepartmentCameraDTO> camerasOfDepartment2 = cameraRepository.getCamerasOfDepartment(2L);
+    List<GetCameraDTO> camerasOfDepartment = cameraRepository.getCamerasOfDepartment(1L);
+    List<GetCameraDTO> camerasOfDepartment2 = cameraRepository.getCamerasOfDepartment(2L);
 
     Assertions.assertThat(camerasOfDepartment2.size()).isEqualTo(0);
     Assertions.assertThat(camerasOfDepartment.size()).isEqualTo(2);
