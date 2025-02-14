@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.services.department;
 
 import com.main.face_recognition_resource_server.DTOS.RegisterDepartmentDTO;
+import com.main.face_recognition_resource_server.domains.Department;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.DepartmentRepository;
@@ -42,5 +43,15 @@ public class DepartmentServicesImpl implements DepartmentServices {
   @Override
   public void registerDepartment(RegisterDepartmentDTO departmentToRegister) {
     departmentRepository.registerDepartment(departmentToRegister.getDepartmentName(), departmentToRegister.getOrganizationId());
+  }
+
+  @Override
+  public Department getDepartment(Long departmentId) throws DepartmentDoesntExistException {
+    Optional<Department> department = departmentRepository.findById(departmentId);
+    if (department.isEmpty()) {
+      throw new DepartmentDoesntExistException();
+    } else {
+      return department.get();
+    }
   }
 }

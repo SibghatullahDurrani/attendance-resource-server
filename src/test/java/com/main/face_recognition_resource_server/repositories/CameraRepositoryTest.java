@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Optional;
 
 class CameraRepositoryTest extends AbstractPostgreSQLTestContainer {
   @Autowired
@@ -54,4 +55,60 @@ class CameraRepositoryTest extends AbstractPostgreSQLTestContainer {
     Assertions.assertThat(camerasOfDepartment.get(1).getId()).isBetween(1L, 2L);
   }
 
+  @Test
+  public void existsByIpAddressAndPortAndChannelAndDepartments_ReturnTrue() {
+    Organization organization = DataUtil.getOrganization();
+    organizationRepository.saveAndFlush(organization);
+
+    Department department1 = DataUtil.getDepartment(organization);
+    departmentRepository.saveAndFlush(department1);
+    List<Department> departments1 = List.of(department1);
+    Camera camera1 = DataUtil.getCamera(departments1);
+    cameraRepository.saveAndFlush(camera1);
+
+    boolean exists = cameraRepository.existsByIpAddressAndPortAndChannelAndDepartmentId(camera1.getIpAddress(), camera1.getPort(), camera1.getChannel(), department1.getId());
+
+    Assertions.assertThat(exists).isEqualTo(true);
+  }
+
+  @Test
+  public void existsByIpAddressAndPortAndChannelAndDepartments_ReturnFalse() {
+    Organization organization = DataUtil.getOrganization();
+    organizationRepository.saveAndFlush(organization);
+
+    Department department1 = DataUtil.getDepartment(organization);
+    departmentRepository.saveAndFlush(department1);
+    List<Department> departments1 = List.of(department1);
+    Camera camera1 = DataUtil.getCamera(departments1);
+    cameraRepository.saveAndFlush(camera1);
+
+    boolean exists = cameraRepository.existsByIpAddressAndPortAndChannelAndDepartmentId(camera1.getIpAddress(), camera1.getPort(), camera1.getChannel(), 2L);
+
+    Assertions.assertThat(exists).isEqualTo(false);
+  }
+
+  @Test
+  public void getCameraByIpAddressPortChannelAndType_ReturnsValidCamera() {
+    Organization organization = DataUtil.getOrganization();
+    organizationRepository.saveAndFlush(organization);
+    Department department = DataUtil.getDepartment(organization);
+    departmentRepository.saveAndFlush(department);
+    List<Department> departments = List.of(department);
+    Camera camera = DataUtil.getCamera(departments);
+
+    cameraRepository.saveAndFlush(camera);
+    Optional<Camera> camera1 = cameraRepository.getCameraByIpAddressPortAndChannel(
+            camera.getIpAddress(),
+            camera.getPort(),
+            camera.getChannel()
+    );
+    Optional<Camera> camera2 = cameraRepository.getCameraByIpAddressPortAndChannel(
+            camera.getIpAddress(),
+            camera.getPort(),
+            1
+    );
+
+    Assertions.assertThat(camera1).isPresent();
+    Assertions.assertThat(camera2).isEmpty();
+  }
 }

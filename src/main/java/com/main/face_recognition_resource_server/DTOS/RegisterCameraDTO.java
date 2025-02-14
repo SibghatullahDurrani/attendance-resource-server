@@ -1,8 +1,15 @@
 package com.main.face_recognition_resource_server.DTOS;
 
-import com.main.face_recognition_resource_server.constants.CameraStatus;
 import com.main.face_recognition_resource_server.constants.CameraType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class RegisterCameraDTO {
   private String ipAddress;
   private int port;
@@ -10,6 +17,5 @@ public class RegisterCameraDTO {
   private String username;
   private String password;
   private CameraType type;
-  private CameraStatus status;
   private Long departmentId;
 }
