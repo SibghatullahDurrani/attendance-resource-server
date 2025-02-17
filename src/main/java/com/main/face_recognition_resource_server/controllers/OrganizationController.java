@@ -3,6 +3,8 @@ package com.main.face_recognition_resource_server.controllers;
 import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.OrganizationDepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterOrganizationDTO;
+import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
+import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import com.main.face_recognition_resource_server.services.user.UserServices;
 import org.springframework.data.domain.Page;
@@ -33,7 +35,7 @@ public class OrganizationController {
 
   @GetMapping
   @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<OrganizationDTO> getOwnOrganization(Authentication authentication) {
+  public ResponseEntity<OrganizationDTO> getOwnOrganization(Authentication authentication) throws UserDoesntExistException {
     OrganizationDTO organization = userServices.getOrganizationByUsername(authentication.getName());
     return new ResponseEntity<>(organization, HttpStatus.OK);
   }
@@ -48,7 +50,7 @@ public class OrganizationController {
 
   @GetMapping("{id}")
   @PreAuthorize("hasRole('SUPER_ADMIN')")
-  public ResponseEntity<OrganizationDTO> getOrganizationById(@PathVariable Long id) {
+  public ResponseEntity<OrganizationDTO> getOrganizationById(@PathVariable Long id) throws OrganizationDoesntExistException {
     OrganizationDTO organization = organizationServices.getOrganizationDTO(id);
     return new ResponseEntity<>(organization, HttpStatus.OK);
   }

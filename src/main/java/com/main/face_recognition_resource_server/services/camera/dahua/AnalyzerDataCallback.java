@@ -55,11 +55,6 @@ public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
           id = Long.parseLong(idString);
           attendanceCacheProducer.produceCache(id, time, cameraType);
         }
-//        if (nonResidentCache == null) {
-//          handleDataWithJustResidentCache(id, time);
-//        } else {
-//          handleDataWithBothResidentAndNonResidentCache(id, time);
-//        }
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -96,36 +91,6 @@ public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
     }
     return 0;
   }
-
-//  private void handleDataWithBothResidentAndNonResidentCache(Long userId, Date time) {
-//    synchronized (synchronizationLock) {
-//      if (!residentCache.isUserInCache(userId)) {
-//        if (!nonResidentCache.isUserInCache(userId)) {
-//          if (cameraType == CameraTypes.IN) {
-//            //TODO: add an entry for attendance worker
-//            residentCache.addUserToCache(userId);
-//          }
-//        } else {
-//          //TODO: add an entry for attendance worker
-//          nonResidentCache.removeUserFromCache(userId);
-//          residentCache.addUserToCache(userId);
-//        }
-//      }
-//    }
-//  }
-//
-//  private void handleDataWithJustResidentCache(Long id, Date time) {
-//    synchronized (synchronizationLock) {
-//      if (!residentCache.isUserInCache(id)) {
-//        //TODO: add an entry for attendance worker
-//        residentCache.addUserToCache(id);
-//        System.out.println("user with id: " + id + " added to cache at time: " + time);
-//      } else {
-//        System.out.println("user with id: " + id + " is already in the cache");
-//      }
-//    }
-//  }
-
 
   private static final class AnalyzerDataCBHolder {
     static AnalyzerDataCallback instance(CameraType cameraType, BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue) {

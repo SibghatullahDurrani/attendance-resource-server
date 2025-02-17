@@ -8,8 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -44,11 +42,7 @@ public class Camera {
   @Column(nullable = false)
   private CameraStatus cameraStatus;
 
-  @ManyToMany
-  @JoinTable(name = "departments_cameras", joinColumns = @JoinColumn(name = "department_id"), inverseJoinColumns = @JoinColumn(name = "camera_id"))
-  private List<Department> departments;
-
   @ManyToOne
-  @JoinColumn(name = "organization_id", nullable = true)
+  @JoinColumn(name = "organization_id")
   private Organization organization;
 }

@@ -8,7 +8,6 @@ import com.main.face_recognition_resource_server.converters.OrganizationToRegist
 import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.OrganizationRepository;
-import com.main.face_recognition_resource_server.repositories.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,11 +19,9 @@ import java.util.Optional;
 @Service
 public class OrganizationServicesImpl implements OrganizationServices {
   private final OrganizationRepository organizationRepository;
-  private final UserRepository userRepository;
 
-  public OrganizationServicesImpl(OrganizationRepository organizationRepository, UserRepository userRepository) {
+  public OrganizationServicesImpl(OrganizationRepository organizationRepository) {
     this.organizationRepository = organizationRepository;
-    this.userRepository = userRepository;
   }
 
   @Override

@@ -4,6 +4,8 @@ import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterDepartmentDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
+import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
+import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.services.department.DepartmentServices;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import com.main.face_recognition_resource_server.services.user.UserServices;
@@ -28,14 +30,17 @@ public class DepartmentController {
 
   @GetMapping()
   @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<DepartmentDTO> getOwnDepartment(Authentication authentication) {
+  public ResponseEntity<DepartmentDTO> getOwnDepartment(Authentication authentication) throws UserDoesntExistException {
     DepartmentDTO department = userServices.getDepartmentByUsername(authentication.getName());
     return new ResponseEntity<>(department, HttpStatus.OK);
   }
 
   @PostMapping()
   @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-  public ResponseEntity<HttpStatus> registerDepartment(@RequestBody RegisterDepartmentDTO departmentToRegister, Authentication authentication) {
+  public ResponseEntity<HttpStatus> registerDepartment(@RequestBody RegisterDepartmentDTO departmentToRegister, Authentication authentication) throws
+          OrganizationDoesntExistException,
+          UserDoesntExistException,
+          OrganizationDoesntBelongToYouException {
     boolean isSuperAdmin = authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals(UserRole.ROLE_SUPER_ADMIN.toString()));
     boolean organizationExists = organizationServices.organizationExists(departmentToRegister.getOrganizationId());
     if (organizationExists) {

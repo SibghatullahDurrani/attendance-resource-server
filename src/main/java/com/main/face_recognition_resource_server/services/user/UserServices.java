@@ -15,7 +15,7 @@ public interface UserServices {
 
   Page<UserDTO> getAllUsers(Pageable pageable);
 
-  void registerUser(RegisterUserDTO userToRegister);
+  void registerUser(RegisterUserDTO userToRegister) throws UserAlreadyExistsException;
 
   boolean userExistsWithEmailAndRole(String email, UserRole role) throws UserAlreadyExistsException;
 

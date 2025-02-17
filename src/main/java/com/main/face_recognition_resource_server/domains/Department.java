@@ -1,7 +1,10 @@
 package com.main.face_recognition_resource_server.domains;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -26,7 +29,4 @@ public class Department {
 
   @OneToMany(mappedBy = "department")
   private List<User> users;
-
-  @ManyToMany(mappedBy = "departments")
-  private List<Camera> cameras;
 }

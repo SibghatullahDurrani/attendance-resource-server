@@ -44,7 +44,7 @@ public class UserServicesImpl implements UserServices {
 
   @Override
   @Transactional
-  public void registerUser(RegisterUserDTO userToRegister) {
+  public void registerUser(RegisterUserDTO userToRegister) throws UserAlreadyExistsException {
     boolean userExistsWithEmailAndRole = userExistsWithEmailAndRole(userToRegister.getEmail(), userToRegister.getRole());
     if (!userExistsWithEmailAndRole) {
       String hashedPassword = passwordEncoder.encode(userToRegister.getPassword());
@@ -106,9 +106,9 @@ public class UserServicesImpl implements UserServices {
   @Override
   public Long getUserDepartmentId(String username) throws UserDoesntExistException {
     Optional<Long> departmentId = userRepository.getUserDepartmentId(username);
-    if(departmentId.isEmpty()){
+    if (departmentId.isEmpty()) {
       throw new UserDoesntExistException();
-    }else{
+    } else {
       return departmentId.get();
     }
   }

@@ -5,13 +5,13 @@ import com.netsdk.lib.ToolKits;
 
 public class FaceRecognitionEventHandler {
 
-  public void initFaceRecognitionSubscription(NetSDKLib sdkInstance, NetSDKLib.LLong loginHandle, NetSDKLib.LLong eventHandle, NetSDKLib.fAnalyzerDataCallBack analyzerDataCallBack) {
+  public void initFaceRecognitionSubscription(NetSDKLib sdkInstance, NetSDKLib.LLong loginHandle, NetSDKLib.LLong eventHandle, NetSDKLib.fAnalyzerDataCallBack analyzerDataCallBack, int channel) {
     this.detachEventLoadPic(sdkInstance, eventHandle);
 
     int bNeedPicture = 1;
     eventHandle = sdkInstance.CLIENT_RealLoadPictureEx(
             loginHandle,
-            0,
+            channel,
             NetSDKLib.EVENT_IVS_FACERECOGNITION,
             bNeedPicture,
             analyzerDataCallBack,

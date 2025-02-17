@@ -10,12 +10,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RegisterCameraDTO {
+public class CameraCredentialsDTO {
+  private Long id;
   private String ipAddress;
   private int port;
   private int channel;
   private String username;
   private String password;
   private CameraType type;
-  private Long organizationId;
 }
