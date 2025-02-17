@@ -5,6 +5,9 @@ import com.main.face_recognition_resource_server.constants.CameraType;
 
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 public class BlockingQueueAttendanceCacheConsumer implements Runnable {
@@ -18,6 +21,16 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
     this.residentCache = residentCache;
     this.nonResidentCache = nonResidentCache;
     this.synchronizationLock = synchronizationLock;
+    ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+    scheduledExecutorService.scheduleAtFixedRate(() -> {
+      if (residentCache != null) {
+        residentCache.invalidateCache();
+      }
+      if (nonResidentCache != null) {
+        nonResidentCache.invalidateCache();
+      }
+      System.out.println("Cache invalidated");
+    }, 0, 1, TimeUnit.HOURS);
   }
 
   @Override
