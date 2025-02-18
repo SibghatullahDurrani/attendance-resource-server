@@ -1,55 +1,51 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
 import com.main.face_recognition_resource_server.domains.Attendance;
-import com.main.face_recognition_resource_server.domains.CheckIn;
 import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.AttendanceRepository;
 import com.main.face_recognition_resource_server.services.user.UserServices;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Optional;
 
 @Service
 public class AttendanceServicesImpl implements AttendanceServices {
   private final AttendanceRepository attendanceRepository;
   private final UserServices userServices;
+  private final CheckInServices checkInServices;
 
 
-  public AttendanceServicesImpl(AttendanceRepository attendanceRepository, UserServices userServices) {
+  public AttendanceServicesImpl(AttendanceRepository attendanceRepository, UserServices userServices, CheckInServices checkInServices) {
     this.attendanceRepository = attendanceRepository;
     this.userServices = userServices;
+    this.checkInServices = checkInServices;
   }
 
   @Override
-  public void markAttendance(Long userId, Date date) throws UserDoesntExistException {
+  @Transactional
+  public void markAttendance(Long userId, Date date, BufferedImage image) throws UserDoesntExistException, IOException {
     Calendar calendar = Calendar.getInstance();
     calendar.setTime(date);
     Date startDate = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).getTime();
     Optional<Attendance> attendance = attendanceRepository.getAttendanceByUserIdAndDate(userId, startDate, date);
     if (attendance.isEmpty()) {
       User user = userServices.getUserById(userId);
-      List<CheckIn> checkIns = List.of(
-              CheckIn.builder()
-                      .date(date)
-                      .build()
-      );
-      attendanceRepository.saveAndFlush(
+      Attendance attendanceAdded = attendanceRepository.saveAndFlush(
               Attendance.builder()
                       .user(user)
                       .date(date)
-                      .checkIns(checkIns)
                       .build()
       );
+      checkInServices.saveCheckIn(date, attendanceAdded, image);
     } else {
-      Attendance editedAttendance = attendance.get();
-      List<CheckIn> checkIns = editedAttendance.getCheckIns();
-      checkIns.add(CheckIn.builder()
-              .date(date)
-              .build());
-      editedAttendance.setCheckIns(checkIns);
-      attendanceRepository.saveAndFlush(editedAttendance);
-      System.out.println("attendance marked");
+      checkInServices.saveCheckIn(date, attendance.get(), image);
     }
   }
 }

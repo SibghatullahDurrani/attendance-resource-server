@@ -10,6 +10,8 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
@@ -50,18 +52,19 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
       try {
         AttendanceCacheDTO attendanceCache = attendanceCacheQueue.take();
         if (nonResidentCache == null) {
-          handleDataWithJustResidentCache(attendanceCache.getUserId(), attendanceCache.getTime());
+          handleDataWithJustResidentCache(attendanceCache.getUserId(), attendanceCache.getTime(), attendanceCache.getImage());
         } else {
-          handleDataWithBothResidentAndNonResidentCache(attendanceCache.getUserId(), attendanceCache.getTime(), attendanceCache.getCameraType());
+          handleDataWithBothResidentAndNonResidentCache(attendanceCache.getUserId(), attendanceCache.getTime(), attendanceCache.getCameraType(), attendanceCache.getImage());
         }
       } catch (InterruptedException | UserDoesntExistException e) {
         throw new RuntimeException(e);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
-
     }
   }
 
-  private void handleDataWithBothResidentAndNonResidentCache(Long userId, Date time, CameraType cameraType) {
+  private void handleDataWithBothResidentAndNonResidentCache(Long userId, Date time, CameraType cameraType, BufferedImage image) {
     synchronized (synchronizationLock) {
       if (!residentCache.isUserInCache(userId)) {
         if (!nonResidentCache.isUserInCache(userId)) {
@@ -78,10 +81,10 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
     }
   }
 
-  private void handleDataWithJustResidentCache(Long id, Date time) throws UserDoesntExistException {
+  private void handleDataWithJustResidentCache(Long id, Date time, BufferedImage image) throws UserDoesntExistException, IOException {
     synchronized (synchronizationLock) {
       if (!residentCache.isUserInCache(id)) {
-        attendanceServices.markAttendance(id, time);
+        attendanceServices.markAttendance(id, time, image);
         residentCache.addUserToCache(id);
         System.out.println("user with id: " + id + " added to cache at time: " + time);
       } else {

@@ -26,4 +26,7 @@ public class CheckOut {
   @ManyToOne
   @JoinColumn(name = "attendance_id", nullable = false)
   private Attendance attendance;
+
+  @Column(nullable = false)
+  private String imagePath;
 }
