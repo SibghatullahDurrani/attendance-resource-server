@@ -5,6 +5,7 @@ import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
+import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import org.springframework.data.domain.Page;
@@ -26,4 +27,6 @@ public interface UserServices {
   OrganizationDTO getOrganizationByUsername(String username) throws UserDoesntExistException;
 
   Long getUserDepartmentId(String username) throws UserDoesntExistException;
+
+  User getUserById(Long userId) throws UserDoesntExistException;
 }

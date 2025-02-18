@@ -2,6 +2,9 @@ package com.main.face_recognition_resource_server.components;
 
 import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.constants.CameraType;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
@@ -10,6 +13,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 
+@Component
+@Scope(value = BeanDefinition.SCOPE_PROTOTYPE)
 public class BlockingQueueAttendanceCacheConsumer implements Runnable {
   private final BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue;
   private final AttendanceCache residentCache;

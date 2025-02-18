@@ -6,6 +6,7 @@ import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
+import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.UserRepository;
@@ -110,6 +111,16 @@ public class UserServicesImpl implements UserServices {
       throw new UserDoesntExistException();
     } else {
       return departmentId.get();
+    }
+  }
+
+  @Override
+  public User getUserById(Long userId) throws UserDoesntExistException {
+    Optional<User> user = userRepository.findById(userId);
+    if (user.isEmpty()) {
+      throw new UserDoesntExistException();
+    } else {
+      return user.get();
     }
   }
 

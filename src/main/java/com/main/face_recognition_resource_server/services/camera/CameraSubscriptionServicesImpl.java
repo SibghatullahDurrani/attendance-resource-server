@@ -3,13 +3,13 @@ package com.main.face_recognition_resource_server.services.camera;
 import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.DTOS.CameraCredentialsDTO;
 import com.main.face_recognition_resource_server.components.AttendanceCache;
-import com.main.face_recognition_resource_server.components.AttendanceCacheImpl;
 import com.main.face_recognition_resource_server.components.BlockingQueueAttendanceCacheConsumer;
 import com.main.face_recognition_resource_server.components.SubscriptionManager;
 import com.main.face_recognition_resource_server.constants.CameraStatus;
 import com.main.face_recognition_resource_server.constants.CameraType;
 import com.main.face_recognition_resource_server.repositories.CameraRepository;
 import com.main.face_recognition_resource_server.services.camera.dahua.FaceRecognitionSubscription;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -21,10 +21,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Service
 public class CameraSubscriptionServicesImpl implements CameraSubscriptionServices {
   private final CameraRepository cameraRepository;
+  private final AnnotationConfigApplicationContext applicationContext;
   private final Map<Long, SubscriptionManager> organizationSubscriptionManager = new HashMap<>();
 
-  public CameraSubscriptionServicesImpl(CameraRepository cameraRepository) {
+  public CameraSubscriptionServicesImpl(CameraRepository cameraRepository, AnnotationConfigApplicationContext applicationContext) {
     this.cameraRepository = cameraRepository;
+    this.applicationContext = applicationContext;
   }
 
   @Override
@@ -41,9 +43,9 @@ public class CameraSubscriptionServicesImpl implements CameraSubscriptionService
     );
     for (CameraCredentialsDTO camera : cameras) {
       if (camera.getType() == CameraType.IN && residentCache == null) {
-        residentCache = new AttendanceCacheImpl(synchronizationLock);
+//        residentCache = applicationContext.getBean(AttendanceCache.class, organizationId);
       } else if (camera.getType() == CameraType.OUT && nonResidentCache == null) {
-        nonResidentCache = new AttendanceCacheImpl(synchronizationLock);
+//        nonResidentCache = new AttendanceCacheImpl(synchronizationLock);
       }
       FaceRecognitionSubscription faceRecognitionSubscription = new FaceRecognitionSubscription(camera, attendanceCacheQueue);
       Thread faceRecognitionThread = new Thread(faceRecognitionSubscription);

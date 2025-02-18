@@ -1,8 +1,14 @@
 package com.main.face_recognition_resource_server.components;
 
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import java.util.Set;
 import java.util.TreeSet;
 
+@Component
+@Scope(value = BeanDefinition.SCOPE_PROTOTYPE)
 public class AttendanceCacheImpl implements AttendanceCache {
   private final Object synchronizationLock;
   private Set<Long> usersRecognizedCache;
