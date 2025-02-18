@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
   @Query("""
-          SELECT a FROM Attendance a WHERE a.user.id = ?1 AND a.date BETWEEN ?1 AND ?2
+          SELECT a FROM Attendance a WHERE a.user.id = ?1 AND a.date BETWEEN ?2 AND ?3
           """)
   Optional<Attendance> getAttendanceByUserIdAndDate(Long userId, Date dateStart, Date dateEnd);
 }

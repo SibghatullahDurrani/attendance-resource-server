@@ -48,11 +48,4 @@ public class ProjectConfigurations {
   public BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue() {
     return new LinkedBlockingQueue<>();
   }
-
-  @Bean
-  @Scope(value = BeanDefinition.SCOPE_PROTOTYPE)
-  public Object synchronizationLock() {
-    return new Object();
-  }
-
 }

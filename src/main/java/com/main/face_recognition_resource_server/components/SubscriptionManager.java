@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.components;
 
 import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
+import com.main.face_recognition_resource_server.components.attendancecacheconsumer.BlockingQueueAttendanceCacheConsumer;
 import lombok.Data;
 
 import java.util.HashMap;

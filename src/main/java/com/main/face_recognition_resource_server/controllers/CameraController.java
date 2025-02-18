@@ -4,6 +4,7 @@ import com.main.face_recognition_resource_server.DTOS.GetCameraDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterCameraDTO;
 import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.exceptions.CameraAlreadyExistsInOrganizationException;
+import com.main.face_recognition_resource_server.exceptions.NoInCameraExistsException;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
 import com.main.face_recognition_resource_server.services.camera.CameraServices;
 import com.main.face_recognition_resource_server.services.camera.CameraSubscriptionServices;
@@ -50,7 +51,7 @@ public class CameraController {
 
   @PostMapping("start-face-recognition/organization/{organizationId}")
   @PreAuthorize("hasRole('SUPER_ADMIN')")
-  public ResponseEntity<HttpStatus> startFaceRecognitionOfOrganization(@PathVariable Long organizationId) {
+  public ResponseEntity<HttpStatus> startFaceRecognitionOfOrganization(@PathVariable Long organizationId) throws NoInCameraExistsException {
     cameraSubscriptionServices.startFaceRecognitionSubscription(organizationId);
     return new ResponseEntity<>(HttpStatus.OK);
   }

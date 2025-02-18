@@ -1,5 +1,6 @@
-package com.main.face_recognition_resource_server.components;
+package com.main.face_recognition_resource_server.components.attendancecache;
 
+import com.main.face_recognition_resource_server.components.synchronizationlock.SynchronizationLock;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -10,10 +11,10 @@ import java.util.TreeSet;
 @Component
 @Scope(value = BeanDefinition.SCOPE_PROTOTYPE)
 public class AttendanceCacheImpl implements AttendanceCache {
-  private final Object synchronizationLock;
+  private final SynchronizationLock synchronizationLock;
   private Set<Long> usersRecognizedCache;
 
-  public AttendanceCacheImpl(Object synchronizationLock) {
+  public AttendanceCacheImpl(SynchronizationLock synchronizationLock) {
     this.synchronizationLock = synchronizationLock;
     usersRecognizedCache = new TreeSet<>();
   }

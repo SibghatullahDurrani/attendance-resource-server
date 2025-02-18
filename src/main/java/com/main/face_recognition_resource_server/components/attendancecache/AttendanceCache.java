@@ -1,4 +1,4 @@
-package com.main.face_recognition_resource_server.components;
+package com.main.face_recognition_resource_server.components.attendancecache;
 
 public interface AttendanceCache {
   boolean isUserInCache(Long userId);

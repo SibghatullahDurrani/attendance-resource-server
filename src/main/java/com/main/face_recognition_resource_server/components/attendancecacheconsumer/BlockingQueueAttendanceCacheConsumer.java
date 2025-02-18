@@ -1,6 +1,8 @@
-package com.main.face_recognition_resource_server.components;
+package com.main.face_recognition_resource_server.components.attendancecacheconsumer;
 
 import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
+import com.main.face_recognition_resource_server.components.attendancecache.AttendanceCache;
+import com.main.face_recognition_resource_server.components.synchronizationlock.SynchronizationLock;
 import com.main.face_recognition_resource_server.constants.CameraType;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -19,9 +21,9 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
   private final BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue;
   private final AttendanceCache residentCache;
   private final AttendanceCache nonResidentCache;
-  private final Object synchronizationLock;
+  private final SynchronizationLock synchronizationLock;
 
-  public BlockingQueueAttendanceCacheConsumer(BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue, AttendanceCache residentCache, AttendanceCache nonResidentCache, Object synchronizationLock) {
+  public BlockingQueueAttendanceCacheConsumer(BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue, AttendanceCache residentCache, AttendanceCache nonResidentCache, SynchronizationLock synchronizationLock) {
     this.attendanceCacheQueue = attendanceCacheQueue;
     this.residentCache = residentCache;
     this.nonResidentCache = nonResidentCache;
