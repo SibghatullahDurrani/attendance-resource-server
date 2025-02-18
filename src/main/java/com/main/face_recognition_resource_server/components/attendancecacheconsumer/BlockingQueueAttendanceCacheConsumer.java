@@ -4,6 +4,8 @@ import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.components.attendancecache.AttendanceCache;
 import com.main.face_recognition_resource_server.components.synchronizationlock.SynchronizationLock;
 import com.main.face_recognition_resource_server.constants.CameraType;
+import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
+import com.main.face_recognition_resource_server.services.attendance.AttendanceServices;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -22,12 +24,14 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
   private final AttendanceCache residentCache;
   private final AttendanceCache nonResidentCache;
   private final SynchronizationLock synchronizationLock;
+  private final AttendanceServices attendanceServices;
 
-  public BlockingQueueAttendanceCacheConsumer(BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue, AttendanceCache residentCache, AttendanceCache nonResidentCache, SynchronizationLock synchronizationLock) {
+  public BlockingQueueAttendanceCacheConsumer(BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue, AttendanceCache residentCache, AttendanceCache nonResidentCache, SynchronizationLock synchronizationLock, AttendanceServices attendanceServices) {
     this.attendanceCacheQueue = attendanceCacheQueue;
     this.residentCache = residentCache;
     this.nonResidentCache = nonResidentCache;
     this.synchronizationLock = synchronizationLock;
+    this.attendanceServices = attendanceServices;
     ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
     scheduledExecutorService.scheduleAtFixedRate(() -> {
       if (residentCache != null) {
@@ -50,7 +54,7 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
         } else {
           handleDataWithBothResidentAndNonResidentCache(attendanceCache.getUserId(), attendanceCache.getTime(), attendanceCache.getCameraType());
         }
-      } catch (InterruptedException e) {
+      } catch (InterruptedException | UserDoesntExistException e) {
         throw new RuntimeException(e);
       }
 
@@ -74,10 +78,10 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
     }
   }
 
-  private void handleDataWithJustResidentCache(Long id, Date time) {
+  private void handleDataWithJustResidentCache(Long id, Date time) throws UserDoesntExistException {
     synchronized (synchronizationLock) {
       if (!residentCache.isUserInCache(id)) {
-        //TODO: add an entry for attendance worker
+        attendanceServices.markAttendance(id, time);
         residentCache.addUserToCache(id);
         System.out.println("user with id: " + id + " added to cache at time: " + time);
       } else {

@@ -8,7 +8,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 
 public class FaceRecognitionSubscription implements Runnable {
-  private final NetSDKLib sdkInstance = SDKInstance.getInstance();
+  private final NetSDKLib sdkInstance;
   private final CameraCredentialsDTO cameraCredentials;
   private final BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue;
   private final CountDownLatch latch;
@@ -17,6 +17,7 @@ public class FaceRecognitionSubscription implements Runnable {
   public FaceRecognitionSubscription(CameraCredentialsDTO cameraCredentials, BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue) {
     this.cameraCredentials = cameraCredentials;
     this.attendanceCacheQueue = attendanceCacheQueue;
+    this.sdkInstance = SDKInstance.getInstance();
     latch = new CountDownLatch(1);
   }
 
@@ -46,7 +47,7 @@ public class FaceRecognitionSubscription implements Runnable {
     } catch (InterruptedException e) {
       faceRecognitionEventHandler.detachEventLoadPic(sdkInstance, eventHandle);
       DahuaLogin.logout(sdkInstance, loginHandle);
-      DahuaLogin.cleanup(sdkInstance, true);
+//      DahuaLogin.cleanup(sdkInstance, true);
       System.out.println("stopped");
     }
   }

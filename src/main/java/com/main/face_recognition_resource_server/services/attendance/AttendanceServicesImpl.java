@@ -49,6 +49,7 @@ public class AttendanceServicesImpl implements AttendanceServices {
               .build());
       editedAttendance.setCheckIns(checkIns);
       attendanceRepository.saveAndFlush(editedAttendance);
+      System.out.println("attendance marked");
     }
   }
 }

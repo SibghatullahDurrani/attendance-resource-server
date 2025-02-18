@@ -1,11 +1,13 @@
 package com.main.face_recognition_resource_server.services.camera.dahua;
 
 import com.netsdk.lib.NetSDKLib;
+import lombok.Setter;
 
 public class SDKInstance {
   private static final NetSDKLib sdkInstance = NetSDKLib.NETSDK_INSTANCE;
   private static final NetSDKLib.fDisConnect disconnectCallback = DisconnectCallback.getInstance();
   private static final NetSDKLib.fHaveReConnect haveReconnectCallback = HaveReconnectCallback.getInstance();
+  @Setter
   private static boolean isSDKInit;
 
   public static NetSDKLib getInstance() {

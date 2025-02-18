@@ -7,6 +7,7 @@ import com.main.face_recognition_resource_server.components.attendancecachequeue
 import com.main.face_recognition_resource_server.components.synchronizationlock.SynchronizationLock;
 import com.main.face_recognition_resource_server.components.synchronizationlock.SynchronizationLockFactory;
 import com.main.face_recognition_resource_server.constants.BeanNamePrefix;
+import com.main.face_recognition_resource_server.services.attendance.AttendanceServices;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -21,14 +22,24 @@ public class AttendanceCacheConsumerFactory {
   private final AttendanceCacheQueueFactory attendanceCacheQueueFactory;
   private final AttendanceCacheFactory attendanceCacheFactory;
   private final SynchronizationLockFactory synchronizationLockFactory;
+  private final AttendanceServices attendanceServices;
 
-  public AttendanceCacheConsumerFactory(ApplicationContext applicationContext, AttendanceCacheQueueFactory attendanceCacheQueueFactory, AttendanceCacheFactory attendanceCacheFactory, SynchronizationLockFactory synchronizationLockFactory) {
+  public AttendanceCacheConsumerFactory(ApplicationContext applicationContext, AttendanceCacheQueueFactory attendanceCacheQueueFactory, AttendanceCacheFactory attendanceCacheFactory, SynchronizationLockFactory synchronizationLockFactory, AttendanceServices attendanceServices) {
     this.applicationContext = applicationContext;
     this.attendanceCacheQueueFactory = attendanceCacheQueueFactory;
     this.attendanceCacheFactory = attendanceCacheFactory;
     this.synchronizationLockFactory = synchronizationLockFactory;
+    this.attendanceServices = attendanceServices;
   }
 
+  /**
+   * This method adds a consumer object to spring context.
+   * It takes the organizationId and initializes (if not yet initialized) all its dependencies using the same organizationId
+   *
+   * @param organizationId the id of the organization for which we want the consumer for
+   * @return Attendance cache consumer object
+   * @author Sibghatullah Durrani
+   */
   public BlockingQueueAttendanceCacheConsumer getAttendanceCacheConsumer(Long organizationId) {
     String beanName = BeanNamePrefix.ATTENDANCE_CACHE_CONSUMER + organizationId.toString();
     if (!applicationContext.containsBean(beanName)) {
@@ -48,7 +59,8 @@ public class AttendanceCacheConsumerFactory {
                               attendanceCacheQueue,
                               residentCache,
                               nonResidentCache,
-                              synchronizationLock
+                              synchronizationLock,
+                              attendanceServices
                       )
               )
               .setScope(BeanDefinition.SCOPE_PROTOTYPE)
