@@ -3,6 +3,7 @@ package com.main.face_recognition_resource_server.components.attendancecache;
 import com.main.face_recognition_resource_server.components.synchronizationlock.SynchronizationLock;
 import com.main.face_recognition_resource_server.components.synchronizationlock.SynchronizationLockFactory;
 import com.main.face_recognition_resource_server.constants.BeanNamePrefix;
+import com.main.face_recognition_resource_server.services.attendance.AttendanceServices;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -13,10 +14,12 @@ import org.springframework.stereotype.Component;
 public class AttendanceCacheFactory {
   private final ApplicationContext applicationContext;
   private final SynchronizationLockFactory synchronizationLockFactory;
+  private final AttendanceServices attendanceServices;
 
-  public AttendanceCacheFactory(ApplicationContext applicationContext, SynchronizationLockFactory synchronizationLockFactory) {
+  public AttendanceCacheFactory(ApplicationContext applicationContext, SynchronizationLockFactory synchronizationLockFactory, AttendanceServices attendanceServices) {
     this.applicationContext = applicationContext;
     this.synchronizationLockFactory = synchronizationLockFactory;
+    this.attendanceServices = attendanceServices;
   }
 
   public AttendanceCache getResidentCache(Long organizationId) {
@@ -35,7 +38,7 @@ public class AttendanceCacheFactory {
       BeanDefinitionRegistry beanDefinitionRegistry = (BeanDefinitionRegistry) applicationContext.getAutowireCapableBeanFactory();
       BeanDefinition beanDefinition = BeanDefinitionBuilder
               .genericBeanDefinition(AttendanceCache.class,
-                      () -> new AttendanceCacheImpl(synchronizationLock))
+                      () -> new AttendanceCacheImpl(synchronizationLock, attendanceServices))
               .setScope(BeanDefinition.SCOPE_PROTOTYPE)
               .getBeanDefinition();
       beanDefinitionRegistry.registerBeanDefinition(beanName, beanDefinition);

@@ -43,7 +43,7 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
         nonResidentCache.invalidateCache();
       }
       System.out.println("Cache invalidated");
-    }, 0, 1, TimeUnit.HOURS);
+    }, 2, 60, TimeUnit.MINUTES);
   }
 
   @Override
@@ -56,9 +56,7 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
         } else {
           handleDataWithBothResidentAndNonResidentCache(attendanceCache.getUserId(), attendanceCache.getTime(), attendanceCache.getCameraType(), attendanceCache.getImage());
         }
-      } catch (InterruptedException | UserDoesntExistException e) {
-        throw new RuntimeException(e);
-      } catch (IOException e) {
+      } catch (InterruptedException | UserDoesntExistException | IOException e) {
         throw new RuntimeException(e);
       }
     }

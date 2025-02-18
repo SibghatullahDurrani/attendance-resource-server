@@ -1,5 +1,7 @@
 package com.main.face_recognition_resource_server.components.attendancecache;
 
+import com.main.face_recognition_resource_server.constants.CameraType;
+
 public interface AttendanceCache {
   boolean isUserInCache(Long userId);
 
@@ -8,4 +10,6 @@ public interface AttendanceCache {
   void invalidateCache();
 
   void removeUserFromCache(Long userId);
+
+  void syncCache(Long organizationId, CameraType type);
 }

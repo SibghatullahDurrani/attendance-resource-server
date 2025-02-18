@@ -7,6 +7,7 @@ import com.main.face_recognition_resource_server.components.attendancecachequeue
 import com.main.face_recognition_resource_server.components.synchronizationlock.SynchronizationLock;
 import com.main.face_recognition_resource_server.components.synchronizationlock.SynchronizationLockFactory;
 import com.main.face_recognition_resource_server.constants.BeanNamePrefix;
+import com.main.face_recognition_resource_server.constants.CameraType;
 import com.main.face_recognition_resource_server.services.attendance.AttendanceServices;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -46,10 +47,12 @@ public class AttendanceCacheConsumerFactory {
       BeanDefinitionRegistry beanDefinitionRegistry = (BeanDefinitionRegistry) applicationContext.getAutowireCapableBeanFactory();
       BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue = attendanceCacheQueueFactory.getAttendanceCacheQueue(organizationId);
       AttendanceCache residentCache = attendanceCacheFactory.getResidentCache(organizationId);
+      residentCache.syncCache(organizationId, CameraType.IN);
       AttendanceCache nonResidentCache;
       SynchronizationLock synchronizationLock = synchronizationLockFactory.getSynchronizationLock(organizationId);
       if (applicationContext.containsBean(BeanNamePrefix.NON_RESIDENT_CACHE + organizationId.toString())) {
         nonResidentCache = attendanceCacheFactory.getNonResidentCache(organizationId);
+        nonResidentCache.syncCache(organizationId, CameraType.OUT);
       } else {
         nonResidentCache = null;
       }
