@@ -19,9 +19,9 @@ public class FaceRecognitionEventHandler {
             null
     );
     if (eventHandle.longValue() != 0) {
-      System.out.printf("Chn[%d] CLIENT_RealLoadPictureEx Success\n", 0);
+      System.out.printf("Chn[%d] CLIENT_RealLoadPictureEx Success\n", channel);
     } else {
-      System.out.printf("Chn[%d] CLIENT_RealLoadPictureEx Failed! Last Error = %s\n", 0, ToolKits.getErrorCodePrint());
+      System.out.printf("Chn[%d] CLIENT_RealLoadPictureEx Failed! Last Error = %s\n", channel, ToolKits.getErrorCodePrint());
     }
   }
 

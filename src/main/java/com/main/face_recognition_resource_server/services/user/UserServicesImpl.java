@@ -124,4 +124,9 @@ public class UserServicesImpl implements UserServices {
     }
   }
 
+  @Override
+  public boolean userExistsWithUserId(Long userId) {
+    return userRepository.existsById(userId);
+  }
+
 }

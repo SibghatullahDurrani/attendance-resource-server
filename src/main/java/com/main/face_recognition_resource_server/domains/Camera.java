@@ -5,11 +5,11 @@ import com.main.face_recognition_resource_server.constants.CameraType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
 @AllArgsConstructor
+@Getter
 @NoArgsConstructor
 @Builder
 @Entity

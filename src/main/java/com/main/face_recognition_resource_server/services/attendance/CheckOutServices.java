@@ -1,0 +1,15 @@
+package com.main.face_recognition_resource_server.services.attendance;
+
+import com.main.face_recognition_resource_server.DTOS.CheckOutDTO;
+import com.main.face_recognition_resource_server.domains.Attendance;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+
+public interface CheckOutServices {
+  void saveCheckOut(Date date, Attendance attendance, BufferedImage image) throws IOException;
+
+  List<CheckOutDTO> getCheckOutsByAttendanceId(Long attendanceId);
+}

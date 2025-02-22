@@ -18,6 +18,7 @@ public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
   private final CameraType cameraType;
   private final BlockingQueueAttendanceCacheProducer attendanceCacheProducer;
   private final BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue;
+  private final NetSDKLib.DEV_EVENT_FACERECOGNITION_INFO msg = new NetSDKLib.DEV_EVENT_FACERECOGNITION_INFO();
 
   private AnalyzerDataCallback(CameraType cameraType, BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue) {
     this.attendanceCacheQueue = attendanceCacheQueue;
@@ -38,7 +39,6 @@ public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
     if (dwAlarmType == NetSDKLib.EVENT_IVS_FACERECOGNITION) {
       long id;
       Date time;
-      NetSDKLib.DEV_EVENT_FACERECOGNITION_INFO msg = new NetSDKLib.DEV_EVENT_FACERECOGNITION_INFO();
       ToolKits.GetPointerData(pAlarmInfo, msg);
       try {
         String idString = new String(msg.stuCandidatesEx[0].stPersonInfo.szPersonName).trim();

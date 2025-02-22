@@ -7,6 +7,8 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,6 +21,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @Configuration
 @EnableMethodSecurity()
+@EnableAsync
+@EnableScheduling
 public class ProjectConfigurations {
   private final JwtAuthenticationConverter converter;
   @Value("${keySetURI}")

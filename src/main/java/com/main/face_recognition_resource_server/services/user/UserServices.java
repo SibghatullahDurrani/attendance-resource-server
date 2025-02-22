@@ -29,4 +29,6 @@ public interface UserServices {
   Long getUserDepartmentId(String username) throws UserDoesntExistException;
 
   User getUserById(Long userId) throws UserDoesntExistException;
+
+  boolean userExistsWithUserId(Long userId);
 }

@@ -8,15 +8,13 @@ import com.main.face_recognition_resource_server.exceptions.UserDoesntExistExcep
 import com.main.face_recognition_resource_server.services.attendance.AttendanceServices;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 
 @Component
@@ -27,6 +25,7 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
   private final AttendanceCache nonResidentCache;
   private final SynchronizationLock synchronizationLock;
   private final AttendanceServices attendanceServices;
+  private boolean isFirstCacheInvalidation = true;
 
   public BlockingQueueAttendanceCacheConsumer(BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue, AttendanceCache residentCache, AttendanceCache nonResidentCache, SynchronizationLock synchronizationLock, AttendanceServices attendanceServices) {
     this.attendanceCacheQueue = attendanceCacheQueue;
@@ -34,16 +33,19 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
     this.nonResidentCache = nonResidentCache;
     this.synchronizationLock = synchronizationLock;
     this.attendanceServices = attendanceServices;
-    ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-    scheduledExecutorService.scheduleAtFixedRate(() -> {
-      if (residentCache != null) {
-        residentCache.invalidateCache();
-      }
-      if (nonResidentCache != null) {
-        nonResidentCache.invalidateCache();
-      }
-      System.out.println("Cache invalidated");
-    }, 2, 60, TimeUnit.MINUTES);
+//    ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+//    scheduledExecutorService.scheduleAtFixedRate(() -> {
+//      if (!isFirstCacheInvalidation) {
+//        if (residentCache != null) {
+//          residentCache.invalidateCache();
+//        }
+//        if (nonResidentCache != null) {
+//          nonResidentCache.invalidateCache();
+//        }
+//        System.out.println("Cache invalidated");
+//      }
+//      isFirstCacheInvalidation = false;
+//    }, 1, 3600, TimeUnit.SECONDS);
   }
 
   @Override
@@ -62,32 +64,67 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
     }
   }
 
-  private void handleDataWithBothResidentAndNonResidentCache(Long userId, Date time, CameraType cameraType, BufferedImage image) {
+  private void handleDataWithBothResidentAndNonResidentCache(Long userId, Date time, CameraType cameraType, BufferedImage image) throws UserDoesntExistException, IOException {
     synchronized (synchronizationLock) {
       if (!residentCache.isUserInCache(userId)) {
         if (!nonResidentCache.isUserInCache(userId)) {
           if (cameraType == CameraType.IN) {
-            //TODO: add an entry for attendance worker
+            attendanceServices.markCheckIn(userId, time, image);
             residentCache.addUserToCache(userId);
+            System.out.println("user: " + userId.toString() + " check in");
           }
         } else {
-          //TODO: add an entry for attendance worker
-          nonResidentCache.removeUserFromCache(userId);
-          residentCache.addUserToCache(userId);
+          if (cameraType == CameraType.IN) {
+            nonResidentCache.removeUserFromCache(userId);
+            residentCache.addUserToCache(userId);
+            attendanceServices.markCheckIn(userId, time, image);
+            System.out.println("user: " + userId.toString() + " check in");
+          }
+        }
+      } else {
+        if (!nonResidentCache.isUserInCache(userId)) {
+          if (cameraType == CameraType.OUT) {
+            residentCache.removeUserFromCache(userId);
+            nonResidentCache.addUserToCache(userId);
+            attendanceServices.markCheckOut(userId, time, image);
+            System.out.println("user: " + userId.toString() + " check out");
+          }
         }
       }
     }
   }
 
-  private void handleDataWithJustResidentCache(Long id, Date time, BufferedImage image) throws UserDoesntExistException, IOException {
+  private void handleDataWithJustResidentCache(Long userId, Date time, BufferedImage image) throws UserDoesntExistException, IOException {
     synchronized (synchronizationLock) {
-      if (!residentCache.isUserInCache(id)) {
-        attendanceServices.markAttendance(id, time, image);
-        residentCache.addUserToCache(id);
-        System.out.println("user with id: " + id + " added to cache at time: " + time);
+      if (!residentCache.isUserInCache(userId)) {
+        attendanceServices.markCheckIn(userId, time, image);
+        residentCache.addUserToCache(userId);
+        System.out.println("user with id: " + userId + " added to cache at time: " + time);
       } else {
-        System.out.println("user with id: " + id + " is already in the cache");
+        System.out.println("user with id: " + userId + " is already in the cache");
       }
     }
+  }
+
+  @Scheduled(cron = "0 0 * * * *")
+  public void invalidateCacheEveryHour() {
+    if (residentCache != null) {
+      residentCache.invalidateCache();
+    }
+    if (nonResidentCache != null) {
+      nonResidentCache.invalidateCache();
+    }
+    System.out.println("Cache invalidated");
+  }
+
+  @Scheduled(cron = "0 0 0 * * *")
+  public void invalidateCacheAtTheEndOfTheDay() {
+    if (residentCache != null) {
+      residentCache.invalidateCache();
+    }
+    if (nonResidentCache != null) {
+      nonResidentCache.invalidateCache();
+    }
+    System.out.println("Cache invalidated");
   }
 }

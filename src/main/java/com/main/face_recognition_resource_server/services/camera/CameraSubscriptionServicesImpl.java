@@ -2,10 +2,10 @@ package com.main.face_recognition_resource_server.services.camera;
 
 import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.DTOS.CameraCredentialsDTO;
-import com.main.face_recognition_resource_server.components.attendancecacheconsumer.AttendanceCacheConsumerFactory;
 import com.main.face_recognition_resource_server.components.attendancecache.AttendanceCacheFactory;
-import com.main.face_recognition_resource_server.components.attendancecachequeuefactory.AttendanceCacheQueueFactory;
+import com.main.face_recognition_resource_server.components.attendancecacheconsumer.AttendanceCacheConsumerFactory;
 import com.main.face_recognition_resource_server.components.attendancecacheconsumer.BlockingQueueAttendanceCacheConsumer;
+import com.main.face_recognition_resource_server.components.attendancecachequeuefactory.AttendanceCacheQueueFactory;
 import com.main.face_recognition_resource_server.constants.CameraStatus;
 import com.main.face_recognition_resource_server.constants.CameraType;
 import com.main.face_recognition_resource_server.exceptions.NoInCameraExistsException;
@@ -24,7 +24,7 @@ public class CameraSubscriptionServicesImpl implements CameraSubscriptionService
   private final AttendanceCacheFactory attendanceCacheFactory;
   private final AttendanceCacheQueueFactory attendanceCacheQueueFactory;
   private final AttendanceCacheConsumerFactory attendanceCacheConsumerFactory;
-  private final Map<Long, Thread> organizationIdFaceRecognitionSubscriptionMap = new HashMap<>();
+  private final Map<Long, Map<Long, Thread>> organizationIdFaceRecognitionSubscriptionsMap = new HashMap<>();
 
   public CameraSubscriptionServicesImpl(CameraRepository cameraRepository, AttendanceCacheFactory attendanceCacheFactory, AttendanceCacheQueueFactory attendanceCacheQueueFactory, AttendanceCacheConsumerFactory attendanceCacheConsumerFactory) {
     this.cameraRepository = cameraRepository;
@@ -38,6 +38,8 @@ public class CameraSubscriptionServicesImpl implements CameraSubscriptionService
     List<CameraCredentialsDTO> cameras = cameraRepository.getCameraCredentialsOfOrganization(organizationId);
     boolean InExists = cameras.stream().anyMatch(camera -> camera.getType() == CameraType.IN);
     boolean outExists = cameras.stream().anyMatch(camera -> camera.getType() == CameraType.OUT);
+    Map<Long, Thread> cameraIdFaceSubscriptionMap = new HashMap<>();
+    organizationIdFaceRecognitionSubscriptionsMap.putIfAbsent(organizationId, cameraIdFaceSubscriptionMap);
     if (!InExists) {
       throw new NoInCameraExistsException();
     }
@@ -51,7 +53,7 @@ public class CameraSubscriptionServicesImpl implements CameraSubscriptionService
     for (CameraCredentialsDTO camera : cameras) {
       FaceRecognitionSubscription faceRecognitionSubscription = new FaceRecognitionSubscription(camera, attendanceCacheQueue);
       Thread faceRecognitionThread = new Thread(faceRecognitionSubscription);
-      organizationIdFaceRecognitionSubscriptionMap.put(organizationId, faceRecognitionThread);
+      cameraIdFaceSubscriptionMap.putIfAbsent(camera.getId(), faceRecognitionThread);
       faceRecognitionThread.start();
       cameraRepository.setCameraStatusOfCamera(camera.getId(), CameraStatus.PERFORMING_FACE_RECOGNITION);
     }
@@ -59,7 +61,8 @@ public class CameraSubscriptionServicesImpl implements CameraSubscriptionService
 
   @Override
   public void stopFaceRecognitionSubscription(Long organizationId) {
-    for (Map.Entry<Long, Thread> entry : organizationIdFaceRecognitionSubscriptionMap.entrySet()) {
+    Map<Long, Thread> cameraIdFaceSubscriptionMap = organizationIdFaceRecognitionSubscriptionsMap.get(organizationId);
+    for (Map.Entry<Long, Thread> entry : cameraIdFaceSubscriptionMap.entrySet()) {
       entry.getValue().interrupt();
       cameraRepository.setCameraStatusOfCamera(entry.getKey(), CameraStatus.INACTIVE);
     }

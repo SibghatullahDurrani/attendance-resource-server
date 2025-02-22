@@ -1,9 +1,9 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
-import com.main.face_recognition_resource_server.DTOS.CheckInDTO;
+import com.main.face_recognition_resource_server.DTOS.CheckOutDTO;
 import com.main.face_recognition_resource_server.domains.Attendance;
-import com.main.face_recognition_resource_server.domains.CheckIn;
-import com.main.face_recognition_resource_server.repositories.CheckInRepository;
+import com.main.face_recognition_resource_server.domains.CheckOut;
+import com.main.face_recognition_resource_server.repositories.CheckOutRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,12 +16,12 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class CheckInServicesImpl implements CheckInServices {
+public class CheckOutServicesImpl implements CheckOutServices {
   private final File picturePath;
-  private final CheckInRepository checkInRepository;
+  private final CheckOutRepository checkOutRepository;
 
-  public CheckInServicesImpl(CheckInRepository checkInRepository) {
-    this.checkInRepository = checkInRepository;
+  public CheckOutServicesImpl(CheckOutRepository checkOutRepository) {
+    this.checkOutRepository = checkOutRepository;
     picturePath = new File("./FaceRecognition/");
     if (!picturePath.exists()) {
       picturePath.mkdirs();
@@ -30,20 +30,20 @@ public class CheckInServicesImpl implements CheckInServices {
 
   @Override
   @Transactional
-  public void saveCheckIn(Date date, Attendance attendance, BufferedImage image) throws IOException {
+  public void saveCheckOut(Date date, Attendance attendance, BufferedImage image) throws IOException {
     String uuid = UUID.randomUUID().toString();
     String snapPicPath = picturePath + "/" + uuid + "FaceRecognition.jpg";
-    CheckIn checkIn = CheckIn.builder()
+    CheckOut checkOut = CheckOut.builder()
             .date(date)
             .attendance(attendance)
             .imagePath(snapPicPath)
             .build();
-    checkInRepository.saveAndFlush(checkIn);
+    checkOutRepository.saveAndFlush(checkOut);
     ImageIO.write(image, "jpg", new File(snapPicPath));
   }
 
   @Override
-  public List<CheckInDTO> getCheckInsByAttendanceId(Long attendanceId) {
-    return checkInRepository.getCheckInsByAttendanceId(attendanceId);
+  public List<CheckOutDTO> getCheckOutsByAttendanceId(Long attendanceId) {
+    return checkOutRepository.getCheckOutsByAttendanceId(attendanceId);
   }
 }

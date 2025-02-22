@@ -3,15 +3,15 @@ package com.main.face_recognition_resource_server.domains;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Builder
-@Data
 @AllArgsConstructor
 @Entity
+@Getter
 @Table(name = "departments")
 @NoArgsConstructor
 public class Department {
