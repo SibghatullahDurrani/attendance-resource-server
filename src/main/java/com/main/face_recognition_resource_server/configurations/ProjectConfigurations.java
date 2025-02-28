@@ -14,7 +14,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.channel.ChannelProcessingFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -34,10 +38,22 @@ public class ProjectConfigurations {
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.addFilterBefore(new CorsFilter(), ChannelProcessingFilter.class);
     http.oauth2ResourceServer(
             oauth2 -> oauth2.jwt(
                     jwt -> jwt.jwkSetUri(keySetURI)
                             .jwtAuthenticationConverter(converter)));
+    http.cors(c -> {
+      CorsConfigurationSource source = _ -> {
+        CorsConfiguration cc = new CorsConfiguration();
+        cc.setAllowCredentials(true);
+        cc.setAllowedOrigins(List.of("http://127.0.0.1:4000"));
+        cc.setAllowedHeaders(List.of("*"));
+        cc.setAllowedMethods(List.of("*"));
+        return cc;
+      };
+      c.configurationSource(source);
+    });
     http.authorizeHttpRequests(c -> c.anyRequest().authenticated());
     return http.build();
   }

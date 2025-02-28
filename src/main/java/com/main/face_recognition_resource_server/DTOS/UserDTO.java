@@ -20,4 +20,5 @@ public class UserDTO {
   private String email;
   private String departmentName;
   private String organizationName;
+  private String profilePicturePath;
 }

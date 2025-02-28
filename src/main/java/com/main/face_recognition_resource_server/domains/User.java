@@ -24,6 +24,8 @@ public class User {
   @Column(name = "first_name", nullable = false, length = 30)
   private String firstName;
 
+  private String profilePicturePath;
+
   @Column(name = "second_name", nullable = false, length = 30)
   private String secondName;
 
