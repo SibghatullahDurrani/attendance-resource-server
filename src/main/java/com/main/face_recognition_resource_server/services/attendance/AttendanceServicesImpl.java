@@ -46,48 +46,46 @@ public class AttendanceServicesImpl implements AttendanceServices {
   @Transactional
   @Async
   public void markCheckIn(Long userId, Date checkInDate, BufferedImage image) throws UserDoesntExistException, IOException {
-    Optional<Attendance> attendance = getUserAttendanceFromDayStartTillDate(userId, checkInDate);
+    Optional<Attendance> attendanceOptional = getUserAttendanceFromDayStartTillDate(userId, checkInDate);
     Long organizationId = this.userServices.getUserOrganizationIdByUserId(userId);
 
-    if (attendance.isEmpty()) {
-      User user = userServices.getUserById(userId);
+    if (attendanceOptional.isPresent()) {
+      Attendance attendance = attendanceOptional.get();
+      if (attendance.getCheckIns() == null || attendance.getCheckIns().isEmpty()) {
+        String checkInPolicyTime = this.organizationServices.getOrganizationCheckInPolicy(organizationId);
+        int lateAttendanceToleranceTimePolicy = this.organizationServices.getOrganizationLateAttendanceToleranceTimePolicy(organizationId);
 
-      String checkInPolicyTime = this.organizationServices.getOrganizationCheckInPolicy(organizationId);
-      int lateAttendanceToleranceTimePolicy = this.organizationServices.getOrganizationLateAttendanceToleranceTimePolicy(organizationId);
-
-      int lateAttendanceToleranceTimeHours = 0;
-      int lateAttendanceToleranceTimeMinutes = 0;
-      while (lateAttendanceToleranceTimePolicy >= 60) {
-        lateAttendanceToleranceTimeHours += 1;
-        lateAttendanceToleranceTimePolicy -= 60;
-      }
-      lateAttendanceToleranceTimeMinutes += lateAttendanceToleranceTimePolicy;
+        int lateAttendanceToleranceTimeHours = 0;
+        int lateAttendanceToleranceTimeMinutes = 0;
+        while (lateAttendanceToleranceTimePolicy >= 60) {
+          lateAttendanceToleranceTimeHours += 1;
+          lateAttendanceToleranceTimePolicy -= 60;
+        }
+        lateAttendanceToleranceTimeMinutes += lateAttendanceToleranceTimePolicy;
 
 
-      String[] timeSplit = checkInPolicyTime.split(":");
-      Calendar requiredCheckInTime = GregorianCalendar.getInstance();
-      requiredCheckInTime.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeSplit[0]) + lateAttendanceToleranceTimeHours);
-      requiredCheckInTime.set(Calendar.MINUTE, Integer.parseInt(timeSplit[1]) + lateAttendanceToleranceTimeMinutes);
+        String[] timeSplit = checkInPolicyTime.split(":");
+        Calendar requiredCheckInTime = GregorianCalendar.getInstance();
+        requiredCheckInTime.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeSplit[0]) + lateAttendanceToleranceTimeHours);
+        requiredCheckInTime.set(Calendar.MINUTE, Integer.parseInt(timeSplit[1]) + lateAttendanceToleranceTimeMinutes);
 
-      Calendar checkedInTime = GregorianCalendar.getInstance();
-      checkedInTime.setTime(checkInDate);
-      AttendanceStatus attendanceStatus;
-      if (checkedInTime.after(requiredCheckInTime)) {
-        attendanceStatus = AttendanceStatus.LATE;
+        Calendar checkedInTime = GregorianCalendar.getInstance();
+        checkedInTime.setTime(checkInDate);
+        AttendanceStatus attendanceStatus;
+        if (checkedInTime.after(requiredCheckInTime)) {
+          attendanceStatus = AttendanceStatus.LATE;
+        } else {
+          attendanceStatus = AttendanceStatus.ON_TIME;
+        }
+
+        attendance.setStatus(attendanceStatus);
+        attendanceRepository.saveAndFlush(attendance);
+
+        checkInServices.saveCheckIn(checkInDate, attendance, image);
+
       } else {
-        attendanceStatus = AttendanceStatus.ON_TIME;
+        checkInServices.saveCheckIn(checkInDate, attendance, image);
       }
-
-      Attendance attendanceAdded = attendanceRepository.saveAndFlush(
-              Attendance.builder()
-                      .user(user)
-                      .date(checkInDate)
-                      .status(attendanceStatus)
-                      .build()
-      );
-      checkInServices.saveCheckIn(checkInDate, attendanceAdded, image);
-    } else {
-      checkInServices.saveCheckIn(checkInDate, attendance.get(), image);
     }
   }
 
@@ -130,10 +128,18 @@ public class AttendanceServicesImpl implements AttendanceServices {
   public void markAbsentOfAllUsersInOrganizationForCurrentDay(Long organizationId) {
     Calendar calendar = GregorianCalendar.getInstance();
     calendar.set(Calendar.HOUR_OF_DAY, 0);
+    calendar.set(Calendar.MINUTE, 0);
+    calendar.set(Calendar.SECOND, 0);
+    calendar.set(Calendar.MILLISECOND, 0);
 
     boolean exists = this.attendanceRepository.existsByDateAndOrganizationId(calendar.getTime(), organizationId);
     if (!exists) {
-
+      List<User> users = userServices.getUsersByOrganizationId(organizationId);
+      List<Attendance> attendances = new ArrayList<>();
+      for (User user : users) {
+        attendances.add(Attendance.builder().user(user).date(calendar.getTime()).status(AttendanceStatus.ABSENT).build());
+      }
+      attendanceRepository.saveAllAndFlush(attendances);
     }
   }
 
@@ -150,7 +156,7 @@ public class AttendanceServicesImpl implements AttendanceServices {
     Calendar calendar = Calendar.getInstance();
     calendar.setTime(endDate);
     Date startDate = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).getTime();
-    List<Attendance> attendances = attendanceRepository.getAttendanceOfOrganizationBetweenTime(startDate, endDate, organizationId);
+    List<Attendance> attendances = attendanceRepository.getPresentAttendanceOfOrganizationBetweenTime(startDate, endDate, organizationId, AttendanceStatus.ON_TIME, AttendanceStatus.LATE);
     Set<Long> userSet = new TreeSet<>();
     if (type == CameraType.IN) {
       for (Attendance attendance : attendances) {

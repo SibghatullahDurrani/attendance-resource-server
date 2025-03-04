@@ -15,6 +15,7 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.BlockingQueue;
@@ -57,15 +58,16 @@ public class AttendanceCacheConsumerFactory {
       AttendanceCache nonResidentCache;
       SynchronizationLock synchronizationLock = synchronizationLockFactory.getSynchronizationLock(organizationId);
       String retakeAttendanceCron = organizationServices.attendanceRetakeTimingCron(organizationId);
-      this.attendanceServices.markAbsentOfAllUsersInOrganizationForCurrentDay(organizationId);
+      attendanceServices.markAbsentOfAllUsersInOrganizationForCurrentDay(organizationId);
+      taskScheduler.schedule(() -> attendanceServices.markAbsentOfAllUsersInOrganizationForCurrentDay(organizationId), new CronTrigger("0 10 0 * * *"));
       if (applicationContext.containsBean(BeanNamePrefix.NON_RESIDENT_CACHE + organizationId.toString())) {
         nonResidentCache = attendanceCacheFactory.getNonResidentCache(organizationId);
         nonResidentCache.syncCache(organizationId, CameraType.OUT);
       } else {
         nonResidentCache = null;
       }
-      BeanDefinition beanDefinition = BeanDefinitionBuilder
-              .genericBeanDefinition(BlockingQueueAttendanceCacheConsumer.class,
+      BeanDefinition beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(
+                      BlockingQueueAttendanceCacheConsumer.class,
                       () -> new BlockingQueueAttendanceCacheConsumer(
                               attendanceCacheQueue,
                               residentCache,
@@ -73,9 +75,7 @@ public class AttendanceCacheConsumerFactory {
                               synchronizationLock,
                               attendanceServices,
                               retakeAttendanceCron,
-                              taskScheduler
-                      )
-              )
+                              taskScheduler))
               .setScope(BeanDefinition.SCOPE_PROTOTYPE)
               .getBeanDefinition();
       beanDefinitionRegistry.registerBeanDefinition(beanName, beanDefinition);

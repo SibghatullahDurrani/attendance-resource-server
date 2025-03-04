@@ -11,6 +11,8 @@ import com.main.face_recognition_resource_server.exceptions.UserDoesntExistExcep
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface UserServices {
   UserDTO getUserDataByUsername(String username) throws UserDoesntExistException;
 
@@ -33,4 +35,6 @@ public interface UserServices {
   boolean userExistsWithUserId(Long userId);
 
   Long getUserOrganizationIdByUserId(Long userId) throws UserDoesntExistException;
+
+  List<User> getUsersByOrganizationId(Long organizationId);
 }
