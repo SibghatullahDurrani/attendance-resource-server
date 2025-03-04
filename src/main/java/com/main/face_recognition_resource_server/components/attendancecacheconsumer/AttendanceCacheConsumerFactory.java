@@ -57,6 +57,7 @@ public class AttendanceCacheConsumerFactory {
       AttendanceCache nonResidentCache;
       SynchronizationLock synchronizationLock = synchronizationLockFactory.getSynchronizationLock(organizationId);
       String retakeAttendanceCron = organizationServices.attendanceRetakeTimingCron(organizationId);
+      this.attendanceServices.markAbsentOfAllUsersInOrganizationForCurrentDay(organizationId);
       if (applicationContext.containsBean(BeanNamePrefix.NON_RESIDENT_CACHE + organizationId.toString())) {
         nonResidentCache = attendanceCacheFactory.getNonResidentCache(organizationId);
         nonResidentCache.syncCache(organizationId, CameraType.OUT);

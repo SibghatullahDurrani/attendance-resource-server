@@ -89,4 +89,14 @@ public class OrganizationServicesImpl implements OrganizationServices {
     int retakeAttendanceInHour = this.organizationRepository.getRetakeAttendanceInHourPolicy(organizationId);
     return AttendanceRetakeCron.getCron(retakeAttendanceInHour);
   }
+
+  @Override
+  public String getOrganizationCheckInPolicy(Long organizationId) {
+    return this.organizationRepository.getCheckInPolicy(organizationId);
+  }
+
+  @Override
+  public int getOrganizationLateAttendanceToleranceTimePolicy(Long organizationId) {
+    return this.organizationRepository.getLateAttendanceToleranceTimePolicy(organizationId);
+  }
 }

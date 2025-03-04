@@ -34,7 +34,7 @@ public interface CameraRepository extends JpaRepository<Camera, Long> {
   void setCameraStatusOfCamera(Long id, CameraStatus cameraStatus);
 
   @Query("""
-          SELECT CASE WHEN COUNT(c) > 0 THEN TRUE ELSE FALSE END FROM Camera c JOIN c.organization o
+          SELECT CASE WHEN COUNT(c) > 0 THEN TRUE ELSE FALSE END FROM Camera c
           WHERE c.ipAddress = ?1 AND c.port = ?2 AND c.channel = ?3
           """)
   boolean existsByIpAddressAndPortAndChannel(String ipAddress, int port, int channel);

@@ -51,16 +51,7 @@ public class UserServicesImpl implements UserServices {
       String hashedPassword = passwordEncoder.encode(userToRegister.getPassword());
       Long usernameSequence = userRepository.nextUsernameSequence();
       String username = userToRegister.getFirstName() + userToRegister.getSecondName() + "#" + usernameSequence;
-      userRepository.registerUser(
-              userToRegister.getFirstName(),
-              userToRegister.getSecondName(),
-              hashedPassword,
-              username,
-              userToRegister.getRole().toString(),
-              userToRegister.getIdentificationNumber(),
-              userToRegister.getEmail(),
-              userToRegister.getDepartmentId()
-      );
+      userRepository.registerUser(userToRegister.getFirstName(), userToRegister.getSecondName(), hashedPassword, username, userToRegister.getRole().toString(), userToRegister.getIdentificationNumber(), userToRegister.getEmail(), userToRegister.getDepartmentId());
     }
   }
 
@@ -127,6 +118,16 @@ public class UserServicesImpl implements UserServices {
   @Override
   public boolean userExistsWithUserId(Long userId) {
     return userRepository.existsById(userId);
+  }
+
+  @Override
+  public Long getUserOrganizationIdByUserId(Long userId) throws UserDoesntExistException {
+    Optional<Long> organizationId = this.userRepository.getUserOrganizationIdByUserId(userId);
+    if (organizationId.isPresent()) {
+      return organizationId.get();
+    } else {
+      throw new UserDoesntExistException();
+    }
   }
 
 }

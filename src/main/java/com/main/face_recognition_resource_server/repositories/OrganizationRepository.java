@@ -36,7 +36,17 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
   Page<Organization> getAllOrganizationsWithDepartments(Pageable pageable);
 
   @Query("""
-          SELECT o.organizationPreferences.retakeAttendanceInHour FROM Organization o WHERE o.id = ?1
+          SELECT o.organizationPolicies.retakeAttendanceInHour FROM Organization o WHERE o.id = ?1
           """)
   int getRetakeAttendanceInHourPolicy(Long organizationId);
+
+  @Query("""
+          SELECT o.organizationPolicies.checkInTimeForUser FROM Organization o WHERE o.id = ?1
+          """)
+  String getCheckInPolicy(Long organizationId);
+
+  @Query("""
+          SELECT o.organizationPolicies.lateAttendanceToleranceTimeInMinutes FROM Organization o WHERE o.id = ?1
+          """)
+  int getLateAttendanceToleranceTimePolicy(Long organizationId);
 }

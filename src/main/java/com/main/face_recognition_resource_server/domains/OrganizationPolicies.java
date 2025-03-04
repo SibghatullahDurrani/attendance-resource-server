@@ -20,7 +20,7 @@ public class OrganizationPolicies {
 
   private String checkOutTimeForUser;
 
-  private int minutesTillAttendanceCountsAsLate;
+  private int lateAttendanceToleranceTimeInMinutes;
 
   private int retakeAttendanceInHour;
 

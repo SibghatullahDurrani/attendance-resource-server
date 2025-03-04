@@ -77,4 +77,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
           SELECT u.department.id FROM User u WHERE u.username = ?1
           """)
   Optional<Long> getUserDepartmentId(String username);
+
+  @Query("""
+          SELECT u.department.organization.id FROM User u WHERE u.id = ?1
+          """)
+  Optional<Long> getUserOrganizationIdByUserId(Long userId);
 }

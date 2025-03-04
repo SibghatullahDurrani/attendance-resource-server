@@ -36,5 +36,5 @@ public class Organization {
 
   @OneToOne(cascade = CascadeType.ALL)
   @JoinColumn(name = "organization_policies_id", referencedColumnName = "id")
-  private OrganizationPolicies organizationPreferences;
+  private OrganizationPolicies organizationPolicies;
 }

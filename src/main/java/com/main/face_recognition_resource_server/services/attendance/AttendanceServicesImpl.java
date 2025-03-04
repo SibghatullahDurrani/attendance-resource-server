@@ -3,6 +3,7 @@ package com.main.face_recognition_resource_server.services.attendance;
 import com.main.face_recognition_resource_server.DTOS.CheckInDTO;
 import com.main.face_recognition_resource_server.DTOS.CheckOutDTO;
 import com.main.face_recognition_resource_server.DTOS.UserAttendanceDTO;
+import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import com.main.face_recognition_resource_server.constants.CameraType;
 import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.domains.CheckIn;
@@ -11,9 +12,9 @@ import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.AttendanceDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.AttendanceRepository;
+import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import com.main.face_recognition_resource_server.services.user.UserServices;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,32 +31,63 @@ public class AttendanceServicesImpl implements AttendanceServices {
   private final UserServices userServices;
   private final CheckInServices checkInServices;
   private final CheckOutServices checkOutServices;
+  private final OrganizationServices organizationServices;
 
 
-  public AttendanceServicesImpl(AttendanceRepository attendanceRepository, UserServices userServices, CheckInServices checkInServices, CheckOutServices checkOutServices) {
+  public AttendanceServicesImpl(AttendanceRepository attendanceRepository, UserServices userServices, CheckInServices checkInServices, CheckOutServices checkOutServices, OrganizationServices organizationServices) {
     this.attendanceRepository = attendanceRepository;
     this.userServices = userServices;
     this.checkInServices = checkInServices;
     this.checkOutServices = checkOutServices;
+    this.organizationServices = organizationServices;
   }
 
   @Override
   @Transactional
   @Async
-  public void markCheckIn(Long userId, Date endDate, BufferedImage image) throws UserDoesntExistException, IOException {
-    Optional<Attendance> attendance = getUserAttendanceFromDayStartTillDate(userId, endDate);
+  public void markCheckIn(Long userId, Date checkInDate, BufferedImage image) throws UserDoesntExistException, IOException {
+    Optional<Attendance> attendance = getUserAttendanceFromDayStartTillDate(userId, checkInDate);
+    Long organizationId = this.userServices.getUserOrganizationIdByUserId(userId);
+
     if (attendance.isEmpty()) {
       User user = userServices.getUserById(userId);
+
+      String checkInPolicyTime = this.organizationServices.getOrganizationCheckInPolicy(organizationId);
+      int lateAttendanceToleranceTimePolicy = this.organizationServices.getOrganizationLateAttendanceToleranceTimePolicy(organizationId);
+
+      int lateAttendanceToleranceTimeHours = 0;
+      int lateAttendanceToleranceTimeMinutes = 0;
+      while (lateAttendanceToleranceTimePolicy >= 60) {
+        lateAttendanceToleranceTimeHours += 1;
+        lateAttendanceToleranceTimePolicy -= 60;
+      }
+      lateAttendanceToleranceTimeMinutes += lateAttendanceToleranceTimePolicy;
+
+
+      String[] timeSplit = checkInPolicyTime.split(":");
+      Calendar requiredCheckInTime = GregorianCalendar.getInstance();
+      requiredCheckInTime.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeSplit[0]) + lateAttendanceToleranceTimeHours);
+      requiredCheckInTime.set(Calendar.MINUTE, Integer.parseInt(timeSplit[1]) + lateAttendanceToleranceTimeMinutes);
+
+      Calendar checkedInTime = GregorianCalendar.getInstance();
+      checkedInTime.setTime(checkInDate);
+      AttendanceStatus attendanceStatus;
+      if (checkedInTime.after(requiredCheckInTime)) {
+        attendanceStatus = AttendanceStatus.LATE;
+      } else {
+        attendanceStatus = AttendanceStatus.ON_TIME;
+      }
 
       Attendance attendanceAdded = attendanceRepository.saveAndFlush(
               Attendance.builder()
                       .user(user)
-                      .date(endDate)
+                      .date(checkInDate)
+                      .status(attendanceStatus)
                       .build()
       );
-      checkInServices.saveCheckIn(endDate, attendanceAdded, image);
+      checkInServices.saveCheckIn(checkInDate, attendanceAdded, image);
     } else {
-      checkInServices.saveCheckIn(endDate, attendance.get(), image);
+      checkInServices.saveCheckIn(checkInDate, attendance.get(), image);
     }
   }
 
@@ -94,11 +126,15 @@ public class AttendanceServicesImpl implements AttendanceServices {
     return null;
   }
 
-  @Scheduled(cron = "0 0 0 * * *")
   @Override
-  public void markAbsentOnDayStartScheduled() {
-//    attendanceRepository.markAbsentOfEveryUserForToday();
+  public void markAbsentOfAllUsersInOrganizationForCurrentDay(Long organizationId) {
+    Calendar calendar = GregorianCalendar.getInstance();
+    calendar.set(Calendar.HOUR_OF_DAY, 0);
 
+    boolean exists = this.attendanceRepository.existsByDateAndOrganizationId(calendar.getTime(), organizationId);
+    if (!exists) {
+
+    }
   }
 
   private Optional<Attendance> getUserAttendanceFromDayStartTillDate(Long userId, Date endDate) {

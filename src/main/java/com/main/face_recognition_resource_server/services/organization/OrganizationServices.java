@@ -22,4 +22,8 @@ public interface OrganizationServices {
   Page<OrganizationDepartmentDTO> getAllOrganizationsWithItsDepartments(Pageable pageable);
 
   String attendanceRetakeTimingCron(Long organizationId);
+
+  String getOrganizationCheckInPolicy(Long organizationId);
+
+  int getOrganizationLateAttendanceToleranceTimePolicy(Long organizationId);
 }

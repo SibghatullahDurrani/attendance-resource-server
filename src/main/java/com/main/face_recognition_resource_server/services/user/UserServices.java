@@ -31,4 +31,6 @@ public interface UserServices {
   User getUserById(Long userId) throws UserDoesntExistException;
 
   boolean userExistsWithUserId(Long userId);
+
+  Long getUserOrganizationIdByUserId(Long userId) throws UserDoesntExistException;
 }

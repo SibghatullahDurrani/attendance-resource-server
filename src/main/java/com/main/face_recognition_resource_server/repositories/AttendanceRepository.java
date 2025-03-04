@@ -34,4 +34,9 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
           """)
   Optional<UserAttendanceDTO> getAttendanceDTOByUserIdAndDate(Long userId, Date startDate, Date endDate);
 
+  @Query("""
+          SELECT CASE WHEN COUNT(a) > 0 THEN TRUE ELSE FALSE END FROM Attendance a 
+          WHERE a.date > ?1 and a.user.department.organization.id = ?2
+          """)
+  boolean existsByDateAndOrganizationId(Date dateAfter, Long organizationId);
 }
