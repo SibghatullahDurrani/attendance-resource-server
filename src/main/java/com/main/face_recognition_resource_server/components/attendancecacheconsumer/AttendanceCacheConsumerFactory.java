@@ -9,10 +9,12 @@ import com.main.face_recognition_resource_server.components.synchronizationlock.
 import com.main.face_recognition_resource_server.constants.BeanNamePrefix;
 import com.main.face_recognition_resource_server.constants.CameraType;
 import com.main.face_recognition_resource_server.services.attendance.AttendanceServices;
+import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.BlockingQueue;
@@ -24,13 +26,17 @@ public class AttendanceCacheConsumerFactory {
   private final AttendanceCacheFactory attendanceCacheFactory;
   private final SynchronizationLockFactory synchronizationLockFactory;
   private final AttendanceServices attendanceServices;
+  private final OrganizationServices organizationServices;
+  private final TaskScheduler taskScheduler;
 
-  public AttendanceCacheConsumerFactory(ApplicationContext applicationContext, AttendanceCacheQueueFactory attendanceCacheQueueFactory, AttendanceCacheFactory attendanceCacheFactory, SynchronizationLockFactory synchronizationLockFactory, AttendanceServices attendanceServices) {
+  public AttendanceCacheConsumerFactory(ApplicationContext applicationContext, AttendanceCacheQueueFactory attendanceCacheQueueFactory, AttendanceCacheFactory attendanceCacheFactory, SynchronizationLockFactory synchronizationLockFactory, AttendanceServices attendanceServices, OrganizationServices organizationServices, TaskScheduler taskScheduler) {
     this.applicationContext = applicationContext;
     this.attendanceCacheQueueFactory = attendanceCacheQueueFactory;
     this.attendanceCacheFactory = attendanceCacheFactory;
     this.synchronizationLockFactory = synchronizationLockFactory;
     this.attendanceServices = attendanceServices;
+    this.organizationServices = organizationServices;
+    this.taskScheduler = taskScheduler;
   }
 
   /**
@@ -50,6 +56,7 @@ public class AttendanceCacheConsumerFactory {
       residentCache.syncCache(organizationId, CameraType.IN);
       AttendanceCache nonResidentCache;
       SynchronizationLock synchronizationLock = synchronizationLockFactory.getSynchronizationLock(organizationId);
+      String retakeAttendanceCron = organizationServices.attendanceRetakeTimingCron(organizationId);
       if (applicationContext.containsBean(BeanNamePrefix.NON_RESIDENT_CACHE + organizationId.toString())) {
         nonResidentCache = attendanceCacheFactory.getNonResidentCache(organizationId);
         nonResidentCache.syncCache(organizationId, CameraType.OUT);
@@ -63,7 +70,9 @@ public class AttendanceCacheConsumerFactory {
                               residentCache,
                               nonResidentCache,
                               synchronizationLock,
-                              attendanceServices
+                              attendanceServices,
+                              retakeAttendanceCron,
+                              taskScheduler
                       )
               )
               .setScope(BeanDefinition.SCOPE_PROTOTYPE)

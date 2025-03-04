@@ -6,9 +6,11 @@ import com.main.face_recognition_resource_server.components.synchronizationlock.
 import com.main.face_recognition_resource_server.constants.CameraType;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.services.attendance.AttendanceServices;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import java.awt.image.BufferedImage;
@@ -25,9 +27,10 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
   private final AttendanceCache nonResidentCache;
   private final SynchronizationLock synchronizationLock;
   private final AttendanceServices attendanceServices;
-  private boolean isFirstCacheInvalidation = true;
+  private final String retakeAttendanceCron;
+  private final TaskScheduler taskScheduler;
 
-  public BlockingQueueAttendanceCacheConsumer(BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue, AttendanceCache residentCache, AttendanceCache nonResidentCache, SynchronizationLock synchronizationLock, AttendanceServices attendanceServices) {
+  public BlockingQueueAttendanceCacheConsumer(BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue, AttendanceCache residentCache, AttendanceCache nonResidentCache, SynchronizationLock synchronizationLock, AttendanceServices attendanceServices, String retakeAttendanceCron, TaskScheduler taskScheduler) {
     this.attendanceCacheQueue = attendanceCacheQueue;
     this.residentCache = residentCache;
     this.nonResidentCache = nonResidentCache;
@@ -46,7 +49,20 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
 //      }
 //      isFirstCacheInvalidation = false;
 //    }, 1, 3600, TimeUnit.SECONDS);
+    this.retakeAttendanceCron = retakeAttendanceCron;
+    this.taskScheduler = taskScheduler;
   }
+
+  @PostConstruct
+  public void scheduleCacheInvalidation() {
+    if (retakeAttendanceCron.equals("0 0 0 * * *")) {
+      taskScheduler.schedule(this::invalidateCache, new CronTrigger(retakeAttendanceCron));
+    } else {
+      taskScheduler.schedule(this::invalidateCache, new CronTrigger(retakeAttendanceCron));
+      taskScheduler.schedule(this::invalidateCache, new CronTrigger("0 0 0 * * *"));
+    }
+  }
+
 
   @Override
   public void run() {
@@ -106,25 +122,12 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
     }
   }
 
-  @Scheduled(cron = "0 0 * * * *")
-  public void invalidateCacheEveryHour() {
+  public void invalidateCache() {
     if (residentCache != null) {
       residentCache.invalidateCache();
     }
     if (nonResidentCache != null) {
       nonResidentCache.invalidateCache();
     }
-    System.out.println("Cache invalidated");
-  }
-
-  @Scheduled(cron = "0 0 0 * * *")
-  public void invalidateCacheAtTheEndOfTheDay() {
-    if (residentCache != null) {
-      residentCache.invalidateCache();
-    }
-    if (nonResidentCache != null) {
-      nonResidentCache.invalidateCache();
-    }
-    System.out.println("Cache invalidated");
   }
 }

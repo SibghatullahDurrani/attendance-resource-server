@@ -35,6 +35,6 @@ public class Organization {
   private List<Camera> cameras;
 
   @OneToOne(cascade = CascadeType.ALL)
-  @JoinColumn(name = "organization_preferences_id", referencedColumnName = "id")
-  private OrganizationPreferences organizationPreferences;
+  @JoinColumn(name = "organization_policies_id", referencedColumnName = "id")
+  private OrganizationPolicies organizationPreferences;
 }

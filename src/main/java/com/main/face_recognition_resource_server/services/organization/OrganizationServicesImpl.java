@@ -4,6 +4,7 @@ import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.OrganizationDepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.RegisterOrganizationDTO;
+import com.main.face_recognition_resource_server.constants.AttendanceRetakeCron;
 import com.main.face_recognition_resource_server.converters.OrganizationToRegisterOrganizationDTOConvertor;
 import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
@@ -81,5 +82,11 @@ public class OrganizationServicesImpl implements OrganizationServices {
               departments
       );
     });
+  }
+
+  @Override
+  public String attendanceRetakeTimingCron(Long organizationId) {
+    int retakeAttendanceInHour = this.organizationRepository.getRetakeAttendanceInHourPolicy(organizationId);
+    return AttendanceRetakeCron.getCron(retakeAttendanceInHour);
   }
 }

@@ -19,5 +19,5 @@ public interface AttendanceServices {
 
   UserAttendanceDTO getAttendanceOfUserOnDate(Long userId, String date) throws UserDoesntExistException, AttendanceDoesntExistException;
 
-  void markAbsentOnDayStartScheduled();
+  void markAbsentOfAllUsersInOrganization(Long OrganizationId);
 }

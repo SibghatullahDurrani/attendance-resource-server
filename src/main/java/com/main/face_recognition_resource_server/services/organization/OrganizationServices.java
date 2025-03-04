@@ -20,4 +20,6 @@ public interface OrganizationServices {
   Organization getOrganization(Long id) throws OrganizationDoesntExistException;
 
   Page<OrganizationDepartmentDTO> getAllOrganizationsWithItsDepartments(Pageable pageable);
+
+  String attendanceRetakeTimingCron(Long organizationId);
 }

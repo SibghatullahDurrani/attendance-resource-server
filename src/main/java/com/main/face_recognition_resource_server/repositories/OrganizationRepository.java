@@ -34,4 +34,9 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
   I will have to change this...
   */
   Page<Organization> getAllOrganizationsWithDepartments(Pageable pageable);
+
+  @Query("""
+          SELECT o.organizationPreferences.retakeAttendanceInHour FROM Organization o WHERE o.id = ?1
+          """)
+  int getRetakeAttendanceInHourPolicy(Long organizationId);
 }
