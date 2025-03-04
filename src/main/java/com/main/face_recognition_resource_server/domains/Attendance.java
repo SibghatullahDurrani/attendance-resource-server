@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.domains;
 
+import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,6 +28,10 @@ public class Attendance {
 
   @Column(nullable = false)
   private Date date;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private AttendanceStatus status;
 
   @OneToMany(mappedBy = "attendance")
   private List<CheckIn> checkIns;

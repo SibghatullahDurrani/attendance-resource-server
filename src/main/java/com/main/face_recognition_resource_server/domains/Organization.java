@@ -10,10 +10,10 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Builder
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Getter
 @Table(name = "organizations")
 public class Organization {
   @Id
@@ -33,4 +33,8 @@ public class Organization {
 
   @OneToMany(mappedBy = "organization")
   private List<Camera> cameras;
+
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinColumn(name = "organization_preferences_id", referencedColumnName = "id")
+  private OrganizationPreferences organizationPreferences;
 }

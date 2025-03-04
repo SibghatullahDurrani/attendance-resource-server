@@ -33,4 +33,5 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
           ) FROM Attendance a WHERE a.date BETWEEN ?2 AND ?3 AND a.user.id = ?1
           """)
   Optional<UserAttendanceDTO> getAttendanceDTOByUserIdAndDate(Long userId, Date startDate, Date endDate);
+
 }

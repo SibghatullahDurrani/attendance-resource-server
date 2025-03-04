@@ -13,6 +13,7 @@ import com.main.face_recognition_resource_server.exceptions.UserDoesntExistExcep
 import com.main.face_recognition_resource_server.repositories.AttendanceRepository;
 import com.main.face_recognition_resource_server.services.user.UserServices;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +46,13 @@ public class AttendanceServicesImpl implements AttendanceServices {
     Optional<Attendance> attendance = getUserAttendanceFromDayStartTillDate(userId, endDate);
     if (attendance.isEmpty()) {
       User user = userServices.getUserById(userId);
-      Attendance attendanceAdded = attendanceRepository.saveAndFlush(Attendance.builder().user(user).date(endDate).build());
+
+      Attendance attendanceAdded = attendanceRepository.saveAndFlush(
+              Attendance.builder()
+                      .user(user)
+                      .date(endDate)
+                      .build()
+      );
       checkInServices.saveCheckIn(endDate, attendanceAdded, image);
     } else {
       checkInServices.saveCheckIn(endDate, attendance.get(), image);
@@ -85,6 +92,13 @@ public class AttendanceServicesImpl implements AttendanceServices {
       }
     }
     return null;
+  }
+
+  @Scheduled(cron = "0 0 0 * * *")
+  @Override
+  public void markAbsentOnDayStartScheduled() {
+//    attendanceRepository.markAbsentOfEveryUserForToday();
+
   }
 
   private Optional<Attendance> getUserAttendanceFromDayStartTillDate(Long userId, Date endDate) {

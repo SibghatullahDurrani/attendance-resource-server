@@ -18,4 +18,6 @@ public interface AttendanceServices {
   void markCheckOut(Long userId, Date endDate, BufferedImage image) throws IOException;
 
   UserAttendanceDTO getAttendanceOfUserOnDate(Long userId, String date) throws UserDoesntExistException, AttendanceDoesntExistException;
+
+  void markAbsentOnDayStartScheduled();
 }
