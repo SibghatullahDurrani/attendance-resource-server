@@ -16,9 +16,5 @@ public class UserDTO {
   private String secondName;
   private String username;
   private UserRole role;
-  private String identificationNumber;
-  private String email;
-  private String departmentName;
-  private String organizationName;
   private String profilePicturePath;
 }

@@ -136,4 +136,14 @@ public class UserServicesImpl implements UserServices {
     return userRepository.getUsersByOrganizationId(organizationId);
   }
 
+  @Override
+  public Long getUserIdByUsername(String username) throws UserDoesntExistException {
+    Optional<Long> userId = userRepository.getUserIdByUsername(username);
+    if (userId.isPresent()) {
+      return userId.get();
+    } else {
+      throw new UserDoesntExistException();
+    }
+  }
+
 }

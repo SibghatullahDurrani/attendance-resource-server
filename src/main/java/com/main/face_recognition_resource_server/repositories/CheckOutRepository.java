@@ -5,6 +5,7 @@ import com.main.face_recognition_resource_server.domains.CheckOut;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Date;
 import java.util.List;
 
 public interface CheckOutRepository extends JpaRepository<CheckOut, Long> {
@@ -14,4 +15,10 @@ public interface CheckOutRepository extends JpaRepository<CheckOut, Long> {
           ) FROM CheckOut co WHERE co.attendance.id = ?1
           """)
   List<CheckOutDTO> getCheckOutsByAttendanceId(Long attendanceId);
+
+  @Query("""
+          SELECT co.date FROM CheckOut co
+          WHERE co.attendance.id IN ?1
+          """)
+  List<Date> getCheckOutDatesOfAttendanceIds(List<Long> attendanceIds);
 }

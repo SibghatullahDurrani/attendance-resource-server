@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
+import com.main.face_recognition_resource_server.DTOS.AttendanceStatsDTO;
 import com.main.face_recognition_resource_server.DTOS.CheckInDTO;
 import com.main.face_recognition_resource_server.DTOS.CheckOutDTO;
 import com.main.face_recognition_resource_server.DTOS.UserAttendanceDTO;
@@ -10,6 +11,7 @@ import com.main.face_recognition_resource_server.domains.CheckIn;
 import com.main.face_recognition_resource_server.domains.CheckOut;
 import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.AttendanceDoesntExistException;
+import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.AttendanceRepository;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
@@ -141,6 +143,64 @@ public class AttendanceServicesImpl implements AttendanceServices {
       }
       attendanceRepository.saveAllAndFlush(attendances);
     }
+  }
+
+  @Override
+  public AttendanceStatsDTO getUserAttendanceStats(int year, Long userId) throws NoStatsAvailableException {
+    Date startDate = new GregorianCalendar(year, Calendar.JANUARY, 1).getTime();
+    Calendar endCalendar = GregorianCalendar.getInstance();
+    endCalendar.set(Calendar.YEAR, year);
+    endCalendar.set(Calendar.MONTH, Calendar.DECEMBER);
+    endCalendar.set(Calendar.DAY_OF_MONTH, endCalendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+    endCalendar.set(Calendar.HOUR_OF_DAY, 0);
+    Date endDate = endCalendar.getTime();
+    return generateAttendanceStatsDTO(startDate, endDate, userId);
+  }
+
+  @Override
+  public AttendanceStatsDTO getUserAttendanceStats(int month, int year, Long userId) throws NoStatsAvailableException {
+    Date startDate = new GregorianCalendar(year, month, 1, 0, 0).getTime();
+    Calendar endCalendar = GregorianCalendar.getInstance();
+    endCalendar.set(Calendar.YEAR, year);
+    endCalendar.set(Calendar.MONTH, month);
+    endCalendar.set(Calendar.DAY_OF_MONTH, endCalendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+    endCalendar.set(Calendar.HOUR_OF_DAY, endCalendar.getActualMaximum(Calendar.HOUR_OF_DAY));
+    endCalendar.set(Calendar.MINUTE, endCalendar.getActualMaximum(Calendar.MINUTE));
+    endCalendar.set(Calendar.SECOND, endCalendar.getActualMaximum(Calendar.SECOND));
+    Date endDate = endCalendar.getTime();
+    return generateAttendanceStatsDTO(startDate, endDate, userId);
+  }
+
+  private AttendanceStatsDTO generateAttendanceStatsDTO(Date startDate, Date endDate, Long userId) throws NoStatsAvailableException {
+    int presentCount = attendanceRepository.countPresentAttendancesOfUserBetweenDates(
+            startDate,
+            endDate,
+            userId,
+            AttendanceStatus.ON_TIME,
+            AttendanceStatus.LATE
+    );
+    int absentCount = attendanceRepository.countAbsentAttendancesOfUserBetweenDates(
+            startDate,
+            endDate,
+            userId,
+            AttendanceStatus.ABSENT
+    );
+    int leaveCount = attendanceRepository.countLeaveAttendancesOfUserBetweenDates(
+            startDate,
+            endDate,
+            userId,
+            AttendanceStatus.ON_LEAVE
+    );
+    List<Long> attendanceIds = attendanceRepository.getAttendanceIdsOfUserBetweenDates(startDate, endDate, userId);
+    String averageCheckIns = checkInServices.getAverageCheckInOfAttendances(attendanceIds);
+    String averageCheckOuts = checkOutServices.getAverageCheckOutOfAttendances(attendanceIds);
+    return new AttendanceStatsDTO(
+            presentCount,
+            absentCount,
+            leaveCount,
+            averageCheckIns,
+            averageCheckOuts
+    );
   }
 
   private Optional<Attendance> getUserAttendanceFromDayStartTillDate(Long userId, Date endDate) {
