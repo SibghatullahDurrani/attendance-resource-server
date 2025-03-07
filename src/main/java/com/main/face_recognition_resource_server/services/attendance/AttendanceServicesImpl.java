@@ -1,9 +1,6 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
-import com.main.face_recognition_resource_server.DTOS.AttendanceStatsDTO;
-import com.main.face_recognition_resource_server.DTOS.CheckInDTO;
-import com.main.face_recognition_resource_server.DTOS.CheckOutDTO;
-import com.main.face_recognition_resource_server.DTOS.UserAttendanceDTO;
+import com.main.face_recognition_resource_server.DTOS.*;
 import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import com.main.face_recognition_resource_server.constants.CameraType;
 import com.main.face_recognition_resource_server.domains.Attendance;
@@ -22,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.text.DateFormatSymbols;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -159,6 +157,11 @@ public class AttendanceServicesImpl implements AttendanceServices {
 
   @Override
   public AttendanceStatsDTO getUserAttendanceStats(int month, int year, Long userId) throws NoStatsAvailableException {
+    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(month, year);
+    return generateAttendanceStatsDTO(startAndEndDate[0], startAndEndDate[1], userId);
+  }
+
+  private Date[] getStartAndEndDateOfMonthOfYear(int month, int year) {
     Date startDate = new GregorianCalendar(year, month, 1, 0, 0).getTime();
     Calendar endCalendar = GregorianCalendar.getInstance();
     endCalendar.set(Calendar.YEAR, year);
@@ -168,39 +171,37 @@ public class AttendanceServicesImpl implements AttendanceServices {
     endCalendar.set(Calendar.MINUTE, endCalendar.getActualMaximum(Calendar.MINUTE));
     endCalendar.set(Calendar.SECOND, endCalendar.getActualMaximum(Calendar.SECOND));
     Date endDate = endCalendar.getTime();
-    return generateAttendanceStatsDTO(startDate, endDate, userId);
+    return new Date[]{startDate, endDate};
+
+  }
+
+  @Override
+  public AttendanceCalendarDTO getUserAttendanceCalendar(int month, int year, Long userId) throws NoStatsAvailableException {
+    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(month, year);
+    List<CalendarAttendanceDataDTO> data = attendanceRepository.getAttendanceStatusWithDateOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
+    if (data.isEmpty()) {
+      throw new NoStatsAvailableException();
+    }
+    Calendar calendar = GregorianCalendar.getInstance();
+    calendar.setTime(startAndEndDate[0]);
+    DateFormatSymbols symbols = new DateFormatSymbols(Locale.getDefault());
+    String firstDayOfMonth = symbols.getWeekdays()[calendar.get(Calendar.DAY_OF_WEEK)];
+    int maxDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+    return AttendanceCalendarDTO.builder()
+            .data(data)
+            .maxDays(maxDays)
+            .firstDayOfTheMonth(firstDayOfMonth)
+            .build();
   }
 
   private AttendanceStatsDTO generateAttendanceStatsDTO(Date startDate, Date endDate, Long userId) throws NoStatsAvailableException {
-    int presentCount = attendanceRepository.countPresentAttendancesOfUserBetweenDates(
-            startDate,
-            endDate,
-            userId,
-            AttendanceStatus.ON_TIME,
-            AttendanceStatus.LATE
-    );
-    int absentCount = attendanceRepository.countAbsentAttendancesOfUserBetweenDates(
-            startDate,
-            endDate,
-            userId,
-            AttendanceStatus.ABSENT
-    );
-    int leaveCount = attendanceRepository.countLeaveAttendancesOfUserBetweenDates(
-            startDate,
-            endDate,
-            userId,
-            AttendanceStatus.ON_LEAVE
-    );
+    int presentCount = attendanceRepository.countPresentAttendancesOfUserBetweenDates(startDate, endDate, userId, AttendanceStatus.ON_TIME, AttendanceStatus.LATE);
+    int absentCount = attendanceRepository.countAbsentAttendancesOfUserBetweenDates(startDate, endDate, userId, AttendanceStatus.ABSENT);
+    int leaveCount = attendanceRepository.countLeaveAttendancesOfUserBetweenDates(startDate, endDate, userId, AttendanceStatus.ON_LEAVE);
     List<Long> attendanceIds = attendanceRepository.getAttendanceIdsOfUserBetweenDates(startDate, endDate, userId);
     String averageCheckIns = checkInServices.getAverageCheckInOfAttendances(attendanceIds);
     String averageCheckOuts = checkOutServices.getAverageCheckOutOfAttendances(attendanceIds);
-    return new AttendanceStatsDTO(
-            presentCount,
-            absentCount,
-            leaveCount,
-            averageCheckIns,
-            averageCheckOuts
-    );
+    return new AttendanceStatsDTO(presentCount, absentCount, leaveCount, averageCheckIns, averageCheckOuts);
   }
 
   private Optional<Attendance> getUserAttendanceFromDayStartTillDate(Long userId, Date endDate) {

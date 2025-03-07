@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.controllers;
 
+import com.main.face_recognition_resource_server.DTOS.AttendanceCalendarDTO;
 import com.main.face_recognition_resource_server.DTOS.AttendanceStatsDTO;
 import com.main.face_recognition_resource_server.DTOS.UserAttendanceDTO;
 import com.main.face_recognition_resource_server.DTOS.UserAttendanceRequestDTO;
@@ -42,5 +43,13 @@ public class AttendanceController {
       attendanceStatsDTO = attendanceServices.getUserAttendanceStats(year, userId);
     }
     return new ResponseEntity<>(attendanceStatsDTO, HttpStatus.OK);
+  }
+
+  @GetMapping("calendar")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<AttendanceCalendarDTO> getUserAttendanceCalendar(@RequestParam int year, @RequestParam int month, Authentication authentication) throws UserDoesntExistException, NoStatsAvailableException {
+    Long userId = userServices.getUserIdByUsername(authentication.getName());
+    AttendanceCalendarDTO attendanceCalendar = attendanceServices.getUserAttendanceCalendar(month, year, userId);
+    return new ResponseEntity<>(attendanceCalendar, HttpStatus.OK);
   }
 }

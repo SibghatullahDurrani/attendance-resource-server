@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
+import com.main.face_recognition_resource_server.DTOS.AttendanceCalendarDTO;
 import com.main.face_recognition_resource_server.DTOS.AttendanceStatsDTO;
 import com.main.face_recognition_resource_server.DTOS.UserAttendanceDTO;
 import com.main.face_recognition_resource_server.constants.CameraType;
@@ -27,4 +28,5 @@ public interface AttendanceServices {
 
   AttendanceStatsDTO getUserAttendanceStats(int month, int year, Long userId) throws NoStatsAvailableException;
 
+  AttendanceCalendarDTO getUserAttendanceCalendar(int month, int year, Long userId) throws NoStatsAvailableException;
 }

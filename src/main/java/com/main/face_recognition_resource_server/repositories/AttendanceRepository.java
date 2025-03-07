@@ -1,8 +1,10 @@
 package com.main.face_recognition_resource_server.repositories;
 
+import com.main.face_recognition_resource_server.DTOS.CalendarAttendanceDataDTO;
 import com.main.face_recognition_resource_server.DTOS.UserAttendanceDTO;
 import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import com.main.face_recognition_resource_server.domains.Attendance;
+import com.main.face_recognition_resource_server.domains.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -76,4 +78,13 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
           and a.user.id = ?3
           """)
   List<Long> getAttendanceIdsOfUserBetweenDates(Date startDate, Date endDate, Long userId);
+
+  List<Attendance> user(User user);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.CalendarAttendanceDataDTO(
+          a.date, a.status
+          )FROM Attendance a WHERE a.date BETWEEN ?1 AND ?2 AND a.user.id = ?3
+          """)
+  List<CalendarAttendanceDataDTO> getAttendanceStatusWithDateOfUserBetweenDates(Date startDate, Date endDate, Long userId);
 }
