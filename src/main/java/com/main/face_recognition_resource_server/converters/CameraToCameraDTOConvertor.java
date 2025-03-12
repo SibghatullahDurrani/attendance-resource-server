@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.converters;
 
-import com.main.face_recognition_resource_server.DTOS.CameraDTO;
+import com.main.face_recognition_resource_server.DTOS.camera.CameraDTO;
 import com.main.face_recognition_resource_server.domains.Camera;
 
 public class CameraToCameraDTOConvertor {

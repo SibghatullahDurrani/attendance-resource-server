@@ -1,4 +1,4 @@
-package com.main.face_recognition_resource_server.DTOS;
+package com.main.face_recognition_resource_server.DTOS.department;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 @Builder
-public class UserAttendanceRequestDTO {
-  private Long userId;
-  private String date;
+@Data
+public class DepartmentDTO {
+  private Long id;
+  private String departmentName;
 }

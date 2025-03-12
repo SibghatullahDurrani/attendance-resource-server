@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.components.attendancecacheproducer;
 
-import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.constants.CameraType;
 
 import java.awt.image.BufferedImage;

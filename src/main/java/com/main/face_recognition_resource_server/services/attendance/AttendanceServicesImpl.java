@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
-import com.main.face_recognition_resource_server.DTOS.*;
+import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import com.main.face_recognition_resource_server.constants.CameraType;
 import com.main.face_recognition_resource_server.domains.Attendance;
@@ -187,11 +187,55 @@ public class AttendanceServicesImpl implements AttendanceServices {
     DateFormatSymbols symbols = new DateFormatSymbols(Locale.getDefault());
     String firstDayOfMonth = symbols.getWeekdays()[calendar.get(Calendar.DAY_OF_WEEK)];
     int maxDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-    return AttendanceCalendarDTO.builder()
-            .data(data)
-            .maxDays(maxDays)
-            .firstDayOfTheMonth(firstDayOfMonth)
+    calendar.set(Calendar.DAY_OF_MONTH, maxDays);
+    String lastDayOfMonth = symbols.getWeekdays()[calendar.get(Calendar.DAY_OF_WEEK)];
+    calendar.set(Calendar.DAY_OF_MONTH, 1);
+    int previousMonth = calendar.get(Calendar.MONTH) - 1;
+    calendar.set(Calendar.MONTH, previousMonth);
+    int lastDateOfPreviousMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+    return AttendanceCalendarDTO.builder().data(data).maxDays(maxDays).firstDayOfTheMonth(firstDayOfMonth).lastDayOfTheMonth(lastDayOfMonth).lastDateOfPreviousMonth(lastDateOfPreviousMonth).build();
+  }
+
+  @Override
+  public List<AttendanceOverviewDTO> getUserAttendanceOverview(int month, int year, Long userId) throws NoStatsAvailableException {
+//    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(month, year);
+//    List<AttendanceOverviewDTO> attendanceOverviews = attendanceRepository.getAttendanceOverviewOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
+//
+//    if (attendanceOverviews.isEmpty()) {
+//      throw new NoStatsAvailableException();
+//    } else {
+//      List<Long> checkIns = new ArrayList<>();
+//      for (AttendanceOverviewDTO attendanceOverview : attendanceOverviews) {
+//        checkInServices.getCheckInsByAttendanceId(attendanceOverview.getId())
+//                .stream().map(checkIn -> checkIns.add(checkIn.getDate().));
+//      }
+//    }
+    return null;
+  }
+
+  @Override
+  public AttendanceSnapshotDTO getUserAttendanceSnapshots(int year, int month, int day, Long userId) throws NoStatsAvailableException {
+    Calendar startCalendar = new GregorianCalendar(year, month, day, 0, 0);
+    Date startDate = startCalendar.getTime();
+    Calendar endCalendar = new GregorianCalendar(year, month, day, 23, 59);
+    Date endDate = endCalendar.getTime();
+
+    Optional<Long> attendanceId = attendanceRepository.getAttendanceIdOfUserBetweenDates(startDate, endDate, userId);
+
+    if (attendanceId.isEmpty()) {
+      throw new NoStatsAvailableException();
+    }
+
+    AttendanceSnapshotDTO attendanceSnapshot = AttendanceSnapshotDTO.builder()
+            .attendanceStatus(attendanceRepository.getAttendanceStatusOfAttendance(attendanceId.get()))
+            .dayTime(startDate.getTime())
+            .data(new ArrayList<>())
             .build();
+
+    attendanceSnapshot.addAttendanceSnapshotDTOData(checkInServices.getCheckInSnapshotsOfAttendance(attendanceId.get()));
+    attendanceSnapshot.addAttendanceSnapshotDTOData(checkOutServices.getCheckOutSnapshotsOfAttendance(attendanceId.get()));
+
+    return attendanceSnapshot;
   }
 
   private AttendanceStatsDTO generateAttendanceStatsDTO(Date startDate, Date endDate, Long userId) throws NoStatsAvailableException {
@@ -199,8 +243,18 @@ public class AttendanceServicesImpl implements AttendanceServices {
     int absentCount = attendanceRepository.countAbsentAttendancesOfUserBetweenDates(startDate, endDate, userId, AttendanceStatus.ABSENT);
     int leaveCount = attendanceRepository.countLeaveAttendancesOfUserBetweenDates(startDate, endDate, userId, AttendanceStatus.ON_LEAVE);
     List<Long> attendanceIds = attendanceRepository.getAttendanceIdsOfUserBetweenDates(startDate, endDate, userId);
-    String averageCheckIns = checkInServices.getAverageCheckInOfAttendances(attendanceIds);
-    String averageCheckOuts = checkOutServices.getAverageCheckOutOfAttendances(attendanceIds);
+    String averageCheckIns = "-";
+    String averageCheckOuts = "-";
+    try {
+      averageCheckIns = checkInServices.getAverageCheckInOfAttendances(attendanceIds);
+      averageCheckOuts = checkOutServices.getAverageCheckOutOfAttendances(attendanceIds);
+    } catch (NoStatsAvailableException exception) {
+      if (absentCount > 0) {
+        return new AttendanceStatsDTO(presentCount, absentCount, leaveCount, averageCheckIns, averageCheckOuts);
+      } else {
+        throw new NoStatsAvailableException();
+      }
+    }
     return new AttendanceStatsDTO(presentCount, absentCount, leaveCount, averageCheckIns, averageCheckOuts);
   }
 

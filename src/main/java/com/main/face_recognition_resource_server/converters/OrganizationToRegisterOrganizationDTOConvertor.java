@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.converters;
 
-import com.main.face_recognition_resource_server.DTOS.RegisterOrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Organization;
 
 public class OrganizationToRegisterOrganizationDTOConvertor {

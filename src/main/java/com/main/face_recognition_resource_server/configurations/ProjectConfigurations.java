@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.configurations;
 
-import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.auth.JwtAuthenticationConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;

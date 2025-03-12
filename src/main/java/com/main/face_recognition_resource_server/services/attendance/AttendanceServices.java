@@ -1,8 +1,6 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
-import com.main.face_recognition_resource_server.DTOS.AttendanceCalendarDTO;
-import com.main.face_recognition_resource_server.DTOS.AttendanceStatsDTO;
-import com.main.face_recognition_resource_server.DTOS.UserAttendanceDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.constants.CameraType;
 import com.main.face_recognition_resource_server.exceptions.AttendanceDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
@@ -11,6 +9,7 @@ import com.main.face_recognition_resource_server.exceptions.UserDoesntExistExcep
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 public interface AttendanceServices {
@@ -29,4 +28,8 @@ public interface AttendanceServices {
   AttendanceStatsDTO getUserAttendanceStats(int month, int year, Long userId) throws NoStatsAvailableException;
 
   AttendanceCalendarDTO getUserAttendanceCalendar(int month, int year, Long userId) throws NoStatsAvailableException;
+
+  List<AttendanceOverviewDTO> getUserAttendanceOverview(int month, int year, Long userId) throws NoStatsAvailableException;
+
+  AttendanceSnapshotDTO getUserAttendanceSnapshots(int year, int month, int day, Long userId) throws NoStatsAvailableException;
 }

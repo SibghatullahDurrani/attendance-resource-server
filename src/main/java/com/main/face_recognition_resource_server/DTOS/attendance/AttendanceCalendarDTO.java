@@ -1,4 +1,4 @@
-package com.main.face_recognition_resource_server.DTOS;
+package com.main.face_recognition_resource_server.DTOS.attendance;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,4 +15,6 @@ public class AttendanceCalendarDTO {
   private List<CalendarAttendanceDataDTO> data;
   private int maxDays;
   private String firstDayOfTheMonth;
+  private String lastDayOfTheMonth;
+  private int lastDateOfPreviousMonth;
 }

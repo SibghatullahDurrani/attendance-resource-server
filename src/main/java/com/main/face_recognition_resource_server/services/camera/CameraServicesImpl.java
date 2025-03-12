@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.services.camera;
 
-import com.main.face_recognition_resource_server.DTOS.GetCameraDTO;
-import com.main.face_recognition_resource_server.DTOS.RegisterCameraDTO;
+import com.main.face_recognition_resource_server.DTOS.camera.GetCameraDTO;
+import com.main.face_recognition_resource_server.DTOS.camera.RegisterCameraDTO;
 import com.main.face_recognition_resource_server.constants.CameraStatus;
 import com.main.face_recognition_resource_server.domains.Camera;
 import com.main.face_recognition_resource_server.domains.Organization;

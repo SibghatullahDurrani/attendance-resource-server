@@ -1,4 +1,4 @@
-package com.main.face_recognition_resource_server.DTOS;
+package com.main.face_recognition_resource_server.DTOS.attendance;
 
 import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import lombok.AllArgsConstructor;

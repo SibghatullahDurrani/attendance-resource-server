@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.services.camera;
 
-import com.main.face_recognition_resource_server.DTOS.AttendanceCacheDTO;
-import com.main.face_recognition_resource_server.DTOS.CameraCredentialsDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceCacheDTO;
+import com.main.face_recognition_resource_server.DTOS.camera.CameraCredentialsDTO;
 import com.main.face_recognition_resource_server.components.attendancecache.AttendanceCacheFactory;
 import com.main.face_recognition_resource_server.components.attendancecacheconsumer.AttendanceCacheConsumerFactory;
 import com.main.face_recognition_resource_server.components.attendancecacheconsumer.BlockingQueueAttendanceCacheConsumer;

@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.repositories;
 
-import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.constants.OrganizationType;
 import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.utils.AbstractPostgreSQLTestContainer;

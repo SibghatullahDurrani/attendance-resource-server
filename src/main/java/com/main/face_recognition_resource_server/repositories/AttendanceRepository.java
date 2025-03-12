@@ -1,7 +1,8 @@
 package com.main.face_recognition_resource_server.repositories;
 
-import com.main.face_recognition_resource_server.DTOS.CalendarAttendanceDataDTO;
-import com.main.face_recognition_resource_server.DTOS.UserAttendanceDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceOverviewDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.CalendarAttendanceDataDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.UserAttendanceDTO;
 import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.domains.User;
@@ -38,7 +39,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
   @Query("""
           SELECT DISTINCT new
-          com.main.face_recognition_resource_server.DTOS.UserAttendanceDTO(
+          com.main.face_recognition_resource_server.DTOS.attendance.UserAttendanceDTO(
           a.id, a.user.id, a.date) FROM Attendance a
           WHERE a.date BETWEEN ?2 AND ?3 AND a.user.id = ?1
           """)
@@ -82,9 +83,26 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
   List<Attendance> user(User user);
 
   @Query("""
-          SELECT new com.main.face_recognition_resource_server.DTOS.CalendarAttendanceDataDTO(
+          SELECT new com.main.face_recognition_resource_server.DTOS.attendance.CalendarAttendanceDataDTO(
           a.date, a.status
           )FROM Attendance a WHERE a.date BETWEEN ?1 AND ?2 AND a.user.id = ?3
           """)
   List<CalendarAttendanceDataDTO> getAttendanceStatusWithDateOfUserBetweenDates(Date startDate, Date endDate, Long userId);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.attendance.AttendanceOverviewDTO(
+                    a.id,a.date,a.status
+            )FROM Attendance a WHERE a.date BETWEEN ?1 AND ?2 AND a.user.id = ?3
+          """)
+  List<AttendanceOverviewDTO> getAttendanceOverviewOfUserBetweenDates(Date startDate, Date endDate, Long userId);
+
+  @Query("""
+          SELECT a.id FROM Attendance a WHERE a.date BETWEEN ?1 AND ?2 AND a.user.id = ?3
+          """)
+  Optional<Long> getAttendanceIdOfUserBetweenDates(Date startDate, Date endDate, Long userId);
+
+  @Query("""
+          SELECT a.status FROM Attendance a WHERE a.id = ?1
+          """)
+  AttendanceStatus getAttendanceStatusOfAttendance(Long attendanceId);
 }

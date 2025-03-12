@@ -1,8 +1,8 @@
 package com.main.face_recognition_resource_server.controllers;
 
-import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
-import com.main.face_recognition_resource_server.DTOS.OrganizationDepartmentDTO;
-import com.main.face_recognition_resource_server.DTOS.RegisterOrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.department.OrganizationDepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;

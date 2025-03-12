@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.converters;
 
-import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
+import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
 import com.main.face_recognition_resource_server.domains.User;
 
 public class UserToRegisterUserDTOConvertor {

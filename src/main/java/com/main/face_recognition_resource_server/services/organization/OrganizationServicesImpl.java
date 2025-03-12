@@ -1,9 +1,9 @@
 package com.main.face_recognition_resource_server.services.organization;
 
-import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
-import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
-import com.main.face_recognition_resource_server.DTOS.OrganizationDepartmentDTO;
-import com.main.face_recognition_resource_server.DTOS.RegisterOrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.department.OrganizationDepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.constants.AttendanceRetakeCron;
 import com.main.face_recognition_resource_server.converters.OrganizationToRegisterOrganizationDTOConvertor;
 import com.main.face_recognition_resource_server.domains.Organization;

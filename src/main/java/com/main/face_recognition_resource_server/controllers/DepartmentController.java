@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.controllers;
 
-import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
-import com.main.face_recognition_resource_server.DTOS.RegisterDepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.department.RegisterDepartmentDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;

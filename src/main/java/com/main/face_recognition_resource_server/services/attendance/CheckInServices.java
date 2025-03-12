@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
-import com.main.face_recognition_resource_server.DTOS.CheckInDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceSnapshotDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.CheckInDTO;
 import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
 
@@ -15,4 +16,6 @@ public interface CheckInServices {
   List<CheckInDTO> getCheckInsByAttendanceId(Long attendanceId);
 
   String getAverageCheckInOfAttendances(List<Long> attendanceIds) throws NoStatsAvailableException;
+
+  List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> getCheckInSnapshotsOfAttendance(Long attendanceId);
 }

@@ -1,10 +1,10 @@
 package com.main.face_recognition_resource_server.services.user;
 
 
-import com.main.face_recognition_resource_server.DTOS.DepartmentDTO;
-import com.main.face_recognition_resource_server.DTOS.OrganizationDTO;
-import com.main.face_recognition_resource_server.DTOS.RegisterUserDTO;
-import com.main.face_recognition_resource_server.DTOS.UserDTO;
+import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
+import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;

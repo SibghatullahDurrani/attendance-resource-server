@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.repositories;
 
-import com.main.face_recognition_resource_server.DTOS.CameraCredentialsDTO;
-import com.main.face_recognition_resource_server.DTOS.GetCameraDTO;
+import com.main.face_recognition_resource_server.DTOS.camera.CameraCredentialsDTO;
+import com.main.face_recognition_resource_server.DTOS.camera.GetCameraDTO;
 import com.main.face_recognition_resource_server.constants.CameraStatus;
 import com.main.face_recognition_resource_server.domains.Camera;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,14 +13,14 @@ import java.util.List;
 
 public interface CameraRepository extends JpaRepository<Camera, Long> {
   @Query("""
-          SELECT new com.main.face_recognition_resource_server.DTOS.GetCameraDTO(
+          SELECT new com.main.face_recognition_resource_server.DTOS.camera.GetCameraDTO(
           c.id, c.ipAddress, c.port, c.channel, c.type, c.cameraStatus
           ) FROM Camera c JOIN c.organization o WHERE o.id = ?1
           """)
   List<GetCameraDTO> getCamerasOfOrganization(Long organizationId);
 
   @Query("""
-          SELECT new com.main.face_recognition_resource_server.DTOS.CameraCredentialsDTO(
+          SELECT new com.main.face_recognition_resource_server.DTOS.camera.CameraCredentialsDTO(
           c.id,c.ipAddress,c.port,c.channel,c.username,c.password,c.type
           ) FROM Camera c JOIN c.organization o WHERE o.id = ?1
           """)

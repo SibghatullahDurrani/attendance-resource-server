@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.services.department;
 
-import com.main.face_recognition_resource_server.DTOS.RegisterDepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.department.RegisterDepartmentDTO;
 import com.main.face_recognition_resource_server.domains.Department;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;

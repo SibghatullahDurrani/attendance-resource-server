@@ -1,9 +1,6 @@
 package com.main.face_recognition_resource_server.controllers;
 
-import com.main.face_recognition_resource_server.DTOS.AttendanceCalendarDTO;
-import com.main.face_recognition_resource_server.DTOS.AttendanceStatsDTO;
-import com.main.face_recognition_resource_server.DTOS.UserAttendanceDTO;
-import com.main.face_recognition_resource_server.DTOS.UserAttendanceRequestDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.exceptions.AttendanceDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
@@ -14,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("attendances")
@@ -51,5 +50,21 @@ public class AttendanceController {
     Long userId = userServices.getUserIdByUsername(authentication.getName());
     AttendanceCalendarDTO attendanceCalendar = attendanceServices.getUserAttendanceCalendar(month, year, userId);
     return new ResponseEntity<>(attendanceCalendar, HttpStatus.OK);
+  }
+
+  @GetMapping("overview")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<List<AttendanceOverviewDTO>> getUserAttendanceOverview(@RequestParam int year, @RequestParam int month, Authentication authentication) throws UserDoesntExistException, NoStatsAvailableException {
+    Long userId = userServices.getUserIdByUsername(authentication.getName());
+    List<AttendanceOverviewDTO> attendanceOverviews = attendanceServices.getUserAttendanceOverview(month, year, userId);
+    return new ResponseEntity<>(attendanceOverviews, HttpStatus.OK);
+  }
+
+  @GetMapping("snaps")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<AttendanceSnapshotDTO> getUserAttendanceSnapshots(@RequestParam int year, @RequestParam int month, @RequestParam int day, Authentication authentication) throws UserDoesntExistException, NoStatsAvailableException {
+    Long userId = userServices.getUserIdByUsername(authentication.getName());
+    AttendanceSnapshotDTO attendanceSnapshot = attendanceServices.getUserAttendanceSnapshots(year, month, day, userId);
+    return new ResponseEntity<>(attendanceSnapshot, HttpStatus.OK);
   }
 }

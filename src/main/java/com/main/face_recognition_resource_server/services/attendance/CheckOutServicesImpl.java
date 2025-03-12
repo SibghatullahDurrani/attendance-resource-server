@@ -1,6 +1,9 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
-import com.main.face_recognition_resource_server.DTOS.CheckOutDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceSnapshotDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.CheckOutDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.GetAttendanceSnapPathDTO;
+import com.main.face_recognition_resource_server.constants.AttendanceType;
 import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.domains.CheckOut;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
@@ -31,11 +34,12 @@ public class CheckOutServicesImpl implements CheckOutServices {
   @Transactional
   public void saveCheckOut(Date date, Attendance attendance, BufferedImage image) throws IOException {
     String uuid = UUID.randomUUID().toString();
-    String snapPicPath = picturePath + "/" + uuid + "FaceRecognition.jpg";
+    String snapName = uuid + "FaceRecognition.jpg";
+    String snapPicPath = picturePath + "/" + snapName;
     CheckOut checkOut = CheckOut.builder()
             .date(date)
             .attendance(attendance)
-            .imagePath(snapPicPath)
+            .imagePath(snapName)
             .build();
     checkOutRepository.saveAndFlush(checkOut);
     ImageIO.write(image, "jpg", new File(snapPicPath));
@@ -49,7 +53,7 @@ public class CheckOutServicesImpl implements CheckOutServices {
   @Override
   public String getAverageCheckOutOfAttendances(List<Long> attendanceIds) throws NoStatsAvailableException {
     List<Date> checkOutDates = checkOutRepository.getCheckOutDatesOfAttendanceIds(attendanceIds);
-    if(checkOutDates.size() < 1) throw new NoStatsAvailableException();
+    if (checkOutDates.size() < 1) throw new NoStatsAvailableException();
     Calendar calendar = GregorianCalendar.getInstance();
     int totalMinutes = 0;
     for (Date date : checkOutDates) {
@@ -59,12 +63,36 @@ public class CheckOutServicesImpl implements CheckOutServices {
     }
     int averageMinutes = totalMinutes / checkOutDates.size();
     int averageHours = 0;
+    String ampm = "am";
     while (averageMinutes > 60) {
       averageMinutes -= 60;
       averageHours++;
+
+      if (averageHours == 13) {
+        averageHours = 1;
+      }
+      if (averageHours == 12) {
+        ampm = "pm";
+      }
     }
     String averageHoursString = averageHours < 10 ? "0" + averageHours : String.valueOf(averageHours);
     String averageMinutesString = averageMinutes < 10 ? "0" + averageMinutes : String.valueOf(averageMinutes);
-    return averageHoursString + ":" + averageMinutesString;
+    return averageHoursString + ":" + averageMinutesString + " " + ampm;
+  }
+
+  @Override
+  public List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> getCheckOutSnapshotsOfAttendance(Long attendanceId) {
+    List<GetAttendanceSnapPathDTO> checkOutSnapPaths = checkOutRepository.getCheckOutSnapPathsOfAttendance(attendanceId);
+    List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> attendanceSnapshots = new ArrayList<>();
+    checkOutSnapPaths.forEach(snapPath -> {
+      attendanceSnapshots.add(
+              AttendanceSnapshotDTO.AttendanceSnapShotDTOData.builder()
+                      .snapName(snapPath.getSnapPath())
+                      .attendanceType(AttendanceType.CHECK_OUT)
+                      .attendanceTime(snapPath.getAttendanceTime())
+                      .build()
+      );
+    });
+    return attendanceSnapshots;
   }
 }

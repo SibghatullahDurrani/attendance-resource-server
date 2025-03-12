@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
-import com.main.face_recognition_resource_server.DTOS.CheckOutDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceSnapshotDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.CheckOutDTO;
 import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
 
@@ -15,4 +16,6 @@ public interface CheckOutServices {
   List<CheckOutDTO> getCheckOutsByAttendanceId(Long attendanceId);
 
   String getAverageCheckOutOfAttendances(List<Long> attendanceIds) throws NoStatsAvailableException;
+
+  List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> getCheckOutSnapshotsOfAttendance(Long attendanceId);
 }
