@@ -30,4 +30,10 @@ public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
           WHERE ci.attendance.id = ?1
           """)
   List<GetAttendanceSnapPathDTO> getCheckInSnapPathsOfAttendance(Long attendanceId);
+
+  @Query("""
+          SELECT ci.date FROM CheckIn ci
+          WHERE ci.attendance.id = ?1
+          """)
+  List<Date> getCheckInDatesOfAttendanceId(Long attendanceId);
 }

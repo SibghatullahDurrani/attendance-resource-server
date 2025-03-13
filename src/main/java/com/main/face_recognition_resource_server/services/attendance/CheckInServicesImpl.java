@@ -51,6 +51,12 @@ public class CheckInServicesImpl implements CheckInServices {
   }
 
   @Override
+  public List<Long> getCheckInTimesByAttendanceId(Long attendanceId) {
+    List<Date> checkedInDates = checkInRepository.getCheckInDatesOfAttendanceId(attendanceId);
+    return checkedInDates.stream().map(Date::getTime).toList();
+  }
+
+  @Override
   public String getAverageCheckInOfAttendances(List<Long> attendanceIds) throws NoStatsAvailableException {
     List<Date> checkInDates = checkInRepository.getCheckInDatesOfAttendanceIds(attendanceIds);
     if (checkInDates.size() < 1) throw new NoStatsAvailableException();

@@ -18,4 +18,6 @@ public interface CheckOutServices {
   String getAverageCheckOutOfAttendances(List<Long> attendanceIds) throws NoStatsAvailableException;
 
   List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> getCheckOutSnapshotsOfAttendance(Long attendanceId);
+
+  List<Long> getCheckOutTimesByAttendanceId(Long attendanceId);
 }

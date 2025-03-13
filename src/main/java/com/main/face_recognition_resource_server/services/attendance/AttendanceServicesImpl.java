@@ -198,19 +198,18 @@ public class AttendanceServicesImpl implements AttendanceServices {
 
   @Override
   public List<AttendanceOverviewDTO> getUserAttendanceOverview(int month, int year, Long userId) throws NoStatsAvailableException {
-//    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(month, year);
-//    List<AttendanceOverviewDTO> attendanceOverviews = attendanceRepository.getAttendanceOverviewOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
-//
-//    if (attendanceOverviews.isEmpty()) {
-//      throw new NoStatsAvailableException();
-//    } else {
-//      List<Long> checkIns = new ArrayList<>();
-//      for (AttendanceOverviewDTO attendanceOverview : attendanceOverviews) {
-//        checkInServices.getCheckInsByAttendanceId(attendanceOverview.getId())
-//                .stream().map(checkIn -> checkIns.add(checkIn.getDate().));
-//      }
-//    }
-    return null;
+    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(month, year);
+    List<AttendanceOverviewDTO> attendanceOverviews = attendanceRepository.getAttendanceOverviewOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
+
+    if (attendanceOverviews.isEmpty()) {
+      throw new NoStatsAvailableException();
+    }
+
+    for (AttendanceOverviewDTO attendanceOverview : attendanceOverviews) {
+      attendanceOverview.setCheckIns(checkInServices.getCheckInTimesByAttendanceId(attendanceOverview.getId()));
+      attendanceOverview.setCheckOuts(checkOutServices.getCheckOutTimesByAttendanceId(attendanceOverview.getId()));
+    }
+    return attendanceOverviews;
   }
 
   @Override

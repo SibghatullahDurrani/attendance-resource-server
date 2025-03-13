@@ -15,6 +15,8 @@ public interface CheckInServices {
 
   List<CheckInDTO> getCheckInsByAttendanceId(Long attendanceId);
 
+  List<Long> getCheckInTimesByAttendanceId(Long attendanceId);
+
   String getAverageCheckInOfAttendances(List<Long> attendanceIds) throws NoStatsAvailableException;
 
   List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> getCheckInSnapshotsOfAttendance(Long attendanceId);

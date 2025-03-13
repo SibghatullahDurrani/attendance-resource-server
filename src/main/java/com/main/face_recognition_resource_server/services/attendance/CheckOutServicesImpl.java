@@ -95,4 +95,10 @@ public class CheckOutServicesImpl implements CheckOutServices {
     });
     return attendanceSnapshots;
   }
+
+  @Override
+  public List<Long> getCheckOutTimesByAttendanceId(Long attendanceId) {
+    List<Date> checkOutDates = checkOutRepository.getCheckOutDatesOfAttendanceId(attendanceId);
+    return checkOutDates.stream().map(Date::getTime).toList();
+  }
 }
