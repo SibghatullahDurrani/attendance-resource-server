@@ -2,9 +2,10 @@ package com.main.face_recognition_resource_server.services.attendance;
 
 import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.constants.CameraType;
-import com.main.face_recognition_resource_server.exceptions.AttendanceDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -19,8 +20,6 @@ public interface AttendanceServices {
 
   void markCheckOut(Long userId, Date endDate, BufferedImage image) throws IOException;
 
-  UserAttendanceDTO getAttendanceOfUserOnDate(Long userId, String date) throws UserDoesntExistException, AttendanceDoesntExistException;
-
   void markAbsentOfAllUsersInOrganizationForCurrentDay(Long OrganizationId);
 
   AttendanceStatsDTO getUserAttendanceStats(int year, Long userId) throws NoStatsAvailableException;
@@ -29,7 +28,11 @@ public interface AttendanceServices {
 
   AttendanceCalendarDTO getUserAttendanceCalendar(int month, int year, Long userId) throws NoStatsAvailableException;
 
-  List<AttendanceOverviewDTO> getUserAttendanceOverview(int month, int year, Long userId) throws NoStatsAvailableException;
+  List<UserAttendanceTableDTO> getMonthlyUserAttendanceTable(int month, int year, Long userId) throws NoStatsAvailableException, UserDoesntExistException, IOException;
+
+  List<UserAttendanceDTO> getMonthlyUserAttendanceOverview(int month, int year, Long userId) throws NoStatsAvailableException, UserDoesntExistException;
 
   AttendanceSnapshotDTO getUserAttendanceSnapshots(int year, int month, int day, Long userId) throws NoStatsAvailableException;
+
+  Page<UserAttendanceDTO> getYearlyUserAttendanceTable(Pageable pageRequest, int year, Long userId);
 }

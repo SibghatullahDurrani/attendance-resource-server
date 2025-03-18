@@ -49,4 +49,14 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
           SELECT o.organizationPolicies.lateAttendanceToleranceTimeInMinutes FROM Organization o WHERE o.id = ?1
           """)
   int getLateAttendanceToleranceTimePolicy(Long organizationId);
+
+  @Query("""
+          SELECT o.organizationPolicies.checkOutTimeForUser FROM Organization o WHERE o.id = ?1
+          """)
+  String getCheckOutPolicy(Long organizationId);
+
+  @Query("""
+          SELECT o.organizationPolicies.checkOutToleranceTimeInHour FROM Organization o WHERE o.id = ?1
+          """)
+  int getCheckOutToleranceTimePolicy(Long organizationId);
 }

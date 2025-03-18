@@ -1,8 +1,8 @@
 package com.main.face_recognition_resource_server.services.organization;
 
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
-import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.department.OrganizationDepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.constants.AttendanceRetakeCron;
 import com.main.face_recognition_resource_server.converters.OrganizationToRegisterOrganizationDTOConvertor;
@@ -91,12 +91,27 @@ public class OrganizationServicesImpl implements OrganizationServices {
   }
 
   @Override
+  public int getAttendanceRetakeAttendanceInHourPolicy(Long organizationId) {
+    return this.organizationRepository.getRetakeAttendanceInHourPolicy(organizationId);
+  }
+
+  @Override
   public String getOrganizationCheckInPolicy(Long organizationId) {
     return this.organizationRepository.getCheckInPolicy(organizationId);
   }
 
   @Override
+  public String getOrganizationCheckOutPolicy(Long organizationId) {
+    return this.organizationRepository.getCheckOutPolicy(organizationId);
+  }
+
+  @Override
   public int getOrganizationLateAttendanceToleranceTimePolicy(Long organizationId) {
     return this.organizationRepository.getLateAttendanceToleranceTimePolicy(organizationId);
+  }
+
+  @Override
+  public int getOrganizationCheckOutToleranceTimePolicy(Long organizationId) {
+    return this.organizationRepository.getCheckOutToleranceTimePolicy(organizationId);
   }
 }

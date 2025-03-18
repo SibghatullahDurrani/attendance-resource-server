@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.services.organization;
 
-import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.department.OrganizationDepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
@@ -23,7 +23,13 @@ public interface OrganizationServices {
 
   String attendanceRetakeTimingCron(Long organizationId);
 
+  int getAttendanceRetakeAttendanceInHourPolicy(Long organizationId);
+
   String getOrganizationCheckInPolicy(Long organizationId);
 
+  String getOrganizationCheckOutPolicy(Long organizationId);
+
   int getOrganizationLateAttendanceToleranceTimePolicy(Long organizationId);
+
+  int getOrganizationCheckOutToleranceTimePolicy(Long organizationId);
 }

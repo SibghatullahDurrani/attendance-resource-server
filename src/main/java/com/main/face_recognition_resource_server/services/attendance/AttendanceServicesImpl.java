@@ -7,22 +7,24 @@ import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.domains.CheckIn;
 import com.main.face_recognition_resource_server.domains.CheckOut;
 import com.main.face_recognition_resource_server.domains.User;
-import com.main.face_recognition_resource_server.exceptions.AttendanceDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.AttendanceRepository;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import com.main.face_recognition_resource_server.services.user.UserServices;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.DateFormatSymbols;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.*;
 
 @Service
@@ -32,6 +34,11 @@ public class AttendanceServicesImpl implements AttendanceServices {
   private final CheckInServices checkInServices;
   private final CheckOutServices checkOutServices;
   private final OrganizationServices organizationServices;
+  private final int scoreImageWidth = 1200;
+  private final int scoreImageHeight = 100;
+  private final Color green = new Color(67, 99, 63);
+  private final Color red = new Color(163, 0, 0);
+  private final Color cyan = new Color(209, 232, 111);
 
 
   public AttendanceServicesImpl(AttendanceRepository attendanceRepository, UserServices userServices, CheckInServices checkInServices, CheckOutServices checkOutServices, OrganizationServices organizationServices) {
@@ -52,8 +59,8 @@ public class AttendanceServicesImpl implements AttendanceServices {
     if (attendanceOptional.isPresent()) {
       Attendance attendance = attendanceOptional.get();
       if (attendance.getCheckIns() == null || attendance.getCheckIns().isEmpty()) {
-        String checkInPolicyTime = this.organizationServices.getOrganizationCheckInPolicy(organizationId);
-        int lateAttendanceToleranceTimePolicy = this.organizationServices.getOrganizationLateAttendanceToleranceTimePolicy(organizationId);
+        String checkInPolicyTime = organizationServices.getOrganizationCheckInPolicy(organizationId);
+        int lateAttendanceToleranceTimePolicy = organizationServices.getOrganizationLateAttendanceToleranceTimePolicy(organizationId);
 
         int lateAttendanceToleranceTimeHours = 0;
         int lateAttendanceToleranceTimeMinutes = 0;
@@ -100,31 +107,6 @@ public class AttendanceServicesImpl implements AttendanceServices {
   }
 
   @Override
-  public UserAttendanceDTO getAttendanceOfUserOnDate(Long userId, String stringDate) throws UserDoesntExistException, AttendanceDoesntExistException {
-    boolean userExists = userServices.userExistsWithUserId(userId);
-    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-    String stringStartDate = stringDate + " 00:00:00";
-    String stringEndDate = stringDate + " 23:59:59";
-    LocalDateTime startLocalDateTime = LocalDateTime.parse(stringStartDate, dateTimeFormatter);
-    LocalDateTime endLocalDateTime = LocalDateTime.parse(stringEndDate, dateTimeFormatter);
-    Date startDate = Date.from(startLocalDateTime.atZone(ZoneId.systemDefault()).toInstant());
-    Date endDate = Date.from(endLocalDateTime.atZone(ZoneId.systemDefault()).toInstant());
-    if (userExists) {
-      Optional<UserAttendanceDTO> attendance = attendanceRepository.getAttendanceDTOByUserIdAndDate(userId, startDate, endDate);
-      if (attendance.isEmpty()) {
-        throw new AttendanceDoesntExistException();
-      } else {
-        List<CheckInDTO> checkIns = checkInServices.getCheckInsByAttendanceId(attendance.get().getId());
-        List<CheckOutDTO> checkOuts = checkOutServices.getCheckOutsByAttendanceId(attendance.get().getId());
-        attendance.get().setCheckIns(checkIns);
-        attendance.get().setCheckOuts(checkOuts);
-        return attendance.get();
-      }
-    }
-    return null;
-  }
-
-  @Override
   public void markAbsentOfAllUsersInOrganizationForCurrentDay(Long organizationId) {
     Calendar calendar = GregorianCalendar.getInstance();
     calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -150,7 +132,7 @@ public class AttendanceServicesImpl implements AttendanceServices {
     endCalendar.set(Calendar.YEAR, year);
     endCalendar.set(Calendar.MONTH, Calendar.DECEMBER);
     endCalendar.set(Calendar.DAY_OF_MONTH, endCalendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-    endCalendar.set(Calendar.HOUR_OF_DAY, 0);
+    endCalendar.set(Calendar.HOUR_OF_DAY, 23);
     Date endDate = endCalendar.getTime();
     return generateAttendanceStatsDTO(startDate, endDate, userId);
   }
@@ -197,19 +179,169 @@ public class AttendanceServicesImpl implements AttendanceServices {
   }
 
   @Override
-  public List<AttendanceOverviewDTO> getUserAttendanceOverview(int month, int year, Long userId) throws NoStatsAvailableException {
+  public List<UserAttendanceTableDTO> getMonthlyUserAttendanceTable(int month, int year, Long userId) throws NoStatsAvailableException, UserDoesntExistException, IOException {
     Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(month, year);
-    List<AttendanceOverviewDTO> attendanceOverviews = attendanceRepository.getAttendanceOverviewOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
+    List<UserAttendanceTableDTO> attendanceTableRecords = attendanceRepository.getAttendanceTableRecordsOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
 
-    if (attendanceOverviews.isEmpty()) {
+    if (attendanceTableRecords.isEmpty()) {
       throw new NoStatsAvailableException();
     }
 
-    for (AttendanceOverviewDTO attendanceOverview : attendanceOverviews) {
-      attendanceOverview.setCheckIns(checkInServices.getCheckInTimesByAttendanceId(attendanceOverview.getId()));
-      attendanceOverview.setCheckOuts(checkOutServices.getCheckOutTimesByAttendanceId(attendanceOverview.getId()));
+    Long organizationId = userServices.getUserOrganizationIdByUserId(userId);
+    int lateAttendanceToleranceTimeInMillis = organizationServices.getOrganizationLateAttendanceToleranceTimePolicy(organizationId) * 60000;
+    long organizationRetakeAttendancePolicyInMillis = organizationServices.getAttendanceRetakeAttendanceInHourPolicy(organizationId) * 3600000L;
+    String organizationCheckInTime = organizationServices.getOrganizationCheckInPolicy(organizationId);
+    String[] organizationCheckInTimeSplit = organizationCheckInTime.split(":");
+    int organizationCheckInHour = Integer.parseInt(organizationCheckInTimeSplit[0]);
+    int organizationCheckInMinutes = Integer.parseInt(organizationCheckInTimeSplit[1]);
+    String organizationCheckOutTime = organizationServices.getOrganizationCheckOutPolicy(organizationId);
+    String[] organizationCheckOutTimeSplit = organizationCheckOutTime.split(":");
+    int organizationCheckOutHour = Integer.parseInt(organizationCheckOutTimeSplit[0]);
+    int organizationCheckOutMinutes = Integer.parseInt(organizationCheckOutTimeSplit[1]);
+    int checkOutToleranceTime = organizationServices.getOrganizationCheckOutToleranceTimePolicy(organizationId);
+
+    for (UserAttendanceTableDTO attendanceRecord : attendanceTableRecords) {
+      attendanceRecord.setCheckIns(checkInServices.getCheckInTimesByAttendanceId(attendanceRecord.getId()));
+      attendanceRecord.setCheckOuts(checkOutServices.getCheckOutTimesByAttendanceId(attendanceRecord.getId()));
+
+      BufferedImage scoreImage = new BufferedImage(scoreImageWidth, scoreImageHeight, BufferedImage.TYPE_INT_RGB);
+      Graphics scoreGraphics = scoreImage.createGraphics();
+
+      Calendar policyCheckIn = new GregorianCalendar();
+      Calendar policyCheckOut = new GregorianCalendar();
+
+      policyCheckIn.setTimeInMillis(attendanceRecord.getDate());
+      policyCheckOut.setTimeInMillis(attendanceRecord.getDate());
+
+      policyCheckIn.set(Calendar.HOUR_OF_DAY, organizationCheckInHour);
+      policyCheckIn.set(Calendar.MINUTE, organizationCheckInMinutes);
+
+      policyCheckOut.set(Calendar.HOUR_OF_DAY, organizationCheckOutHour);
+      policyCheckOut.set(Calendar.MINUTE, organizationCheckOutMinutes);
+
+      long policyCheckOutTimeStamp = policyCheckOut.getTime().getTime();
+      long policyCheckInTimeStamp = policyCheckIn.getTime().getTime();
+
+      long totalWorkingHoursTimeStamp = policyCheckOutTimeStamp - policyCheckInTimeStamp;
+
+      List<Long> checkIns = new ArrayList<>(attendanceRecord.getCheckIns());
+      List<Long> checkOuts = new ArrayList<>(attendanceRecord.getCheckOuts());
+
+      long checkIn = 0;
+      long checkOut = 0;
+      if (!checkIns.isEmpty()) {
+        checkIn = checkIns.removeFirst();
+      }
+      if (!checkOuts.isEmpty()) {
+        checkOut = checkOuts.removeFirst();
+      }
+      int previousPoint = 0;
+      boolean first = true;
+
+      if (checkIn == 0 && attendanceRecord.getStatus() == AttendanceStatus.ABSENT) {
+        drawRectangleTillEnd(scoreGraphics, previousPoint, red);
+      } else if (checkIn == 0 && attendanceRecord.getStatus() == AttendanceStatus.ON_LEAVE) {
+        drawRectangleTillEnd(scoreGraphics, previousPoint, cyan);
+      }
+
+      while (checkIn != 0 || checkOut != 0) {
+        if (first) {
+          if (checkIn > policyCheckInTimeStamp + lateAttendanceToleranceTimeInMillis) {
+            previousPoint = drawRectangle(scoreGraphics, previousPoint, policyCheckInTimeStamp, checkIn, totalWorkingHoursTimeStamp, red);
+            if (checkIns.isEmpty()) {
+              if (checkOut == 0) {
+                if (checkIn + organizationRetakeAttendancePolicyInMillis > policyCheckOutTimeStamp) {
+                  drawRectangle(scoreGraphics, previousPoint, checkIn, policyCheckOutTimeStamp, totalWorkingHoursTimeStamp, green);
+                } else {
+                  int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkIn + organizationRetakeAttendancePolicyInMillis, totalWorkingHoursTimeStamp, green);
+                  previousPoint = previousPoint + newPoint;
+                  drawRectangleTillEnd(scoreGraphics, previousPoint, red);
+                }
+              } else {
+                int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkOut, totalWorkingHoursTimeStamp, green);
+                previousPoint = previousPoint + newPoint;
+              }
+              checkIn = 0;
+            } else {
+              checkIn = checkIns.removeFirst();
+            }
+          } else {
+            int newPoint = drawRectangle(scoreGraphics, previousPoint, policyCheckInTimeStamp, checkIn, totalWorkingHoursTimeStamp, green);
+            previousPoint = previousPoint + newPoint;
+          }
+          first = false;
+        } else {
+          if (checkIn != 0 && checkOut == 0) {
+            if ((checkIn + organizationRetakeAttendancePolicyInMillis) > policyCheckOutTimeStamp) {
+              drawRectangle(scoreGraphics, previousPoint, checkIn, policyCheckOutTimeStamp, totalWorkingHoursTimeStamp, green);
+            } else {
+              int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkIn + organizationRetakeAttendancePolicyInMillis, totalWorkingHoursTimeStamp, green);
+              previousPoint = previousPoint + newPoint;
+              drawRectangleTillEnd(scoreGraphics, previousPoint, red);
+            }
+            checkIn = 0;
+          }
+          if (checkIn == 0 && checkOut != 0) {
+            drawRectangleTillEnd(scoreGraphics, previousPoint, red);
+            checkOut = 0;
+          }
+          if (checkOut != 0) {
+            if (checkOut > checkIn) {
+              int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkOut, totalWorkingHoursTimeStamp, green);
+              previousPoint = previousPoint + newPoint;
+              if (checkIns.isEmpty()) {
+                checkIn = 0;
+              } else {
+                checkIn = checkIns.removeFirst();
+              }
+            } else {
+              int newPoint = drawRectangle(scoreGraphics, previousPoint, checkOut, checkIn, totalWorkingHoursTimeStamp, red);
+              previousPoint = previousPoint + newPoint;
+              if (checkOuts.isEmpty()) {
+                checkOut = 0;
+              } else {
+                checkOut = checkOuts.removeFirst();
+              }
+            }
+          }
+        }
+      }
+
+      ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+      ImageIO.write(scoreImage, "jpg", byteArrayOutputStream);
+      attendanceRecord.setScore(byteArrayOutputStream.toByteArray());
     }
-    return attendanceOverviews;
+    return attendanceTableRecords;
+  }
+
+  private int drawRectangle(Graphics scoreGraphics, int previousPoint, long startTime, long endTime, long totalTime, Color color) {
+    double redPercentage = (double) (endTime - startTime) / totalTime;
+    int width = (int) (scoreImageWidth * redPercentage);
+    scoreGraphics.setColor(color);
+    scoreGraphics.fillRect(previousPoint, 0, width, scoreImageHeight);
+    return width;
+  }
+
+  private void drawRectangleTillEnd(Graphics scoreGraphics, int previousPoint, Color color) {
+    scoreGraphics.setColor(color);
+    scoreGraphics.fillRect(previousPoint, 0, scoreImageWidth - previousPoint, scoreImageHeight);
+  }
+
+  @Override
+  public List<UserAttendanceDTO> getMonthlyUserAttendanceOverview(int month, int year, Long userId) throws NoStatsAvailableException, UserDoesntExistException {
+    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(month, year);
+    List<UserAttendanceDTO> attendances = attendanceRepository.getAttendanceOverviewOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
+
+    if (attendances.isEmpty()) {
+      throw new NoStatsAvailableException();
+    }
+
+    for (UserAttendanceDTO attendance : attendances) {
+      attendance.setCheckIns(checkInServices.getCheckInTimesByAttendanceId(attendance.getId()));
+      attendance.setCheckOuts(checkOutServices.getCheckOutTimesByAttendanceId(attendance.getId()));
+    }
+
+    return attendances;
   }
 
   @Override
@@ -225,16 +357,31 @@ public class AttendanceServicesImpl implements AttendanceServices {
       throw new NoStatsAvailableException();
     }
 
-    AttendanceSnapshotDTO attendanceSnapshot = AttendanceSnapshotDTO.builder()
-            .attendanceStatus(attendanceRepository.getAttendanceStatusOfAttendance(attendanceId.get()))
-            .dayTime(startDate.getTime())
-            .data(new ArrayList<>())
-            .build();
+    AttendanceSnapshotDTO attendanceSnapshot = AttendanceSnapshotDTO.builder().attendanceStatus(attendanceRepository.getAttendanceStatusOfAttendance(attendanceId.get())).dayTime(startDate.getTime()).data(new ArrayList<>()).build();
 
     attendanceSnapshot.addAttendanceSnapshotDTOData(checkInServices.getCheckInSnapshotsOfAttendance(attendanceId.get()));
     attendanceSnapshot.addAttendanceSnapshotDTOData(checkOutServices.getCheckOutSnapshotsOfAttendance(attendanceId.get()));
 
     return attendanceSnapshot;
+  }
+
+  @Override
+  public Page<UserAttendanceDTO> getYearlyUserAttendanceTable(Pageable pageRequest, int year, Long userId) {
+    Date startDate = new GregorianCalendar(year, Calendar.JANUARY, 1).getTime();
+    Calendar endCalendar = GregorianCalendar.getInstance();
+    endCalendar.set(Calendar.YEAR, year);
+    endCalendar.set(Calendar.MONTH, Calendar.DECEMBER);
+    endCalendar.set(Calendar.DAY_OF_MONTH, endCalendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+    endCalendar.set(Calendar.HOUR_OF_DAY, 23);
+    Date endDate = endCalendar.getTime();
+
+    Page<UserAttendanceDTO> attendancePage = attendanceRepository.getUserAttendancePageBetweenDate(userId, startDate, endDate, pageRequest);
+
+    return attendancePage.map(attendance -> {
+      attendance.setCheckIns(checkInServices.getCheckInTimesByAttendanceId(attendance.getId()));
+      attendance.setCheckOuts(checkOutServices.getCheckOutTimesByAttendanceId(attendance.getId()));
+      return attendance;
+    });
   }
 
   private AttendanceStatsDTO generateAttendanceStatsDTO(Date startDate, Date endDate, Long userId) throws NoStatsAvailableException {

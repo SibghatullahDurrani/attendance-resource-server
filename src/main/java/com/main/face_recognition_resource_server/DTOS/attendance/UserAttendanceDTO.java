@@ -1,27 +1,24 @@
 package com.main.face_recognition_resource_server.DTOS.attendance;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 @Data
+@NoArgsConstructor
 public class UserAttendanceDTO {
   private Long id;
-  private Long userId;
-  private String date;
-  private List<CheckInDTO> checkIns;
-  private List<CheckOutDTO> checkOuts;
+  private Long date;
+  private AttendanceStatus status;
+  private List<Long> checkIns;
+  private List<Long> checkOuts;
 
-  public UserAttendanceDTO(Long id, Long userId, Date date) {
+  public UserAttendanceDTO(Long id, Date date, AttendanceStatus status) {
     this.id = id;
-    this.userId = userId;
-    this.date = date.toString();
+    this.date = date.getTime();
+    this.status = status;
   }
 }
