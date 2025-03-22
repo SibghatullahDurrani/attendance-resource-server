@@ -58,7 +58,7 @@ class UserRepositoryTest extends AbstractPostgreSQLTestContainer {
   }
 
   @Test
-  public void getUserByUsername_ReturnsUser() {
+  public void getUserByUsername_ReturnsUserDTO() {
     Organization organization = DataUtil.getOrganization();
     Department department = DataUtil.getDepartment(organization);
     organizationRepository.saveAndFlush(organization);
@@ -67,15 +67,15 @@ class UserRepositoryTest extends AbstractPostgreSQLTestContainer {
 
     userRepository.saveAndFlush(user);
 
-    Optional<UserDTO> userByUsername = userRepository.getUserByUsername(user.getUsername());
+    Optional<UserDTO> userByUsername = userRepository.getUserDTOByUsername(user.getUsername());
 
     Assertions.assertThat(userByUsername).isPresent();
     Assertions.assertThat(userByUsername.get().getUsername()).isEqualTo(user.getUsername());
   }
 
   @Test
-  public void getUserByUsername_ReturnEmpty_WhenNotExist() {
-    Optional<UserDTO> userByUsername = userRepository.getUserByUsername("XYZ");
+  public void getUserDTOByUsername_ReturnEmpty_WhenNotExist() {
+    Optional<UserDTO> userByUsername = userRepository.getUserDTOByUsername("XYZ");
 
     Assertions.assertThat(userByUsername).isEmpty();
   }

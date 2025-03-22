@@ -39,4 +39,8 @@ public interface UserServices {
   List<User> getUsersByOrganizationId(Long organizationId);
 
   Long getUserIdByUsername(String name) throws UserDoesntExistException;
+
+  User getUserByUsername(String username) throws UserDoesntExistException;
+
+  User saveUser(User user);
 }

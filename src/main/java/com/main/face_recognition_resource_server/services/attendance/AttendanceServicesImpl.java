@@ -27,6 +27,9 @@ import java.text.DateFormatSymbols;
 import java.util.List;
 import java.util.*;
 
+import static com.main.face_recognition_resource_server.helpers.DateUtils.getStartAndEndDateOfMonthOfYear;
+import static com.main.face_recognition_resource_server.helpers.DateUtils.getStartAndEndDateOfYear;
+
 @Service
 public class AttendanceServicesImpl implements AttendanceServices {
   private final AttendanceRepository attendanceRepository;
@@ -127,34 +130,14 @@ public class AttendanceServicesImpl implements AttendanceServices {
 
   @Override
   public AttendanceStatsDTO getUserAttendanceStats(int year, Long userId) throws NoStatsAvailableException {
-    Date startDate = new GregorianCalendar(year, Calendar.JANUARY, 1).getTime();
-    Calendar endCalendar = GregorianCalendar.getInstance();
-    endCalendar.set(Calendar.YEAR, year);
-    endCalendar.set(Calendar.MONTH, Calendar.DECEMBER);
-    endCalendar.set(Calendar.DAY_OF_MONTH, endCalendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-    endCalendar.set(Calendar.HOUR_OF_DAY, 23);
-    Date endDate = endCalendar.getTime();
-    return generateAttendanceStatsDTO(startDate, endDate, userId);
+    Date[] dates = getStartAndEndDateOfYear(year);
+    return generateAttendanceStatsDTO(dates[0], dates[1], userId);
   }
 
   @Override
   public AttendanceStatsDTO getUserAttendanceStats(int month, int year, Long userId) throws NoStatsAvailableException {
     Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(month, year);
     return generateAttendanceStatsDTO(startAndEndDate[0], startAndEndDate[1], userId);
-  }
-
-  private Date[] getStartAndEndDateOfMonthOfYear(int month, int year) {
-    Date startDate = new GregorianCalendar(year, month, 1, 0, 0).getTime();
-    Calendar endCalendar = GregorianCalendar.getInstance();
-    endCalendar.set(Calendar.YEAR, year);
-    endCalendar.set(Calendar.MONTH, month);
-    endCalendar.set(Calendar.DAY_OF_MONTH, endCalendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-    endCalendar.set(Calendar.HOUR_OF_DAY, endCalendar.getActualMaximum(Calendar.HOUR_OF_DAY));
-    endCalendar.set(Calendar.MINUTE, endCalendar.getActualMaximum(Calendar.MINUTE));
-    endCalendar.set(Calendar.SECOND, endCalendar.getActualMaximum(Calendar.SECOND));
-    Date endDate = endCalendar.getTime();
-    return new Date[]{startDate, endDate};
-
   }
 
   @Override
@@ -367,15 +350,8 @@ public class AttendanceServicesImpl implements AttendanceServices {
 
   @Override
   public Page<UserAttendanceDTO> getYearlyUserAttendanceTable(Pageable pageRequest, int year, Long userId) {
-    Date startDate = new GregorianCalendar(year, Calendar.JANUARY, 1).getTime();
-    Calendar endCalendar = GregorianCalendar.getInstance();
-    endCalendar.set(Calendar.YEAR, year);
-    endCalendar.set(Calendar.MONTH, Calendar.DECEMBER);
-    endCalendar.set(Calendar.DAY_OF_MONTH, endCalendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-    endCalendar.set(Calendar.HOUR_OF_DAY, 23);
-    Date endDate = endCalendar.getTime();
-
-    Page<UserAttendanceDTO> attendancePage = attendanceRepository.getUserAttendancePageBetweenDate(userId, startDate, endDate, pageRequest);
+    Date[] startAndEndDate = getStartAndEndDateOfYear(year);
+    Page<UserAttendanceDTO> attendancePage = attendanceRepository.getUserAttendancePageBetweenDate(userId, startAndEndDate[0], startAndEndDate[1], pageRequest);
 
     return attendancePage.map(attendance -> {
       attendance.setCheckIns(checkInServices.getCheckInTimesByAttendanceId(attendance.getId()));

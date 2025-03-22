@@ -53,4 +53,10 @@ public class User {
 
   @OneToMany(mappedBy = "user")
   private List<Attendance> attendances;
+
+  @Column(nullable = false)
+  private int remainingSickLeaves;
+
+  @Column(nullable = false)
+  private int remainingAnnualLeaves;
 }

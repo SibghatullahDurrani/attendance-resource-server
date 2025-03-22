@@ -25,4 +25,10 @@ public class OrganizationPolicies {
   private int retakeAttendanceInHour;
 
   private int checkOutToleranceTimeInHour;
+
+  @Column(nullable = false)
+  private int sickLeavesAllowed;
+
+  @Column(nullable = false)
+  private int annualLeavesAllowed;
 }

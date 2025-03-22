@@ -36,7 +36,7 @@ class UserServicesImplTest {
   @Test
   public void getUserDataByUsername_ThrowsUserDoesntExistException() {
     String username = Mockito.anyString();
-    when(userRepository.getUserByUsername(username)).thenReturn(Optional.empty());
+    when(userRepository.getUserDTOByUsername(username)).thenReturn(Optional.empty());
     assertThrows(UserDoesntExistException.class, () -> userServices.getUserDataByUsername(username));
   }
 
@@ -44,7 +44,7 @@ class UserServicesImplTest {
   public void getUserDataByUsername_returnsUser() {
     String username = Mockito.anyString();
     UserDTO userDTO = UserDTO.builder().build();
-    when(userRepository.getUserByUsername(username)).thenReturn(Optional.of(userDTO));
+    when(userRepository.getUserDTOByUsername(username)).thenReturn(Optional.of(userDTO));
     UserDTO user = userServices.getUserDataByUsername(username);
 
     Assertions.assertThat(user).isSameAs(userDTO);

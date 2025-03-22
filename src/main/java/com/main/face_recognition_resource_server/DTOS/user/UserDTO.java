@@ -15,6 +15,7 @@ public class UserDTO {
   private String firstName;
   private String secondName;
   private String username;
+  private String department;
   private UserRole role;
   private String profilePicturePath;
 }

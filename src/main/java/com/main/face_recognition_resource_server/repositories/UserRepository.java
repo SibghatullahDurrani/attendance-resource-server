@@ -20,15 +20,20 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.user.UserDTO(
-          u.id, u.firstName, u.secondName, u.username, u.role,
+          u.id, u.firstName, u.secondName, u.username, u.department.departmentName, u.role,
           u.profilePicturePath
           ) FROM User u WHERE u.username = ?1
           """)
-  Optional<UserDTO> getUserByUsername(String username);
+  Optional<UserDTO> getUserDTOByUsername(String username);
+
+  @Query("""
+          SELECT u FROM User u WHERE u.username = ?1
+          """)
+  Optional<User> getUserByUsername(String username);
 
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.user.UserDTO(
-          u.id, u.firstName, u.secondName, u.username, u.role,
+          u.id, u.firstName, u.secondName, u.username, u.department.departmentName, u.role,
           u.profilePicturePath
           ) FROM User u
           """)

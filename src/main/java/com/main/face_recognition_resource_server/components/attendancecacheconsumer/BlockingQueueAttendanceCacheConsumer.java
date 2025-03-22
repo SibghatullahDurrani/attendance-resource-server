@@ -36,19 +36,6 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
     this.nonResidentCache = nonResidentCache;
     this.synchronizationLock = synchronizationLock;
     this.attendanceServices = attendanceServices;
-//    ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-//    scheduledExecutorService.scheduleAtFixedRate(() -> {
-//      if (!isFirstCacheInvalidation) {
-//        if (residentCache != null) {
-//          residentCache.invalidateCache();
-//        }
-//        if (nonResidentCache != null) {
-//          nonResidentCache.invalidateCache();
-//        }
-//        System.out.println("Cache invalidated");
-//      }
-//      isFirstCacheInvalidation = false;
-//    }, 1, 3600, TimeUnit.SECONDS);
     this.retakeAttendanceCron = retakeAttendanceCron;
     this.taskScheduler = taskScheduler;
   }

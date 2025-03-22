@@ -31,7 +31,7 @@ public class UserServicesImpl implements UserServices {
 
   @Override
   public UserDTO getUserDataByUsername(String username) throws UserDoesntExistException {
-    Optional<UserDTO> optionalUser = userRepository.getUserByUsername(username);
+    Optional<UserDTO> optionalUser = userRepository.getUserDTOByUsername(username);
     if (optionalUser.isEmpty()) {
       throw new UserDoesntExistException();
     } else {
@@ -144,6 +144,21 @@ public class UserServicesImpl implements UserServices {
     } else {
       throw new UserDoesntExistException();
     }
+  }
+
+  @Override
+  public User getUserByUsername(String username) throws UserDoesntExistException {
+    Optional<User> user = userRepository.getUserByUsername(username);
+    if (user.isEmpty()) {
+      throw new UserDoesntExistException();
+    } else {
+      return user.get();
+    }
+  }
+
+  @Override
+  public User saveUser(User user) {
+    return userRepository.saveAndFlush(user);
   }
 
 }
