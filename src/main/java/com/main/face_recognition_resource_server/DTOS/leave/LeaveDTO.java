@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.DTOS.leave;
 
 import com.main.face_recognition_resource_server.constants.LeaveStatus;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 @NoArgsConstructor
+@AllArgsConstructor
 @Data
 @Builder
 public class LeaveDTO {

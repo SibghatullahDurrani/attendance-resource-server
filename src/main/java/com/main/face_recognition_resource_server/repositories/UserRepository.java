@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.repositories;
 
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
@@ -98,4 +99,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
           SELECT u.id FROM User u WHERE u.username = ?1
           """)
   Optional<Long> getUserIdByUsername(String username);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO(
+                    u.remainingSickLeaves, u.remainingAnnualLeaves
+          ) FROM User u WHERE u.username = ?1
+          """)
+  RemainingLeavesDTO getRemainingLeavesByUsername(String username);
 }

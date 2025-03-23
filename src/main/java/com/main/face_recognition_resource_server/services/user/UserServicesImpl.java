@@ -2,6 +2,7 @@ package com.main.face_recognition_resource_server.services.user;
 
 
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
@@ -159,6 +160,11 @@ public class UserServicesImpl implements UserServices {
   @Override
   public User saveUser(User user) {
     return userRepository.saveAndFlush(user);
+  }
+
+  @Override
+  public RemainingLeavesDTO getRemainingLeavesOfUser(String username) {
+    return userRepository.getRemainingLeavesByUsername(username);
   }
 
 }

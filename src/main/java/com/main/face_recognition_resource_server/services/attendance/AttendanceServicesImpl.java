@@ -136,13 +136,13 @@ public class AttendanceServicesImpl implements AttendanceServices {
 
   @Override
   public AttendanceStatsDTO getUserAttendanceStats(int month, int year, Long userId) throws NoStatsAvailableException {
-    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(month, year);
+    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
     return generateAttendanceStatsDTO(startAndEndDate[0], startAndEndDate[1], userId);
   }
 
   @Override
   public AttendanceCalendarDTO getUserAttendanceCalendar(int month, int year, Long userId) throws NoStatsAvailableException {
-    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(month, year);
+    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
     List<CalendarAttendanceDataDTO> data = attendanceRepository.getAttendanceStatusWithDateOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
     if (data.isEmpty()) {
       throw new NoStatsAvailableException();
@@ -163,7 +163,7 @@ public class AttendanceServicesImpl implements AttendanceServices {
 
   @Override
   public List<UserAttendanceTableDTO> getMonthlyUserAttendanceTable(int month, int year, Long userId) throws NoStatsAvailableException, UserDoesntExistException, IOException {
-    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(month, year);
+    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
     List<UserAttendanceTableDTO> attendanceTableRecords = attendanceRepository.getAttendanceTableRecordsOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
 
     if (attendanceTableRecords.isEmpty()) {
@@ -312,7 +312,7 @@ public class AttendanceServicesImpl implements AttendanceServices {
 
   @Override
   public List<UserAttendanceDTO> getMonthlyUserAttendanceOverview(int month, int year, Long userId) throws NoStatsAvailableException, UserDoesntExistException {
-    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(month, year);
+    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
     List<UserAttendanceDTO> attendances = attendanceRepository.getAttendanceOverviewOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
 
     if (attendances.isEmpty()) {

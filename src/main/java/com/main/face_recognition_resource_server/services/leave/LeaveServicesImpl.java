@@ -38,12 +38,13 @@ public class LeaveServicesImpl implements LeaveServices {
     User user = userServices.getUserByUsername(username);
     if (leaveRequest.getLeaveType() == LeaveType.SICK_LEAVE && user.getRemainingSickLeaves() == 0)
       throw new NoMoreLeavesRemainingException();
+    else if (leaveRequest.getLeaveType() == LeaveType.ANNUAL_LEAVE && user.getRemainingAnnualLeaves() == 0)
+      throw new NoMoreLeavesRemainingException();
+    else if (leaveRequest.getLeaveType() == LeaveType.ANNUAL_LEAVE)
+      user.setRemainingAnnualLeaves(user.getRemainingAnnualLeaves() - 1);
     else
       user.setRemainingSickLeaves(user.getRemainingSickLeaves() - 1);
-    if (leaveRequest.getLeaveType() == LeaveType.ANNUAL_LEAVE && user.getRemainingAnnualLeaves() == 0)
-      throw new NoMoreLeavesRemainingException();
-    else
-      user.setRemainingAnnualLeaves(user.getRemainingAnnualLeaves() - 1);
+
 
     userServices.saveUser(user);
 

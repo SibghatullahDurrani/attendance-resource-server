@@ -34,7 +34,7 @@ public class Leave {
   @Enumerated(EnumType.STRING)
   private LeaveType type;
 
-  @OneToOne()
+  @ManyToOne
   @JoinColumn(name = "user_id", referencedColumnName = "id")
   private User user;
 }

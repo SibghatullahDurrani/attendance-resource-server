@@ -59,4 +59,7 @@ public class User {
 
   @Column(nullable = false)
   private int remainingAnnualLeaves;
+
+  @OneToMany(mappedBy = "user")
+  private List<Leave> leaves;
 }

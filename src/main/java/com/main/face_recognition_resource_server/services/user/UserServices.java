@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.services.user;
 
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
@@ -43,4 +44,6 @@ public interface UserServices {
   User getUserByUsername(String username) throws UserDoesntExistException;
 
   User saveUser(User user);
+
+  RemainingLeavesDTO getRemainingLeavesOfUser(String username);
 }
