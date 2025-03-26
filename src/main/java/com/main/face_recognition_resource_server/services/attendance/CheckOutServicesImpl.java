@@ -1,7 +1,6 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
 import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceSnapshotDTO;
-import com.main.face_recognition_resource_server.DTOS.attendance.CheckOutDTO;
 import com.main.face_recognition_resource_server.DTOS.attendance.GetAttendanceSnapPathDTO;
 import com.main.face_recognition_resource_server.constants.AttendanceType;
 import com.main.face_recognition_resource_server.domains.Attendance;
@@ -41,17 +40,12 @@ public class CheckOutServicesImpl implements CheckOutServices {
     CheckOut checkOut = CheckOut.builder()
             .date(date)
             .attendance(attendance)
-            .fullImagePath(fullImageSnapName)
-            .faceImagePath(faceImageSnapName)
+            .fullImageName(fullImageSnapName)
+            .faceImageName(faceImageSnapName)
             .build();
     checkOutRepository.saveAndFlush(checkOut);
     ImageIO.write(fullImage, "jpg", new File(fullImageSnapPath));
     ImageIO.write(faceImage, "jpg", new File(faceImageSnapPath));
-  }
-
-  @Override
-  public List<CheckOutDTO> getCheckOutsByAttendanceId(Long attendanceId) {
-    return checkOutRepository.getCheckOutsByAttendanceId(attendanceId);
   }
 
   @Override

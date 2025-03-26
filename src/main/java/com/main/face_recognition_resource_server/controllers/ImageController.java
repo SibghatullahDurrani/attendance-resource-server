@@ -17,9 +17,20 @@ import java.nio.file.Paths;
 @RequestMapping("images")
 public class ImageController {
 
-  @GetMapping("{imageName}")
-  public ResponseEntity<Resource> getImage(@PathVariable String imageName) throws MalformedURLException {
+  @GetMapping("face-image/{imageName}")
+  public ResponseEntity<Resource> getFaceImage(@PathVariable String imageName) throws MalformedURLException {
     Path path = Paths.get("FaceRecognition/" + imageName);
+
+    Resource resource = new UrlResource(path.toUri());
+
+    return ResponseEntity.ok()
+            .contentType(MediaType.IMAGE_JPEG)
+            .body(resource);
+  }
+
+  @GetMapping("source-face-image/{imageName}")
+  public ResponseEntity<Resource> getSourceImage(@PathVariable String imageName) throws MalformedURLException {
+    Path path = Paths.get("SourceFaces/" + imageName);
 
     Resource resource = new UrlResource(path.toUri());
 

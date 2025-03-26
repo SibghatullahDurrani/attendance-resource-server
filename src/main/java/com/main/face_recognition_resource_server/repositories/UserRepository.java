@@ -22,7 +22,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.user.UserDTO(
           u.id, u.firstName, u.secondName, u.username, u.department.departmentName, u.role,
-          u.profilePicturePath
+          u.profilePictureName, u.sourceFacePictureName
           ) FROM User u WHERE u.username = ?1
           """)
   Optional<UserDTO> getUserDTOByUsername(String username);
@@ -35,7 +35,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.user.UserDTO(
           u.id, u.firstName, u.secondName, u.username, u.department.departmentName, u.role,
-          u.profilePicturePath
+          u.profilePictureName, u.sourceFacePictureName
           ) FROM User u
           """)
   Page<UserDTO> getAllUsers(Pageable pageable);

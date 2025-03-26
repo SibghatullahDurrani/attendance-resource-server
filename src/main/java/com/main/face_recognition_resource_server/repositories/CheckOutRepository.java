@@ -1,6 +1,5 @@
 package com.main.face_recognition_resource_server.repositories;
 
-import com.main.face_recognition_resource_server.DTOS.attendance.CheckOutDTO;
 import com.main.face_recognition_resource_server.DTOS.attendance.GetAttendanceSnapPathDTO;
 import com.main.face_recognition_resource_server.domains.CheckOut;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,12 +9,6 @@ import java.util.Date;
 import java.util.List;
 
 public interface CheckOutRepository extends JpaRepository<CheckOut, Long> {
-  @Query("""
-          SELECT new com.main.face_recognition_resource_server.DTOS.attendance.CheckOutDTO(
-          co.date, co.fullImagePath
-          ) FROM CheckOut co WHERE co.attendance.id = ?1
-          """)
-  List<CheckOutDTO> getCheckOutsByAttendanceId(Long attendanceId);
 
   @Query("""
           SELECT co.date FROM CheckOut co
@@ -25,7 +18,7 @@ public interface CheckOutRepository extends JpaRepository<CheckOut, Long> {
 
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.attendance.GetAttendanceSnapPathDTO(
-                    co.faceImagePath, co.date
+                    co.faceImageName, co.date
           ) FROM CheckOut co
           WHERE co.attendance.id = ?1
           """)

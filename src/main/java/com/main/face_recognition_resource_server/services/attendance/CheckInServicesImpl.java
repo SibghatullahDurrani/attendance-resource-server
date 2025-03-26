@@ -41,17 +41,12 @@ public class CheckInServicesImpl implements CheckInServices {
     CheckIn checkIn = CheckIn.builder()
             .date(date)
             .attendance(attendance)
-            .fullImagePath(fullImageSnapName)
-            .faceImagePath(faceImageSnapName)
+            .fullImageName(fullImageSnapName)
+            .faceImageName(faceImageSnapName)
             .build();
     checkInRepository.saveAndFlush(checkIn);
     ImageIO.write(fullImage, "jpg", new File(fullImageSnapPath));
     ImageIO.write(faceImage, "jpg", new File(faceImageSnapPath));
-  }
-
-  @Override
-  public List<CheckInDTO> getCheckInsByAttendanceId(Long attendanceId) {
-    return checkInRepository.getCheckInsOfAttendanceId(attendanceId);
   }
 
   @Override

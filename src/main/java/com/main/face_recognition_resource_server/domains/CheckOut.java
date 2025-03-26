@@ -28,8 +28,8 @@ public class CheckOut {
   private Attendance attendance;
 
   @Column(nullable = false)
-  private String fullImagePath;
+  private String fullImageName;
 
   @Column(nullable = false)
-  private String faceImagePath;
+  private String faceImageName;
 }

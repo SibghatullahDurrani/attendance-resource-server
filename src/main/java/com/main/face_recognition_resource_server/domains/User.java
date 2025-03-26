@@ -24,8 +24,9 @@ public class User {
   @Column(name = "first_name", nullable = false, length = 30)
   private String firstName;
 
-  @Column(name = "profile_picture_path")
-  private String profilePicturePath;
+  private String profilePictureName;
+
+  private String sourceFacePictureName;
 
   @Column(name = "second_name", nullable = false, length = 30)
   private String secondName;

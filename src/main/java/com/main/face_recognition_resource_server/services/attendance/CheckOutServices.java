@@ -13,8 +13,6 @@ import java.util.List;
 public interface CheckOutServices {
   void saveCheckOut(Date date, Attendance attendance, BufferedImage fullImage, BufferedImage faceImage) throws IOException;
 
-  List<CheckOutDTO> getCheckOutsByAttendanceId(Long attendanceId);
-
   String getAverageCheckOutOfAttendances(List<Long> attendanceIds) throws NoStatsAvailableException;
 
   List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> getCheckOutSnapshotsOfAttendance(Long attendanceId);
