@@ -94,15 +94,13 @@ public class CheckInServicesImpl implements CheckInServices {
   public List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> getCheckInSnapshotsOfAttendance(Long attendanceId) {
     List<GetAttendanceSnapPathDTO> checkInSnapPaths = checkInRepository.getCheckInSnapPathsOfAttendance(attendanceId);
     List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> checkInSnapshots = new ArrayList<>();
-    checkInSnapPaths.forEach(snapPath -> {
-      checkInSnapshots.add(
-              AttendanceSnapshotDTO.AttendanceSnapShotDTOData.builder()
-                      .snapName(snapPath.getSnapPath())
-                      .attendanceType(AttendanceType.CHECK_IN)
-                      .attendanceTime(snapPath.getAttendanceTime())
-                      .build()
-      );
-    });
+    checkInSnapPaths.forEach(snapPath -> checkInSnapshots.add(
+            AttendanceSnapshotDTO.AttendanceSnapShotDTOData.builder()
+                    .snapName(snapPath.getSnapPath())
+                    .attendanceType(AttendanceType.CHECK_IN)
+                    .attendanceTime(snapPath.getAttendanceTime())
+                    .build()
+    ));
     return checkInSnapshots;
   }
 }

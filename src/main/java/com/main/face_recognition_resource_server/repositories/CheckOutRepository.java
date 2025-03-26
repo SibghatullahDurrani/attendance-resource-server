@@ -25,7 +25,7 @@ public interface CheckOutRepository extends JpaRepository<CheckOut, Long> {
 
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.attendance.GetAttendanceSnapPathDTO(
-                    co.fullImagePath, co.date
+                    co.faceImagePath, co.date
           ) FROM CheckOut co
           WHERE co.attendance.id = ?1
           """)

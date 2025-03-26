@@ -340,7 +340,11 @@ public class AttendanceServicesImpl implements AttendanceServices {
       throw new NoStatsAvailableException();
     }
 
-    AttendanceSnapshotDTO attendanceSnapshot = AttendanceSnapshotDTO.builder().attendanceStatus(attendanceRepository.getAttendanceStatusOfAttendance(attendanceId.get())).dayTime(startDate.getTime()).data(new ArrayList<>()).build();
+    AttendanceSnapshotDTO attendanceSnapshot = AttendanceSnapshotDTO.builder()
+            .attendanceStatus(attendanceRepository.getAttendanceStatusOfAttendance(attendanceId.get()))
+            .dayTime(startDate.getTime())
+            .data(new ArrayList<>())
+            .build();
 
     attendanceSnapshot.addAttendanceSnapshotDTOData(checkInServices.getCheckInSnapshotsOfAttendance(attendanceId.get()));
     attendanceSnapshot.addAttendanceSnapshotDTOData(checkOutServices.getCheckOutSnapshotsOfAttendance(attendanceId.get()));

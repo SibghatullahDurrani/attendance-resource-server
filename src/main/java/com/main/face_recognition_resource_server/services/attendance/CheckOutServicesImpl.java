@@ -88,15 +88,13 @@ public class CheckOutServicesImpl implements CheckOutServices {
   public List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> getCheckOutSnapshotsOfAttendance(Long attendanceId) {
     List<GetAttendanceSnapPathDTO> checkOutSnapPaths = checkOutRepository.getCheckOutSnapPathsOfAttendance(attendanceId);
     List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> attendanceSnapshots = new ArrayList<>();
-    checkOutSnapPaths.forEach(snapPath -> {
-      attendanceSnapshots.add(
-              AttendanceSnapshotDTO.AttendanceSnapShotDTOData.builder()
-                      .snapName(snapPath.getSnapPath())
-                      .attendanceType(AttendanceType.CHECK_OUT)
-                      .attendanceTime(snapPath.getAttendanceTime())
-                      .build()
-      );
-    });
+    checkOutSnapPaths.forEach(snapPath -> attendanceSnapshots.add(
+            AttendanceSnapshotDTO.AttendanceSnapShotDTOData.builder()
+                    .snapName(snapPath.getSnapPath())
+                    .attendanceType(AttendanceType.CHECK_OUT)
+                    .attendanceTime(snapPath.getAttendanceTime())
+                    .build()
+    ));
     return attendanceSnapshots;
   }
 
