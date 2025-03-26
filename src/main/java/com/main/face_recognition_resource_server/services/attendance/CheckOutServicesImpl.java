@@ -32,17 +32,21 @@ public class CheckOutServicesImpl implements CheckOutServices {
 
   @Override
   @Transactional
-  public void saveCheckOut(Date date, Attendance attendance, BufferedImage image) throws IOException {
+  public void saveCheckOut(Date date, Attendance attendance, BufferedImage fullImage, BufferedImage faceImage) throws IOException {
     String uuid = UUID.randomUUID().toString();
-    String snapName = uuid + "FaceRecognition.jpg";
-    String snapPicPath = picturePath + "/" + snapName;
+    String fullImageSnapName = uuid + "full-image" + "FaceRecognition.jpg";
+    String faceImageSnapName = uuid + "face-image" + "FaceRecognition.jpg";
+    String fullImageSnapPath = picturePath + "/" + fullImageSnapName;
+    String faceImageSnapPath = picturePath + "/" + faceImageSnapName;
     CheckOut checkOut = CheckOut.builder()
             .date(date)
             .attendance(attendance)
-            .imagePath(snapName)
+            .fullImagePath(fullImageSnapName)
+            .faceImagePath(faceImageSnapName)
             .build();
     checkOutRepository.saveAndFlush(checkOut);
-    ImageIO.write(image, "jpg", new File(snapPicPath));
+    ImageIO.write(fullImage, "jpg", new File(fullImageSnapPath));
+    ImageIO.write(faceImage, "jpg", new File(faceImageSnapPath));
   }
 
   @Override

@@ -52,13 +52,14 @@ public class UserController {
           UserAlreadyExistsException {
     boolean isSuperAdmin = authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals(UserRole.ROLE_SUPER_ADMIN.toString()));
     boolean departmentExists = departmentServices.departmentExist(userToRegister.getDepartmentId());
+    Long userOrganizationId = userServices.getUserOrganizationId(authentication.getName());
     if (departmentExists) {
       if (isSuperAdmin) {
-        userServices.registerUser(userToRegister);
+        userServices.registerUser(userToRegister, userOrganizationId);
         return new ResponseEntity<>(HttpStatus.CREATED);
       } else {
-        Long userOrganizationId = userServices.getUserOrganizationId(authentication.getName());
         if (departmentServices.departmentBelongsToOrganization(userToRegister.getDepartmentId(), userOrganizationId)) {
+          userServices.registerUser(userToRegister, userOrganizationId);
           return new ResponseEntity<>(HttpStatus.CREATED);
         }
       }

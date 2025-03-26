@@ -13,5 +13,6 @@ public class AttendanceCacheDTO {
   private Long userId;
   private Date time;
   private CameraType cameraType;
-  private BufferedImage image;
+  private BufferedImage fullImage;
+  private BufferedImage faceImage;
 }

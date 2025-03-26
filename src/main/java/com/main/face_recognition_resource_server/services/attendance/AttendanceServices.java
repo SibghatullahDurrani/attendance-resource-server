@@ -14,11 +14,11 @@ import java.util.List;
 import java.util.Set;
 
 public interface AttendanceServices {
-  void markCheckIn(Long userId, Date endDate, BufferedImage image) throws UserDoesntExistException, IOException;
+  void markCheckIn(Long userId, Date endDate, BufferedImage fullImage, BufferedImage faceImage) throws UserDoesntExistException, IOException;
 
   Set<Long> getCache(Long organizationId, CameraType type);
 
-  void markCheckOut(Long userId, Date endDate, BufferedImage image) throws IOException;
+  void markCheckOut(Long userId, Date endDate, BufferedImage fullImage, BufferedImage faceImage) throws IOException;
 
   void markAbsentOfAllUsersInOrganizationForCurrentDay(Long OrganizationId);
 

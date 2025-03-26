@@ -50,14 +50,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
           WHERE a.date between ?1 and ?2 and a.user.id = ?3
           and a.status = ?4
           """)
-  int countAbsentAttendancesOfUserBetweenDates(Date startDate, Date endDate, Long userId, AttendanceStatus absent);
-
-  @Query("""
-          SELECT count(a) FROM Attendance a
-          WHERE a.date between ?1 and ?2 and a.user.id = ?3
-          and a.status = ?4
-          """)
-  int countLeaveAttendancesOfUserBetweenDates(Date startDate, Date endDate, Long userId, AttendanceStatus leave);
+  int countAttendancesWithStatusOfUserBetweenDates(Date startDate, Date endDate, Long userId, AttendanceStatus absent);
 
   @Query("""
           SELECT a.id FROM Attendance a

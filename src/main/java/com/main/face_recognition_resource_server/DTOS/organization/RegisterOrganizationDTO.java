@@ -7,4 +7,5 @@ import lombok.Data;
 public class RegisterOrganizationDTO {
   private String organizationName;
   private OrganizationType organizationType;
+  private RegisterOrganizationPoliciesDTO organizationPolicies;
 }

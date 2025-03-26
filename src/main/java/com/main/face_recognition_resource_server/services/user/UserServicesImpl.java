@@ -2,6 +2,7 @@ package com.main.face_recognition_resource_server.services.user;
 
 
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.leave.LeavesAllowedPolicyDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
@@ -11,6 +12,7 @@ import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.UserRepository;
+import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,10 +26,12 @@ import java.util.Optional;
 public class UserServicesImpl implements UserServices {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
+  private final OrganizationServices organizationServices;
 
-  public UserServicesImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+  public UserServicesImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, OrganizationServices organizationServices) {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
+    this.organizationServices = organizationServices;
   }
 
   @Override
@@ -47,13 +51,25 @@ public class UserServicesImpl implements UserServices {
 
   @Override
   @Transactional
-  public void registerUser(RegisterUserDTO userToRegister) throws UserAlreadyExistsException {
+  public void registerUser(RegisterUserDTO userToRegister, Long organizationId) throws UserAlreadyExistsException {
     boolean userExistsWithEmailAndRole = userExistsWithEmailAndRole(userToRegister.getEmail(), userToRegister.getRole());
     if (!userExistsWithEmailAndRole) {
       String hashedPassword = passwordEncoder.encode(userToRegister.getPassword());
       Long usernameSequence = userRepository.nextUsernameSequence();
       String username = userToRegister.getFirstName() + userToRegister.getSecondName() + "#" + usernameSequence;
-      userRepository.registerUser(userToRegister.getFirstName(), userToRegister.getSecondName(), hashedPassword, username, userToRegister.getRole().toString(), userToRegister.getIdentificationNumber(), userToRegister.getEmail(), userToRegister.getDepartmentId());
+      LeavesAllowedPolicyDTO organizationLeavesPolicy = organizationServices.getOrganizationLeavesPolicy(organizationId);
+      userRepository.registerUser(
+              userToRegister.getFirstName(),
+              userToRegister.getSecondName(),
+              hashedPassword,
+              username,
+              userToRegister.getRole().toString(),
+              userToRegister.getIdentificationNumber(),
+              userToRegister.getEmail(),
+              userToRegister.getDepartmentId(),
+              organizationLeavesPolicy.getSickLeavesAllowed(),
+              organizationLeavesPolicy.getAnnualLeavesAllowed()
+      );
     }
   }
 

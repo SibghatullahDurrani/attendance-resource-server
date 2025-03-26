@@ -13,6 +13,7 @@ public class AttendanceStatsDTO {
   private int daysPresent;
   private int daysAbsent;
   private int daysOnLeave;
+  private int daysLate;
   private String averageCheckInTime;
   private String averageCheckOutTime;
 }

@@ -1,0 +1,8 @@
+package com.main.face_recognition_resource_server.services.organizationpolicies;
+
+import com.main.face_recognition_resource_server.DTOS.organization.RegisterOrganizationPoliciesDTO;
+import com.main.face_recognition_resource_server.domains.OrganizationPolicies;
+
+public interface OrganizationPoliciesServices {
+  OrganizationPolicies saveOrganizationPolicies(RegisterOrganizationPoliciesDTO organizationPolicies);
+}

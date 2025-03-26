@@ -60,8 +60,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   boolean existsByEmailAndRole(String email, UserRole role);
 
-  @Query(value = "INSERT INTO users (first_name, second_name,password,username,role,identification_number,email,department_id)" +
-          "VALUES (?1,?2,?3,?4,?5,?6,?7,?8)", nativeQuery = true)
+  @Query(value = "INSERT INTO users (first_name, second_name,password,username,role,identification_number,email,department_id,remaining_sick_leaves,remaining_annual_leaves)" +
+          "VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)", nativeQuery = true)
   @Transactional
   @Modifying
   void registerUser(String firstName,
@@ -71,7 +71,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
                     String role,
                     String identificationNumber,
                     String email,
-                    Long departmentId);
+                    Long departmentId,
+                    int sickLeavesAllowed,
+                    int annualLeavesAllowed
+  );
 
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO(

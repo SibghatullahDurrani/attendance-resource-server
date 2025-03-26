@@ -2,15 +2,13 @@ package com.main.face_recognition_resource_server.domains;
 
 import com.main.face_recognition_resource_server.constants.OrganizationType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
 @Builder
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity

@@ -57,9 +57,9 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
       try {
         AttendanceCacheDTO attendanceCache = attendanceCacheQueue.take();
         if (nonResidentCache == null) {
-          handleDataWithJustResidentCache(attendanceCache.getUserId(), attendanceCache.getTime(), attendanceCache.getImage());
+          handleDataWithJustResidentCache(attendanceCache.getUserId(), attendanceCache.getTime(), attendanceCache.getFullImage(), attendanceCache.getFaceImage());
         } else {
-          handleDataWithBothResidentAndNonResidentCache(attendanceCache.getUserId(), attendanceCache.getTime(), attendanceCache.getCameraType(), attendanceCache.getImage());
+          handleDataWithBothResidentAndNonResidentCache(attendanceCache.getUserId(), attendanceCache.getTime(), attendanceCache.getCameraType(), attendanceCache.getFullImage(), attendanceCache.getFaceImage());
         }
       } catch (InterruptedException | UserDoesntExistException | IOException e) {
         throw new RuntimeException(e);
@@ -67,12 +67,12 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
     }
   }
 
-  private void handleDataWithBothResidentAndNonResidentCache(Long userId, Date time, CameraType cameraType, BufferedImage image) throws UserDoesntExistException, IOException {
+  private void handleDataWithBothResidentAndNonResidentCache(Long userId, Date time, CameraType cameraType, BufferedImage fullImage, BufferedImage faceImage) throws UserDoesntExistException, IOException {
     synchronized (synchronizationLock) {
       if (!residentCache.isUserInCache(userId)) {
         if (!nonResidentCache.isUserInCache(userId)) {
           if (cameraType == CameraType.IN) {
-            attendanceServices.markCheckIn(userId, time, image);
+            attendanceServices.markCheckIn(userId, time, fullImage, faceImage);
             residentCache.addUserToCache(userId);
             System.out.println("user: " + userId.toString() + " check in");
           }
@@ -80,7 +80,7 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
           if (cameraType == CameraType.IN) {
             nonResidentCache.removeUserFromCache(userId);
             residentCache.addUserToCache(userId);
-            attendanceServices.markCheckIn(userId, time, image);
+            attendanceServices.markCheckIn(userId, time, fullImage, faceImage);
             System.out.println("user: " + userId.toString() + " check in");
           }
         }
@@ -89,7 +89,7 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
           if (cameraType == CameraType.OUT) {
             residentCache.removeUserFromCache(userId);
             nonResidentCache.addUserToCache(userId);
-            attendanceServices.markCheckOut(userId, time, image);
+            attendanceServices.markCheckOut(userId, time, fullImage, faceImage);
             System.out.println("user: " + userId.toString() + " check out");
           }
         }
@@ -97,10 +97,10 @@ public class BlockingQueueAttendanceCacheConsumer implements Runnable {
     }
   }
 
-  private void handleDataWithJustResidentCache(Long userId, Date time, BufferedImage image) throws UserDoesntExistException, IOException {
+  private void handleDataWithJustResidentCache(Long userId, Date time, BufferedImage fullImage, BufferedImage faceImage) throws UserDoesntExistException, IOException {
     synchronized (synchronizationLock) {
       if (!residentCache.isUserInCache(userId)) {
-        attendanceServices.markCheckIn(userId, time, image);
+        attendanceServices.markCheckIn(userId, time, fullImage, faceImage);
         residentCache.addUserToCache(userId);
         System.out.println("user with id: " + userId + " added to cache at time: " + time);
       } else {

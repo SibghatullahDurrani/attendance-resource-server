@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.repositories;
 
+import com.main.face_recognition_resource_server.DTOS.leave.LeavesAllowedPolicyDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Organization;
 import org.springframework.data.domain.Page;
@@ -59,4 +60,11 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
           SELECT o.organizationPolicies.checkOutToleranceTimeInHour FROM Organization o WHERE o.id = ?1
           """)
   int getCheckOutToleranceTimePolicy(Long organizationId);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.leave.LeavesAllowedPolicyDTO(
+          o.organizationPolicies.sickLeavesAllowed, o.organizationPolicies.annualLeavesAllowed
+          ) FROM Organization o WHERE o.id = ?1
+          """)
+  LeavesAllowedPolicyDTO getOrganizationLeavesAllowedPolicies(Long organizationId);
 }

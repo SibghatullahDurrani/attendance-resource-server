@@ -44,11 +44,21 @@ public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
         String idString = new String(msg.stuCandidatesEx[0].stPersonInfo.szPersonName).trim();
         time = new GregorianCalendar(msg.UTC.dwYear, msg.UTC.dwMonth - 1, msg.UTC.dwDay, msg.UTC.dwHour, msg.UTC.dwMinute, msg.UTC.dwSecond).getTime();
         byte[] byteBuffer = pBuffer.getByteArray(0, dwBufSize);
+        NetSDKLib.DH_RECT boundingBox = msg.stuObject.stuOriginalBoundingBox;
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteBuffer);
-        BufferedImage bufferedImage = ImageIO.read(byteArrayInputStream);
-        if (!idString.isEmpty() && bufferedImage != null) {
+        BufferedImage fullImage = ImageIO.read(byteArrayInputStream);
+        int leftPadding = 20;
+        int rightPadding = 20;
+        int topPadding = 50;
+        int bottomPadding = 50;
+        int left = boundingBox.left.intValue() - leftPadding > 0 ? boundingBox.left.intValue() - leftPadding : boundingBox.left.intValue();
+        int right = boundingBox.right.intValue() + rightPadding < fullImage.getWidth() ? boundingBox.right.intValue() + rightPadding : boundingBox.right.intValue();
+        int top = boundingBox.top.intValue() - topPadding > 0 ? boundingBox.top.intValue() - topPadding : boundingBox.top.intValue();
+        int bottom = boundingBox.bottom.intValue() + bottomPadding < fullImage.getHeight() ? boundingBox.bottom.intValue() + bottomPadding : boundingBox.bottom.intValue();
+        BufferedImage faceImage = fullImage.getSubimage(left, top, right - left, bottom - top);
+        if (!idString.isEmpty() && fullImage != null) {
           id = Long.parseLong(idString);
-          attendanceCacheProducer.produceCache(id, time, cameraType, bufferedImage);
+          attendanceCacheProducer.produceCache(id, time, cameraType, fullImage, faceImage);
         }
       } catch (Exception e) {
         throw new RuntimeException(e);

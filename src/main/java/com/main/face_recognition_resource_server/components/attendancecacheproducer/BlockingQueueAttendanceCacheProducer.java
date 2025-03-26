@@ -15,12 +15,13 @@ public class BlockingQueueAttendanceCacheProducer implements AttendanceCacheProd
   }
 
   @Override
-  public void produceCache(Long userId, Date time, CameraType cameraType, BufferedImage image) throws InterruptedException {
+  public void produceCache(Long userId, Date time, CameraType cameraType, BufferedImage fullImage, BufferedImage faceImage) throws InterruptedException {
     attendanceCacheQueue.put(AttendanceCacheDTO.builder()
             .userId(userId)
             .time(time)
             .cameraType(cameraType)
-            .image(image)
+            .fullImage(fullImage)
+            .faceImage(faceImage)
             .build());
   }
 }

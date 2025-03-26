@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.services.organization;
 
 import com.main.face_recognition_resource_server.DTOS.department.OrganizationDepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.leave.LeavesAllowedPolicyDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Organization;
@@ -32,4 +33,6 @@ public interface OrganizationServices {
   int getOrganizationLateAttendanceToleranceTimePolicy(Long organizationId);
 
   int getOrganizationCheckOutToleranceTimePolicy(Long organizationId);
+
+  LeavesAllowedPolicyDTO getOrganizationLeavesPolicy(Long organizationId);
 }

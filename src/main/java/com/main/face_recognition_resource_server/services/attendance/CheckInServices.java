@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.List;
 
 public interface CheckInServices {
-  void saveCheckIn(Date date, Attendance attendance, BufferedImage image) throws IOException;
+  void saveCheckIn(Date date, Attendance attendance, BufferedImage fullImage, BufferedImage faceImage) throws IOException;
 
   List<CheckInDTO> getCheckInsByAttendanceId(Long attendanceId);
 

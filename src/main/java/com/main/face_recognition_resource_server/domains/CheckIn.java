@@ -28,5 +28,8 @@ public class CheckIn {
   private Attendance attendance;
 
   @Column(nullable = false)
-  private String imagePath;
+  private String fullImagePath;
+
+  @Column(nullable = false)
+  private String faceImagePath;
 }

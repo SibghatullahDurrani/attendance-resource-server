@@ -12,7 +12,7 @@ import java.util.List;
 public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.attendance.CheckInDTO(
-          ci.date, ci.imagePath
+          ci.date, ci.fullImagePath
           )FROM CheckIn ci WHERE ci.attendance.id = ?1
           """)
   List<CheckInDTO> getCheckInsOfAttendanceId(Long attendanceId);
@@ -25,7 +25,7 @@ public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
 
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.attendance.GetAttendanceSnapPathDTO(
-                    ci.imagePath, ci.date
+                    ci.fullImagePath, ci.date
           ) FROM CheckIn ci
           WHERE ci.attendance.id = ?1
           """)

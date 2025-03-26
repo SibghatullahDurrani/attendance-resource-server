@@ -6,5 +6,5 @@ import java.awt.image.BufferedImage;
 import java.util.Date;
 
 public interface AttendanceCacheProducer {
-  void produceCache(Long userId, Date time, CameraType cameraType, BufferedImage image) throws InterruptedException;
+  void produceCache(Long userId, Date time, CameraType cameraType, BufferedImage fullImage, BufferedImage faceImage) throws InterruptedException;
 }
