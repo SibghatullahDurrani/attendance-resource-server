@@ -51,6 +51,13 @@ public class AttendanceController {
     return new ResponseEntity<>(attendanceCalendar, HttpStatus.OK);
   }
 
+  @GetMapping("calendar/yearly")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<List<MonthlyAttendanceCalendarRecordDTO>> getYearlyUserAttendanceCalendar(@RequestParam int year, Authentication authentication) {
+    List<MonthlyAttendanceCalendarRecordDTO> attendanceCalendarRecordDTOS = attendanceServices.getYearlyUserAttendanceCalendar(year, authentication.getName());
+    return null;
+  }
+
   @GetMapping("overview")
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<List<UserAttendanceDTO>> getUserAttendanceOverview(@RequestParam int year, @RequestParam int month, Authentication authentication) throws UserDoesntExistException, NoStatsAvailableException {

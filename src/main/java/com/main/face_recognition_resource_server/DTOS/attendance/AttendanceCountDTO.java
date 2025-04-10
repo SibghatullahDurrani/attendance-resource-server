@@ -7,10 +7,11 @@ import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 @Builder
-public class AttendanceStatsDTO {
-  private AttendanceCountDTO attendanceCount;
-  private String averageCheckInTime;
-  private String averageCheckOutTime;
+@Data
+public class AttendanceCountDTO {
+  private long daysPresent;
+  private long daysAbsent;
+  private long daysOnLeave;
+  private long daysLate;
 }

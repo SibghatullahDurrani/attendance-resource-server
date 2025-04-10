@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.repositories;
 
+import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceCountDTO;
 import com.main.face_recognition_resource_server.DTOS.attendance.CalendarAttendanceDataDTO;
 import com.main.face_recognition_resource_server.DTOS.attendance.UserAttendanceDTO;
 import com.main.face_recognition_resource_server.DTOS.attendance.UserAttendanceTableDTO;
@@ -37,20 +38,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
           WHERE a.date >= ?1 and a.user.department.organization.id = ?2
           """)
   boolean existsByDateAndOrganizationId(Date dateAfter, Long organizationId);
-
-  @Query("""
-          SELECT count(a) FROM Attendance a
-          WHERE a.date between ?1 and ?2 and a.user.id = ?3
-          and (a.status = ?4 or a.status = ?5)
-          """)
-  int countPresentAttendancesOfUserBetweenDates(Date startDate, Date endDate, Long userId, AttendanceStatus onTime, AttendanceStatus late);
-
-  @Query("""
-          SELECT count(a) FROM Attendance a
-          WHERE a.date between ?1 and ?2 and a.user.id = ?3
-          and a.status = ?4
-          """)
-  int countAttendancesWithStatusOfUserBetweenDates(Date startDate, Date endDate, Long userId, AttendanceStatus absent);
 
   @Query("""
           SELECT a.id FROM Attendance a
@@ -98,4 +85,14 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
           ) FROM Attendance a WHERE a.user.id = ?3 AND a.date BETWEEN ?1 AND ?2
           """)
   List<UserAttendanceTableDTO> getAttendanceTableRecordsOfUserBetweenDates(Date startDate, Date endDate, Long userId);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.attendance.AttendanceCountDTO(
+                    count(a) FILTER(WHERE a.status = 'ON_TIME' OR a.status = 'LATE'),
+                    count(a) FILTER(WHERE a.status = 'ABSENT'),
+                    count(a) FILTER(WHERE a.status = 'ON_LEAVE'),
+                    count(a) FILTER(WHERE a.status = 'LATE')
+          ) FROM Attendance a WHERE a.date BETWEEN ?1 AND ?2 AND a.user.id = ?3
+          """)
+  AttendanceCountDTO getAttendanceCountOfUserBetweenDates(Date startDate, Date endDate, Long userId);
 }

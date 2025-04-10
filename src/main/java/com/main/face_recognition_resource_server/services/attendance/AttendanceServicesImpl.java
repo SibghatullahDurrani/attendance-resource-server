@@ -340,11 +340,7 @@ public class AttendanceServicesImpl implements AttendanceServices {
       throw new NoStatsAvailableException();
     }
 
-    AttendanceSnapshotDTO attendanceSnapshot = AttendanceSnapshotDTO.builder()
-            .attendanceStatus(attendanceRepository.getAttendanceStatusOfAttendance(attendanceId.get()))
-            .dayTime(startDate.getTime())
-            .data(new ArrayList<>())
-            .build();
+    AttendanceSnapshotDTO attendanceSnapshot = AttendanceSnapshotDTO.builder().attendanceStatus(attendanceRepository.getAttendanceStatusOfAttendance(attendanceId.get())).dayTime(startDate.getTime()).data(new ArrayList<>()).build();
 
     attendanceSnapshot.addAttendanceSnapshotDTOData(checkInServices.getCheckInSnapshotsOfAttendance(attendanceId.get()));
     attendanceSnapshot.addAttendanceSnapshotDTOData(checkOutServices.getCheckOutSnapshotsOfAttendance(attendanceId.get()));
@@ -364,11 +360,13 @@ public class AttendanceServicesImpl implements AttendanceServices {
     });
   }
 
+  @Override
+  public List<MonthlyAttendanceCalendarRecordDTO> getYearlyUserAttendanceCalendar(int year, String userName) {
+    return null;
+  }
+
   private AttendanceStatsDTO generateAttendanceStatsDTO(Date startDate, Date endDate, Long userId) throws NoStatsAvailableException {
-    int presentCount = attendanceRepository.countPresentAttendancesOfUserBetweenDates(startDate, endDate, userId, AttendanceStatus.ON_TIME, AttendanceStatus.LATE);
-    int absentCount = attendanceRepository.countAttendancesWithStatusOfUserBetweenDates(startDate, endDate, userId, AttendanceStatus.ABSENT);
-    int leaveCount = attendanceRepository.countAttendancesWithStatusOfUserBetweenDates(startDate, endDate, userId, AttendanceStatus.ON_LEAVE);
-    int lateCount = attendanceRepository.countAttendancesWithStatusOfUserBetweenDates(startDate, endDate, userId, AttendanceStatus.LATE);
+    AttendanceCountDTO attendanceCount = attendanceRepository.getAttendanceCountOfUserBetweenDates(startDate, endDate, userId);
     List<Long> attendanceIds = attendanceRepository.getAttendanceIdsOfUserBetweenDates(startDate, endDate, userId);
     String averageCheckIns = "-";
     String averageCheckOuts = "-";
@@ -376,13 +374,13 @@ public class AttendanceServicesImpl implements AttendanceServices {
       averageCheckIns = checkInServices.getAverageCheckInOfAttendances(attendanceIds);
       averageCheckOuts = checkOutServices.getAverageCheckOutOfAttendances(attendanceIds);
     } catch (NoStatsAvailableException exception) {
-      if (absentCount > 0) {
-        return new AttendanceStatsDTO(presentCount, absentCount, leaveCount, lateCount, averageCheckIns, averageCheckOuts);
+      if (attendanceCount.getDaysAbsent() > 0) {
+        return new AttendanceStatsDTO(attendanceCount, averageCheckIns, averageCheckOuts);
       } else {
         throw new NoStatsAvailableException();
       }
     }
-    return new AttendanceStatsDTO(presentCount, absentCount, leaveCount, lateCount, averageCheckIns, averageCheckOuts);
+    return new AttendanceStatsDTO(attendanceCount, averageCheckIns, averageCheckOuts);
   }
 
   private Optional<Attendance> getUserAttendanceFromDayStartTillDate(Long userId, Date endDate) {

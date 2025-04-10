@@ -5,12 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
-public class AttendanceStatsDTO {
+public class MonthlyAttendanceCalendarRecordDTO {
+  private int month;
   private AttendanceCountDTO attendanceCount;
-  private String averageCheckInTime;
-  private String averageCheckOutTime;
 }
