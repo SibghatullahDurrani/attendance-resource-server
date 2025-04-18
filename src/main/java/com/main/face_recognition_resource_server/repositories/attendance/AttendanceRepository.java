@@ -1,22 +1,20 @@
-package com.main.face_recognition_resource_server.repositories;
+package com.main.face_recognition_resource_server.repositories.attendance;
 
-import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceCountDTO;
-import com.main.face_recognition_resource_server.DTOS.attendance.CalendarAttendanceDataDTO;
-import com.main.face_recognition_resource_server.DTOS.attendance.UserAttendanceDTO;
-import com.main.face_recognition_resource_server.DTOS.attendance.UserAttendanceTableDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.domains.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
+public interface AttendanceRepository extends JpaRepository<Attendance, Long>, JpaSpecificationExecutor<Attendance>, DailyUserAttendanceRepository {
 
   @Query("""
           SELECT a FROM Attendance a
@@ -95,4 +93,30 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
           ) FROM Attendance a WHERE a.date BETWEEN ?1 AND ?2 AND a.user.id = ?3
           """)
   AttendanceCountDTO getAttendanceCountOfUserBetweenDates(Date startDate, Date endDate, Long userId);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.attendance.AttendanceCountDTO(
+                    count(a) FILTER(WHERE a.status = 'ON_TIME' OR a.status = 'LATE'),
+                    count(a) FILTER(WHERE a.status = 'ABSENT'),
+                    count(a) FILTER(WHERE a.status = 'ON_LEAVE'),
+                    count(a) FILTER(WHERE a.status = 'LATE')
+          ) FROM Attendance a WHERE a.date BETWEEN ?1 AND ?2 AND a.user.username = ?3
+          """)
+  AttendanceCountDTO getAttendanceCountOfUserBetweenDates(Date startDate, Date endDate, String userName);
+
+  @Query("""
+          SELECT a.id FROM Attendance a
+          WHERE a.user.id IN ?1 AND a.date = ?2 AND (a.status = "ON_TIME" OR a.status = "LATE")
+          """)
+  List<Long> getAllAttendanceIdsOfTodaysPresentUsers(List<Long> userIds, Date date);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.attendance.DepartmentAttendanceDTO(
+                    COUNT(*) FILTER(WHERE a.status = "ON_TIME"),
+                    COUNT(*) FILTER(WHERE a.status = "LATE"),
+                    COUNT(*) FILTER(WHERE a.status = "ABSENT"),
+                    COUNT(*) FILTER(WHERE a.status =  "ON_LEAVE")
+          ) FROM Attendance a WHERE a.user.department.id = ?1 AND a.date BETWEEN ?2 AND ?3
+          """)
+  DepartmentAttendanceDTO getDepartmentAttendance(Long departmentIds, Date startDate, Date endDate);
 }

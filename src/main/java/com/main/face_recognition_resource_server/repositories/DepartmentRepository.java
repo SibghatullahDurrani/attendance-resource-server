@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
@@ -19,4 +20,14 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
   @Transactional
   @Modifying
   void registerDepartment(String departmentName, Long organizationId);
+
+  @Query("""
+          SELECT d.id FROM Department d WHERE d.organization.id = ?1
+          """)
+  List<Long> getDepartmentIdsOfOrganization(Long organizationId);
+
+  @Query("""
+          SELECT d.departmentName FROM Department d WHERE d.id = ?1
+          """)
+  Optional<String> getDepartmentName(Long departmentId);
 }

@@ -7,6 +7,7 @@ import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExis
 import com.main.face_recognition_resource_server.repositories.DepartmentRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -55,5 +56,19 @@ public class DepartmentServicesImpl implements DepartmentServices {
     } else {
       return department.get();
     }
+  }
+
+  @Override
+  public List<Long> getDepartmentIdsOfOrganization(Long organizationId) {
+    return departmentRepository.getDepartmentIdsOfOrganization(organizationId);
+  }
+
+  @Override
+  public String getDepartmentName(Long departmentId) throws DepartmentDoesntExistException {
+    Optional<String> departmentName = departmentRepository.getDepartmentName(departmentId);
+    if (departmentName.isEmpty()) {
+      throw new DepartmentDoesntExistException();
+    }
+    return departmentName.get();
   }
 }

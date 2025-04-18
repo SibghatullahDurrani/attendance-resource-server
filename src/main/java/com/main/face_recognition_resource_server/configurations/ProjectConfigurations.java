@@ -9,10 +9,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -37,12 +42,28 @@ public class ProjectConfigurations {
   }
 
   @Bean
+  public AuthenticationManager authenticationManager(JwtDecoder jwtDecoder) {
+    JwtAuthenticationProvider jwtAuthenticationProvider = new JwtAuthenticationProvider(jwtDecoder);
+    return new ProviderManager(jwtAuthenticationProvider);
+  }
+
+  @Bean
+  public JwtDecoder jwtDecoder() {
+    return NimbusJwtDecoder.withJwkSetUri(keySetURI).build();
+  }
+
+//  @Bean
+//  public AuthorizationManager<Message<?>> messageAuthorizationManager(MessageMatcherDelegatingAuthorizationManager.Builder messages) {
+//
+
+  /// /    messages.simpDestMatchers("/ws/**").permitAll();
+//    messages.anyMessage().permitAll();
+//    return messages.build();
+//  }
+  @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.addFilterBefore(new CorsFilter(), ChannelProcessingFilter.class);
-    http.oauth2ResourceServer(
-            oauth2 -> oauth2.jwt(
-                    jwt -> jwt.jwkSetUri(keySetURI)
-                            .jwtAuthenticationConverter(converter)));
+    http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwkSetUri(keySetURI).jwtAuthenticationConverter(converter)));
     http.cors(c -> {
       CorsConfigurationSource source = _ -> {
         CorsConfiguration cc = new CorsConfiguration();
@@ -54,7 +75,7 @@ public class ProjectConfigurations {
       };
       c.configurationSource(source);
     });
-    http.authorizeHttpRequests(c -> c.anyRequest().authenticated());
+    http.authorizeHttpRequests(c -> c.anyRequest().permitAll());
     return http.build();
   }
 

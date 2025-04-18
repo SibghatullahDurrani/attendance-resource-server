@@ -1,8 +1,12 @@
 package com.main.face_recognition_resource_server.domains;
 
 import com.main.face_recognition_resource_server.constants.AttendanceStatus;
+import com.main.face_recognition_resource_server.constants.AttendanceType;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
@@ -35,4 +39,7 @@ public class Attendance {
 
   @OneToMany(mappedBy = "attendance")
   private List<CheckOut> checkOuts;
+
+  @Enumerated(EnumType.STRING)
+  private AttendanceType currentAttendanceStatus;
 }

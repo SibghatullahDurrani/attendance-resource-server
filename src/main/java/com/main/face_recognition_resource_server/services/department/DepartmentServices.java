@@ -5,6 +5,8 @@ import com.main.face_recognition_resource_server.domains.Department;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 
+import java.util.List;
+
 public interface DepartmentServices {
 
   boolean departmentExist(Long departmentId) throws DepartmentDoesntExistException;
@@ -14,4 +16,8 @@ public interface DepartmentServices {
   void registerDepartment(RegisterDepartmentDTO departmentToRegister);
 
   Department getDepartment(Long departmentId) throws DepartmentDoesntExistException;
+
+  List<Long> getDepartmentIdsOfOrganization(Long organizationId);
+
+  String getDepartmentName(Long departmentId) throws DepartmentDoesntExistException;
 }

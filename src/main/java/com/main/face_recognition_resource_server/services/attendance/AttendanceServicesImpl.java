@@ -2,18 +2,24 @@ package com.main.face_recognition_resource_server.services.attendance;
 
 import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.constants.AttendanceStatus;
+import com.main.face_recognition_resource_server.constants.AttendanceType;
 import com.main.face_recognition_resource_server.constants.CameraType;
-import com.main.face_recognition_resource_server.domains.Attendance;
-import com.main.face_recognition_resource_server.domains.CheckIn;
-import com.main.face_recognition_resource_server.domains.CheckOut;
-import com.main.face_recognition_resource_server.domains.User;
+import com.main.face_recognition_resource_server.domains.*;
+import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
-import com.main.face_recognition_resource_server.repositories.AttendanceRepository;
+import com.main.face_recognition_resource_server.repositories.attendance.AttendanceRepository;
+import com.main.face_recognition_resource_server.services.department.DepartmentServices;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import com.main.face_recognition_resource_server.services.user.UserServices;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,9 +33,9 @@ import java.text.DateFormatSymbols;
 import java.util.List;
 import java.util.*;
 
-import static com.main.face_recognition_resource_server.helpers.DateUtils.getStartAndEndDateOfMonthOfYear;
-import static com.main.face_recognition_resource_server.helpers.DateUtils.getStartAndEndDateOfYear;
+import static com.main.face_recognition_resource_server.helpers.DateUtils.*;
 
+@Slf4j
 @Service
 public class AttendanceServicesImpl implements AttendanceServices {
   private final AttendanceRepository attendanceRepository;
@@ -42,14 +48,19 @@ public class AttendanceServicesImpl implements AttendanceServices {
   private final Color green = new Color(67, 99, 63);
   private final Color red = new Color(163, 0, 0);
   private final Color cyan = new Color(209, 232, 111);
+  private final SimpMessagingTemplate messagingTemplate;
+  private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+  private final DepartmentServices departmentServices;
 
 
-  public AttendanceServicesImpl(AttendanceRepository attendanceRepository, UserServices userServices, CheckInServices checkInServices, CheckOutServices checkOutServices, OrganizationServices organizationServices) {
+  public AttendanceServicesImpl(AttendanceRepository attendanceRepository, UserServices userServices, CheckInServices checkInServices, CheckOutServices checkOutServices, OrganizationServices organizationServices, SimpMessagingTemplate messagingTemplate, DepartmentServices departmentServices) {
     this.attendanceRepository = attendanceRepository;
     this.userServices = userServices;
     this.checkInServices = checkInServices;
     this.checkOutServices = checkOutServices;
     this.organizationServices = organizationServices;
+    this.messagingTemplate = messagingTemplate;
+    this.departmentServices = departmentServices;
   }
 
   @Override
@@ -89,23 +100,42 @@ public class AttendanceServicesImpl implements AttendanceServices {
         }
 
         attendance.setStatus(attendanceStatus);
+        attendance.setCurrentAttendanceStatus(AttendanceType.CHECK_IN);
         attendanceRepository.saveAndFlush(attendance);
 
         checkInServices.saveCheckIn(checkInDate, attendance, fullImage, faceImage);
 
       } else {
+        attendance.setCurrentAttendanceStatus(AttendanceType.CHECK_IN);
+        attendanceRepository.saveAndFlush(attendance);
         checkInServices.saveCheckIn(checkInDate, attendance, fullImage, faceImage);
       }
+      ImageIO.write(fullImage, "jpg", baos);
+      byte[] fullImageBytes = baos.toByteArray();
+      baos.reset();
+      ImageIO.write(faceImage, "jpg", baos);
+      byte[] faceImageBytes = baos.toByteArray();
+      baos.reset();
+      sendLiveAttendanceFeed(userServices.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder().userId(userId).fullName(userServices.getUserFullNameByUserId(userId)).attendanceType(AttendanceType.CHECK_IN).date(checkInDate.getTime()).fullImage(fullImageBytes).faceImage(faceImageBytes).build());
     }
   }
 
   @Override
   @Transactional
   @Async
-  public void markCheckOut(Long userId, Date endDate, BufferedImage fullImage, BufferedImage faceImage) throws IOException {
+  public void markCheckOut(Long userId, Date endDate, BufferedImage fullImage, BufferedImage faceImage) throws IOException, UserDoesntExistException {
     Optional<Attendance> attendance = getUserAttendanceFromDayStartTillDate(userId, endDate);
     if (attendance.isPresent()) {
       checkOutServices.saveCheckOut(endDate, attendance.get(), fullImage, faceImage);
+      attendance.get().setCurrentAttendanceStatus(AttendanceType.CHECK_OUT);
+      attendanceRepository.saveAndFlush(attendance.get());
+      ImageIO.write(fullImage, "jpg", baos);
+      byte[] fullImageBytes = baos.toByteArray();
+      baos.reset();
+      ImageIO.write(faceImage, "jpg", baos);
+      byte[] faceImageBytes = baos.toByteArray();
+      baos.reset();
+      sendLiveAttendanceFeed(userServices.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder().userId(userId).fullName(userServices.getUserFullNameByUserId(userId)).attendanceType(AttendanceType.CHECK_OUT).date(endDate.getTime()).fullImage(fullImageBytes).faceImage(faceImageBytes).build());
     }
   }
 
@@ -298,8 +328,8 @@ public class AttendanceServicesImpl implements AttendanceServices {
   }
 
   private int drawRectangle(Graphics scoreGraphics, int previousPoint, long startTime, long endTime, long totalTime, Color color) {
-    double redPercentage = (double) (endTime - startTime) / totalTime;
-    int width = (int) (scoreImageWidth * redPercentage);
+    double colorPercentage = (double) (endTime - startTime) / totalTime;
+    int width = (int) (scoreImageWidth * colorPercentage);
     scoreGraphics.setColor(color);
     scoreGraphics.fillRect(previousPoint, 0, width, scoreImageHeight);
     return width;
@@ -362,7 +392,84 @@ public class AttendanceServicesImpl implements AttendanceServices {
 
   @Override
   public List<MonthlyAttendanceCalendarRecordDTO> getYearlyUserAttendanceCalendar(int year, String userName) {
-    return null;
+    Date[] startAndEndDate;
+    AttendanceCountDTO attendanceCount;
+    List<MonthlyAttendanceCalendarRecordDTO> attendanceCalendarRecords = new ArrayList<>();
+    for (int month = 0; month < 12; month++) {
+      startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
+      attendanceCount = attendanceRepository.getAttendanceCountOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userName);
+      attendanceCalendarRecords.add(MonthlyAttendanceCalendarRecordDTO.builder().attendanceCount(attendanceCount).month(month).build());
+    }
+    return attendanceCalendarRecords;
+  }
+
+  @Override
+  public void sendLiveAttendanceFeed(Long organizationId, AttendanceLiveFeedDTO attendanceLiveFeedDTO) {
+    String destination = "/topic/attendance-feed/" + organizationId;
+    messagingTemplate.convertAndSend(destination, attendanceLiveFeedDTO);
+  }
+
+  @Override
+  public List<AttendanceLiveFeedDTO> getRecentAttendancesOfOrganization(long organizationId) {
+    List<Long> userIds = userServices.getAllUserIdsOfOrganization(organizationId);
+    Date[] dates = getStartAndEndDateOfToday();
+    List<Long> attendanceIds = attendanceRepository.getAllAttendanceIdsOfTodaysPresentUsers(userIds, dates[0]);
+
+    List<AttendanceLiveFeedDTO> recentCheckIns = checkInServices.getRecentCheckInsOfAttendanceIdsForLiveAttendanceFeed(attendanceIds);
+    List<AttendanceLiveFeedDTO> recentCheckOuts = checkOutServices.getRecentCheckOutsOfAttendanceIdsForLiveAttendanceFeed(attendanceIds);
+    recentCheckIns.addAll(recentCheckOuts);
+    return recentCheckIns;
+  }
+
+  @Override
+  public List<DepartmentAttendanceDTO> getOrganizationDepartmentsAttendance(Long organizationId, int year, int month, int day) throws DepartmentDoesntExistException {
+    List<Long> departmentIds = departmentServices.getDepartmentIdsOfOrganization(organizationId);
+    List<DepartmentAttendanceDTO> departmentAttendances = new ArrayList<>();
+    Date[] dates = getStartAndEndDateOfDate(year, month, day);
+    for (Long departmentId : departmentIds) {
+      DepartmentAttendanceDTO departmentAttendance = attendanceRepository.getDepartmentAttendance(departmentId, dates[0], dates[1]);
+      departmentAttendance.setDepartmentName(departmentServices.getDepartmentName(departmentId));
+      departmentAttendance.setTotal(userServices.getTotalUsersOfDepartment(departmentId));
+      departmentAttendances.add(departmentAttendance);
+    }
+    return departmentAttendances;
+  }
+
+  @Override
+  public Page<DailyUserAttendanceDTO> getDailyUserAttendances(Long organizationId, AttendanceType attendanceType, AttendanceStatus attendanceStatus, String userName, String departmentName, Pageable pageable) {
+    Specification<Attendance> specification = (root, query, criteriaBuilder) -> {
+      List<Predicate> predicates = new ArrayList<>();
+      Join<Attendance, User> attendanceUserJoin = root.join("user", JoinType.INNER);
+      Join<User, Department> attendanceUserDepartmentJoin = attendanceUserJoin.join("department", JoinType.INNER);
+      Join<Department, Organization> attendanceUserDepartmentOrganizationJoin = attendanceUserDepartmentJoin.join("organization", JoinType.INNER);
+      Calendar now = GregorianCalendar.getInstance();
+      now.set(Calendar.HOUR_OF_DAY, 0);
+      now.set(Calendar.MINUTE, 0);
+      now.set(Calendar.SECOND, 0);
+      now.set(Calendar.MILLISECOND, 0);
+
+      predicates.add(criteriaBuilder.equal(attendanceUserDepartmentOrganizationJoin.get("id"), organizationId));
+      predicates.add(criteriaBuilder.equal(root.get("date"), now.getTime().getTime()));
+      if (attendanceType != null) {
+        predicates.add(criteriaBuilder.equal(root.get("currentAttendanceStatus"), attendanceType));
+      }
+      if (attendanceStatus != null) {
+        predicates.add(criteriaBuilder.equal(root.get("status"), attendanceStatus));
+      }
+      if (userName != null) {
+        predicates.add(
+                criteriaBuilder.or(
+                        criteriaBuilder.like(attendanceUserJoin.get("firstName"), "%" + userName + "%"),
+                        criteriaBuilder.like(attendanceUserJoin.get("secondName"), "%" + userName + "%")
+                )
+        );
+      }
+      if (departmentName != null) {
+        predicates.add(criteriaBuilder.equal(attendanceUserDepartmentJoin.get("departmentName"), departmentName));
+      }
+      return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+    };
+    return attendanceRepository.getDailyUserAttendances(specification, pageable);
   }
 
   private AttendanceStatsDTO generateAttendanceStatsDTO(Date startDate, Date endDate, Long userId) throws NoStatsAvailableException {

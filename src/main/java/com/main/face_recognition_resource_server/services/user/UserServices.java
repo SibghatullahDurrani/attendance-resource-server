@@ -7,6 +7,7 @@ import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.domains.User;
+import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import org.springframework.data.domain.Page;
@@ -46,4 +47,12 @@ public interface UserServices {
   User saveUser(User user);
 
   RemainingLeavesDTO getRemainingLeavesOfUser(String username);
+
+  String getUserFullNameByUserId(Long userId);
+
+  List<Long> getAllUserIdsOfOrganization(long organizationId);
+
+  void checkIfOrganizationBelongsToUser(Long organizationId, String username) throws UserDoesntExistException, OrganizationDoesntBelongToYouException;
+
+  Long getTotalUsersOfDepartment(Long departmentId);
 }

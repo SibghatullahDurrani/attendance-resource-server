@@ -9,6 +9,7 @@ import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.domains.User;
+import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.UserRepository;
@@ -183,4 +184,30 @@ public class UserServicesImpl implements UserServices {
     return userRepository.getRemainingLeavesByUsername(username);
   }
 
+  @Override
+  public String getUserFullNameByUserId(Long userId) {
+    return userRepository.getUserFullNameByUserId(userId);
+  }
+
+  @Override
+  public List<Long> getAllUserIdsOfOrganization(long organizationId) {
+    return userRepository.getAllUserIdsOfOrganization(organizationId);
+  }
+
+  @Override
+  public void checkIfOrganizationBelongsToUser(Long organizationId, String username) throws UserDoesntExistException, OrganizationDoesntBelongToYouException {
+    Optional<Long> userOrganizationId = userRepository.getUserOrganizationId(username);
+    if (userOrganizationId.isEmpty()) {
+      throw new UserDoesntExistException();
+    } else {
+      if (userOrganizationId.get() != organizationId) {
+        throw new OrganizationDoesntBelongToYouException();
+      }
+    }
+  }
+
+  @Override
+  public Long getTotalUsersOfDepartment(Long departmentId) {
+    return userRepository.getTotalUsersOfDepartment(departmentId);
+  }
 }

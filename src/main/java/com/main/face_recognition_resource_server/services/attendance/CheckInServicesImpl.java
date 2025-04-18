@@ -1,13 +1,16 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
+import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceLiveFeedDTO;
 import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceSnapshotDTO;
-import com.main.face_recognition_resource_server.DTOS.attendance.CheckInDTO;
 import com.main.face_recognition_resource_server.DTOS.attendance.GetAttendanceSnapPathDTO;
+import com.main.face_recognition_resource_server.DTOS.attendance.RecentAttendanceDTO;
 import com.main.face_recognition_resource_server.constants.AttendanceType;
 import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.domains.CheckIn;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
 import com.main.face_recognition_resource_server.repositories.CheckInRepository;
+import com.main.face_recognition_resource_server.services.user.UserServices;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,19 +18,25 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
+@Slf4j
 @Service
 public class CheckInServicesImpl implements CheckInServices {
   private final File picturePath;
   private final CheckInRepository checkInRepository;
+  private final UserServices userServices;
 
-  public CheckInServicesImpl(CheckInRepository checkInRepository) {
+  public CheckInServicesImpl(CheckInRepository checkInRepository, UserServices userServices) {
     this.checkInRepository = checkInRepository;
     picturePath = new File("./FaceRecognition/");
     if (!picturePath.exists()) {
       picturePath.mkdirs();
     }
+    this.userServices = userServices;
   }
 
   @Override
@@ -97,5 +106,35 @@ public class CheckInServicesImpl implements CheckInServices {
                     .build()
     ));
     return checkInSnapshots;
+  }
+
+  @Override
+  public List<AttendanceLiveFeedDTO> getRecentCheckInsOfAttendanceIdsForLiveAttendanceFeed(List<Long> attendanceIds) {
+    List<RecentAttendanceDTO> recentAttendances = checkInRepository.getRecentCheckInsOfAttendanceIds(attendanceIds);
+    List<AttendanceLiveFeedDTO> recentLiveFeedCheckIns = new ArrayList<>();
+    for (RecentAttendanceDTO recentAttendance : recentAttendances) {
+      String fullName = userServices.getUserFullNameByUserId(recentAttendance.getUserId());
+      String fullImageURI = "FaceRecognition/%s".formatted(recentAttendance.getFullImageName());
+      String faceImageURI = "FaceRecognition/%s".formatted(recentAttendance.getFaceImageName());
+
+      try {
+        Path fullImagePath = Paths.get(fullImageURI);
+        Path faceImagePath = Paths.get(faceImageURI);
+        byte[] fullImage = Files.readAllBytes(fullImagePath);
+        byte[] faceImage = Files.readAllBytes(faceImagePath);
+        recentLiveFeedCheckIns.add(
+                AttendanceLiveFeedDTO.builder()
+                        .userId(recentAttendance.getUserId())
+                        .faceImage(faceImage)
+                        .fullImage(fullImage)
+                        .fullName(fullName)
+                        .date(recentAttendance.getDate().getTime())
+                        .attendanceType(AttendanceType.CHECK_IN)
+                        .build());
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return recentLiveFeedCheckIns;
   }
 }

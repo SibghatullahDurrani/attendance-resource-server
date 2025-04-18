@@ -21,8 +21,8 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.user.UserDTO(
-          u.id, u.firstName, u.secondName, u.username, u.department.departmentName, u.role,
-          u.profilePictureName, u.sourceFacePictureName
+          u.id, u.firstName, u.secondName, u.username, u.department.departmentName,
+          u.department.organization.id,u.role, u.profilePictureName, u.sourceFacePictureName
           ) FROM User u WHERE u.username = ?1
           """)
   Optional<UserDTO> getUserDTOByUsername(String username);
@@ -34,8 +34,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.user.UserDTO(
-          u.id, u.firstName, u.secondName, u.username, u.department.departmentName, u.role,
-          u.profilePictureName, u.sourceFacePictureName
+          u.id, u.firstName, u.secondName, u.username, u.department.departmentName,
+          u.department.organization.id,u.role, u.profilePictureName, u.sourceFacePictureName
           ) FROM User u
           """)
   Page<UserDTO> getAllUsers(Pageable pageable);
@@ -51,30 +51,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
           """)
   Optional<OrganizationDTO> getOrganizationByUsername(String username);
 
-  @Query(
-          """
-                  SELECT u.department.organization.id FROM User u WHERE u.username = ?1
-                  """
-  )
+  @Query("""
+          SELECT u.department.organization.id FROM User u WHERE u.username = ?1
+          """)
   Optional<Long> getUserOrganizationId(String username);
 
   boolean existsByEmailAndRole(String email, UserRole role);
 
-  @Query(value = "INSERT INTO users (first_name, second_name,password,username,role,identification_number,email,department_id,remaining_sick_leaves,remaining_annual_leaves)" +
-          "VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)", nativeQuery = true)
+  @Query(value = "INSERT INTO users (first_name, second_name,password,username,role,identification_number,email,department_id,remaining_sick_leaves,remaining_annual_leaves)" + "VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)", nativeQuery = true)
   @Transactional
   @Modifying
-  void registerUser(String firstName,
-                    String secondName,
-                    String hashedPassword,
-                    String username,
-                    String role,
-                    String identificationNumber,
-                    String email,
-                    Long departmentId,
-                    int sickLeavesAllowed,
-                    int annualLeavesAllowed
-  );
+  void registerUser(String firstName, String secondName, String hashedPassword, String username, String role, String identificationNumber, String email, Long departmentId, int sickLeavesAllowed, int annualLeavesAllowed);
 
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO(
@@ -109,4 +96,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
           ) FROM User u WHERE u.username = ?1
           """)
   RemainingLeavesDTO getRemainingLeavesByUsername(String username);
+
+  @Query("""
+          SELECT CONCAT(u.firstName, ' ',u.secondName) FROM User u WHERE  u.id = ?1
+          """)
+  String getUserFullNameByUserId(Long userId);
+
+  @Query("""
+          SELECT u.id FROM User u WHERE u.department.organization.id = ?1
+          """)
+  List<Long> getAllUserIdsOfOrganization(long organizationId);
+
+  @Query("""
+          SELECT COUNT(*) FILTER(WHERE u.department.id = ?1) FROM User u
+          """)
+  Long getTotalUsersOfDepartment(Long departmentId);
 }

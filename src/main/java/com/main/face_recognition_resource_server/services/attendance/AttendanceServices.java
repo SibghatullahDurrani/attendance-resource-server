@@ -1,7 +1,10 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
 import com.main.face_recognition_resource_server.DTOS.attendance.*;
+import com.main.face_recognition_resource_server.constants.AttendanceStatus;
+import com.main.face_recognition_resource_server.constants.AttendanceType;
 import com.main.face_recognition_resource_server.constants.CameraType;
+import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import org.springframework.data.domain.Page;
@@ -18,7 +21,7 @@ public interface AttendanceServices {
 
   Set<Long> getCache(Long organizationId, CameraType type);
 
-  void markCheckOut(Long userId, Date endDate, BufferedImage fullImage, BufferedImage faceImage) throws IOException;
+  void markCheckOut(Long userId, Date endDate, BufferedImage fullImage, BufferedImage faceImage) throws IOException, UserDoesntExistException;
 
   void markAbsentOfAllUsersInOrganizationForCurrentDay(Long OrganizationId);
 
@@ -37,4 +40,12 @@ public interface AttendanceServices {
   Page<UserAttendanceDTO> getYearlyUserAttendanceTable(Pageable pageRequest, int year, Long userId);
 
   List<MonthlyAttendanceCalendarRecordDTO> getYearlyUserAttendanceCalendar(int year, String userName);
+
+  void sendLiveAttendanceFeed(Long organizationId, AttendanceLiveFeedDTO attendanceLiveFeedDTO);
+
+  List<AttendanceLiveFeedDTO> getRecentAttendancesOfOrganization(long organizationId);
+
+  List<DepartmentAttendanceDTO> getOrganizationDepartmentsAttendance(Long organizationId, int year, int month, int day) throws DepartmentDoesntExistException;
+
+  Page<DailyUserAttendanceDTO> getDailyUserAttendances(Long organizationId, AttendanceType attendanceType, AttendanceStatus attendanceStatus, String userName, String departmentName, Pageable pageable);
 }

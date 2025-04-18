@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.controllers;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.MediaType;
@@ -13,6 +14,7 @@ import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Slf4j
 @RestController
 @RequestMapping("images")
 public class ImageController {
@@ -26,6 +28,7 @@ public class ImageController {
     return ResponseEntity.ok()
             .contentType(MediaType.IMAGE_JPEG)
             .body(resource);
+
   }
 
   @GetMapping("source-face-image/{imageName}")

@@ -1,7 +1,11 @@
 package com.main.face_recognition_resource_server.controllers;
 
 import com.main.face_recognition_resource_server.DTOS.attendance.*;
+import com.main.face_recognition_resource_server.constants.AttendanceStatus;
+import com.main.face_recognition_resource_server.constants.AttendanceType;
+import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
+import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.services.attendance.AttendanceServices;
 import com.main.face_recognition_resource_server.services.user.UserServices;
@@ -11,10 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -55,7 +56,7 @@ public class AttendanceController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<List<MonthlyAttendanceCalendarRecordDTO>> getYearlyUserAttendanceCalendar(@RequestParam int year, Authentication authentication) {
     List<MonthlyAttendanceCalendarRecordDTO> attendanceCalendarRecordDTOS = attendanceServices.getYearlyUserAttendanceCalendar(year, authentication.getName());
-    return null;
+    return new ResponseEntity<>(attendanceCalendarRecordDTOS, HttpStatus.OK);
   }
 
   @GetMapping("overview")
@@ -89,5 +90,39 @@ public class AttendanceController {
     PageRequest pageRequest = PageRequest.of(page, size);
     Page<UserAttendanceDTO> attendances = attendanceServices.getYearlyUserAttendanceTable(pageRequest, year, userId);
     return new ResponseEntity<>(attendances, HttpStatus.OK);
+  }
+
+  @GetMapping("/recent")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<List<AttendanceLiveFeedDTO>> getRecentAttendances(Authentication authentication) throws UserDoesntExistException {
+    long organizationId = userServices.getUserOrganizationId(authentication.getName());
+    List<AttendanceLiveFeedDTO> recentAttendances = attendanceServices.getRecentAttendancesOfOrganization(organizationId);
+    return new ResponseEntity<>(recentAttendances, HttpStatus.OK);
+  }
+
+  @GetMapping("/organization/{organizationId}/departments")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<List<DepartmentAttendanceDTO>> getOrganizationDepartmentsAttendance(@PathVariable Long organizationId, @RequestParam int year, @RequestParam int month, @RequestParam int day, Authentication authentication) throws OrganizationDoesntBelongToYouException, UserDoesntExistException, DepartmentDoesntExistException {
+    String username = authentication.getName();
+    userServices.checkIfOrganizationBelongsToUser(organizationId, username);
+    List<DepartmentAttendanceDTO> organizationDepartmentsAttendance = attendanceServices.getOrganizationDepartmentsAttendance(organizationId, year, month, day);
+    return new ResponseEntity<>(organizationDepartmentsAttendance, HttpStatus.OK);
+  }
+
+  @GetMapping("/organization/{organizationId}/today")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Page<DailyUserAttendanceDTO>> getOrganizationDailyUserAttendance(
+          @PathVariable Long organizationId,
+          @RequestParam(required = false) AttendanceType attendanceType,
+          @RequestParam(required = false) AttendanceStatus attendanceStatus,
+          @RequestParam(required = false) String userName,
+          @RequestParam(required = false) String departmentName,
+          @RequestParam int page,
+          @RequestParam int size,
+          Authentication authentication) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
+    userServices.checkIfOrganizationBelongsToUser(organizationId, authentication.getName());
+    PageRequest pageRequest = PageRequest.of(page, size);
+    Page<DailyUserAttendanceDTO> dailyUserAttendances = attendanceServices.getDailyUserAttendances(organizationId, attendanceType, attendanceStatus, userName, departmentName, pageRequest);
+    return new ResponseEntity<>(dailyUserAttendances, HttpStatus.OK);
   }
 }
