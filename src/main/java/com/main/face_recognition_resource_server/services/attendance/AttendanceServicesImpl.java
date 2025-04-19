@@ -472,6 +472,12 @@ public class AttendanceServicesImpl implements AttendanceServices {
     return attendanceRepository.getDailyUserAttendances(specification, pageable);
   }
 
+  @Override
+  public List<AttendanceGraphDataDTO> getOrganizationAttendanceGraphsData(Long organizationId, int year, int month) {
+    Date[] dates = getStartAndEndDateOfMonthOfYear(year, month);
+    return attendanceRepository.getOrganizationAttendanceChartInfo(organizationId, dates[0], dates[1]);
+  }
+
   private AttendanceStatsDTO generateAttendanceStatsDTO(Date startDate, Date endDate, Long userId) throws NoStatsAvailableException {
     AttendanceCountDTO attendanceCount = attendanceRepository.getAttendanceCountOfUserBetweenDates(startDate, endDate, userId);
     List<Long> attendanceIds = attendanceRepository.getAttendanceIdsOfUserBetweenDates(startDate, endDate, userId);

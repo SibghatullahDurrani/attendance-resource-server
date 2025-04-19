@@ -125,4 +125,12 @@ public class AttendanceController {
     Page<DailyUserAttendanceDTO> dailyUserAttendances = attendanceServices.getDailyUserAttendances(organizationId, attendanceType, attendanceStatus, userName, departmentName, pageRequest);
     return new ResponseEntity<>(dailyUserAttendances, HttpStatus.OK);
   }
+
+  @GetMapping("/organization/{organizationId}/attendance-graphs-data")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<List<AttendanceGraphDataDTO>> getOrganizationAttendanceGraphsData(@PathVariable Long organizationId, @RequestParam int year, @RequestParam int month, Authentication authentication) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
+    userServices.checkIfOrganizationBelongsToUser(organizationId, authentication.getName());
+    List<AttendanceGraphDataDTO> chartInfos = attendanceServices.getOrganizationAttendanceGraphsData(organizationId, year, month);
+    return new ResponseEntity<>(chartInfos, HttpStatus.OK);
+  }
 }

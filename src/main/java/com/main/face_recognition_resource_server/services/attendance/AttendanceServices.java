@@ -48,4 +48,6 @@ public interface AttendanceServices {
   List<DepartmentAttendanceDTO> getOrganizationDepartmentsAttendance(Long organizationId, int year, int month, int day) throws DepartmentDoesntExistException;
 
   Page<DailyUserAttendanceDTO> getDailyUserAttendances(Long organizationId, AttendanceType attendanceType, AttendanceStatus attendanceStatus, String userName, String departmentName, Pageable pageable);
+
+  List<AttendanceGraphDataDTO> getOrganizationAttendanceGraphsData(Long organizationId, int year, int month);
 }

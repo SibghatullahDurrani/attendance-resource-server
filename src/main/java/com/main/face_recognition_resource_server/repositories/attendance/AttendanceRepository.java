@@ -119,4 +119,16 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
           ) FROM Attendance a WHERE a.user.department.id = ?1 AND a.date BETWEEN ?2 AND ?3
           """)
   DepartmentAttendanceDTO getDepartmentAttendance(Long departmentIds, Date startDate, Date endDate);
+
+  @Query("""
+          SELECT new  com.main.face_recognition_resource_server.DTOS.attendance.AttendanceGraphDataDTO(
+                    a.date,
+                    COUNT(*) FILTER(WHERE a.status = 'ON_TIME' OR a.status = 'LATE'),
+                    COUNT(*) FILTER(WHERE a.status = 'LATE'),
+                    COUNT(*) FILTER(WHERE a.status = 'ABSENT'),
+                    COUNT(*) FILTER(WHERE a.status = 'ON_LEAVE')
+          ) FROM Attendance a WHERE a.user.department.organization.id = ?1 AND a.date BETWEEN ?2 AND ?3
+          GROUP BY a.date
+          """)
+  List<AttendanceGraphDataDTO> getOrganizationAttendanceChartInfo(Long organizationId, Date startDate, Date endDate);
 }
