@@ -20,4 +20,6 @@ public interface DepartmentServices {
   List<Long> getDepartmentIdsOfOrganization(Long organizationId);
 
   String getDepartmentName(Long departmentId) throws DepartmentDoesntExistException;
+
+  List<String> getDepartmentNamesOfOrganization(Long organizationId);
 }

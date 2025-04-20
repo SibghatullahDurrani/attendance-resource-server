@@ -1,10 +1,12 @@
 package com.main.face_recognition_resource_server.controllers;
 
-import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.department.OrganizationDepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.RegisterOrganizationDTO;
+import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
+import com.main.face_recognition_resource_server.services.department.DepartmentServices;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import com.main.face_recognition_resource_server.services.user.UserServices;
 import org.springframework.data.domain.Page;
@@ -15,15 +17,19 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("organizations")
 public class OrganizationController {
   private final OrganizationServices organizationServices;
   private final UserServices userServices;
+  private final DepartmentServices departmentServices;
 
-  public OrganizationController(OrganizationServices organizationServices, UserServices userServices) {
+  public OrganizationController(OrganizationServices organizationServices, UserServices userServices, DepartmentServices departmentServices) {
     this.organizationServices = organizationServices;
     this.userServices = userServices;
+    this.departmentServices = departmentServices;
   }
 
   @PostMapping()
@@ -61,5 +67,13 @@ public class OrganizationController {
     PageRequest pageRequest = PageRequest.of(page, size);
     Page<OrganizationDepartmentDTO> allOrganizationsWithItsDepartments = organizationServices.getAllOrganizationsWithItsDepartments(pageRequest);
     return new ResponseEntity<>(allOrganizationsWithItsDepartments, HttpStatus.OK);
+  }
+
+  @GetMapping("{organizationId}/department-names")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<List<String>> getAllDepartmentNamesOfOrganization(@PathVariable Long organizationId, Authentication authentication) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
+    userServices.checkIfOrganizationBelongsToUser(organizationId, authentication.getName());
+    List<String> departmentNamesOfOrganization = departmentServices.getDepartmentNamesOfOrganization(organizationId);
+    return new ResponseEntity<>(departmentNamesOfOrganization, HttpStatus.OK);
   }
 }

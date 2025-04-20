@@ -126,4 +126,5 @@ public class OrganizationServicesImpl implements OrganizationServices {
   public LeavesAllowedPolicyDTO getOrganizationLeavesPolicy(Long organizationId) {
     return organizationRepository.getOrganizationLeavesAllowedPolicies(organizationId);
   }
+
 }

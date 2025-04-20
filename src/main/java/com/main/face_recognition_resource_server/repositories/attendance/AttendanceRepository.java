@@ -112,7 +112,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
 
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.attendance.DepartmentAttendanceDTO(
-                    COUNT(*) FILTER(WHERE a.status = "ON_TIME"),
+                    COUNT(*) FILTER(WHERE a.status = "ON_TIME" OR a.status = "LATE"),
                     COUNT(*) FILTER(WHERE a.status = "LATE"),
                     COUNT(*) FILTER(WHERE a.status = "ABSENT"),
                     COUNT(*) FILTER(WHERE a.status =  "ON_LEAVE")

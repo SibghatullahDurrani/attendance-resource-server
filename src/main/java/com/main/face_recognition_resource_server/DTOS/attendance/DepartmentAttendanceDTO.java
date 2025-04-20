@@ -11,14 +11,14 @@ import lombok.NoArgsConstructor;
 @Data
 public class DepartmentAttendanceDTO {
   private String departmentName;
-  private Long onTime;
+  private Long present;
   private Long late;
   private Long absent;
   private Long onLeave;
   private Long total;
 
-  public DepartmentAttendanceDTO(Long onTime, Long late, Long absent, Long onLeave) {
-    this.onTime = onTime;
+  public DepartmentAttendanceDTO(Long present, Long late, Long absent, Long onLeave) {
+    this.present = present;
     this.late = late;
     this.absent = absent;
     this.onLeave = onLeave;

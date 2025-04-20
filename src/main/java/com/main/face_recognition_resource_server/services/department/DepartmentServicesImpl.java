@@ -71,4 +71,9 @@ public class DepartmentServicesImpl implements DepartmentServices {
     }
     return departmentName.get();
   }
+
+  @Override
+  public List<String> getDepartmentNamesOfOrganization(Long organizationId) {
+    return this.departmentRepository.getDepartmentNamesOfOrganization(organizationId);
+  }
 }

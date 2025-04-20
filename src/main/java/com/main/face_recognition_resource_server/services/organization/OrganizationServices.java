@@ -9,6 +9,8 @@ import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntEx
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface OrganizationServices {
   boolean organizationExists(Long organizationId) throws OrganizationDoesntExistException;
 
@@ -35,4 +37,5 @@ public interface OrganizationServices {
   int getOrganizationCheckOutToleranceTimePolicy(Long organizationId);
 
   LeavesAllowedPolicyDTO getOrganizationLeavesPolicy(Long organizationId);
+
 }

@@ -30,4 +30,9 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
           SELECT d.departmentName FROM Department d WHERE d.id = ?1
           """)
   Optional<String> getDepartmentName(Long departmentId);
+
+  @Query("""
+          SELECT d.departmentName FROM Department d WHERE d.organization.id = ?1
+          """)
+  List<String> getDepartmentNamesOfOrganization(Long organizationId);
 }
