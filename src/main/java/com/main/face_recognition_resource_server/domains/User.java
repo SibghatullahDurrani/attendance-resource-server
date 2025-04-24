@@ -2,18 +2,16 @@ package com.main.face_recognition_resource_server.domains;
 
 import com.main.face_recognition_resource_server.constants.UserRole;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 @Entity
+@Getter
+@Setter
 @Table(name = "users")
 public class User {
   @Id
@@ -42,11 +40,14 @@ public class User {
   @Enumerated(EnumType.STRING)
   private UserRole role;
 
-  @Column(nullable = false)
   private String identificationNumber;
+
+  private String phoneNumber;
 
   @Column(nullable = false)
   private String email;
+
+  private String designation;
 
   @ManyToOne
   @JoinColumn(name = "department_id", nullable = false)

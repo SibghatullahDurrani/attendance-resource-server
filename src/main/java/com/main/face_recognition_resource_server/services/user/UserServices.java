@@ -3,6 +3,7 @@ package com.main.face_recognition_resource_server.services.user;
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO;
 import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
@@ -11,6 +12,7 @@ import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBe
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -55,4 +57,6 @@ public interface UserServices {
   void checkIfOrganizationBelongsToUser(Long organizationId, String username) throws UserDoesntExistException, OrganizationDoesntBelongToYouException;
 
   Long getTotalUsersOfDepartment(Long departmentId);
+
+  Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest);
 }

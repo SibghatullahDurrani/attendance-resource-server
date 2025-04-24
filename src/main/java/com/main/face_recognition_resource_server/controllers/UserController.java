@@ -1,12 +1,10 @@
 package com.main.face_recognition_resource_server.controllers;
 
+import com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO;
 import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
-import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
-import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
-import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
-import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
+import com.main.face_recognition_resource_server.exceptions.*;
 import com.main.face_recognition_resource_server.services.department.DepartmentServices;
 import com.main.face_recognition_resource_server.services.user.UserServices;
 import org.springframework.data.domain.Page;
@@ -65,5 +63,14 @@ public class UserController {
       }
     }
     return null;
+  }
+
+  @GetMapping("organization/{organizationId}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Page<AdminUsersTableRecordDTO>> getUsersPageOfOrganization(@PathVariable Long organizationId, @RequestParam int page, @RequestParam int size, Authentication authentication) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
+    userServices.checkIfOrganizationBelongsToUser(organizationId, authentication.getName());
+    PageRequest pageRequest = PageRequest.of(page, size);
+    Page<AdminUsersTableRecordDTO> adminUsersTableRecordDTOPage = userServices.getUsersPageOfOrganization(organizationId, pageRequest);
+    return new ResponseEntity<>(adminUsersTableRecordDTOPage, HttpStatus.OK);
   }
 }

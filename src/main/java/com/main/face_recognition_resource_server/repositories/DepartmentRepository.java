@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.repositories;
 
+import com.main.face_recognition_resource_server.DTOS.organization.DepartmentOfOrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Department;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -32,7 +33,10 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
   Optional<String> getDepartmentName(Long departmentId);
 
   @Query("""
-          SELECT d.departmentName FROM Department d WHERE d.organization.id = ?1
+          SELECT new com.main.face_recognition_resource_server.DTOS.organization.DepartmentOfOrganizationDTO(
+          d.id, d.departmentName
+          )
+          FROM Department d WHERE d.organization.id = ?1
           """)
-  List<String> getDepartmentNamesOfOrganization(Long organizationId);
+  List<DepartmentOfOrganizationDTO> getDepartmentNamesOfOrganization(Long organizationId);
 }

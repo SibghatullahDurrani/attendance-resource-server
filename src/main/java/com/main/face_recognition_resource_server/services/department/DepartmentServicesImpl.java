@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.services.department;
 
 import com.main.face_recognition_resource_server.DTOS.department.RegisterDepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.DepartmentOfOrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Department;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
@@ -73,7 +74,7 @@ public class DepartmentServicesImpl implements DepartmentServices {
   }
 
   @Override
-  public List<String> getDepartmentNamesOfOrganization(Long organizationId) {
+  public List<DepartmentOfOrganizationDTO> getDepartmentNamesOfOrganization(Long organizationId) {
     return this.departmentRepository.getDepartmentNamesOfOrganization(organizationId);
   }
 }

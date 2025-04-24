@@ -5,6 +5,7 @@ import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.LeavesAllowedPolicyDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO;
 import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
@@ -209,5 +210,10 @@ public class UserServicesImpl implements UserServices {
   @Override
   public Long getTotalUsersOfDepartment(Long departmentId) {
     return userRepository.getTotalUsersOfDepartment(departmentId);
+  }
+
+  @Override
+  public Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest) {
+    return userRepository.getUsersPageOfOrganization(organizationId, pageRequest);
   }
 }

@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.controllers;
 
 import com.main.face_recognition_resource_server.DTOS.department.OrganizationDepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.DepartmentOfOrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
@@ -69,11 +70,11 @@ public class OrganizationController {
     return new ResponseEntity<>(allOrganizationsWithItsDepartments, HttpStatus.OK);
   }
 
-  @GetMapping("{organizationId}/department-names")
+  @GetMapping("{organizationId}/departments")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<List<String>> getAllDepartmentNamesOfOrganization(@PathVariable Long organizationId, Authentication authentication) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
+  public ResponseEntity<List<DepartmentOfOrganizationDTO>> getAllDepartmentsOfOrganization(@PathVariable Long organizationId, Authentication authentication) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
     userServices.checkIfOrganizationBelongsToUser(organizationId, authentication.getName());
-    List<String> departmentNamesOfOrganization = departmentServices.getDepartmentNamesOfOrganization(organizationId);
+    List<DepartmentOfOrganizationDTO> departmentNamesOfOrganization = departmentServices.getDepartmentNamesOfOrganization(organizationId);
     return new ResponseEntity<>(departmentNamesOfOrganization, HttpStatus.OK);
   }
 }

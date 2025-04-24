@@ -11,7 +11,9 @@ public class RegisterUserDTO {
   private String secondName;
   private String password;
   private String identificationNumber;
+  private String phoneNumber;
   private String email;
   private Long departmentId;
+  private Long designation;
   private UserRole role;
 }

@@ -3,6 +3,7 @@ package com.main.face_recognition_resource_server.repositories;
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO;
 import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.domains.User;
@@ -111,4 +112,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
           SELECT COUNT(*) FILTER(WHERE u.department.id = ?1) FROM User u
           """)
   Long getTotalUsersOfDepartment(Long departmentId);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO(
+                    u.id, u.firstName, u.secondName, u.department.departmentName, u.designation,
+                    u.identificationNumber, u.email, u.phoneNumber
+          )FROM User u WHERE u.department.organization.id = ?1
+          """)
+  Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest);
 }

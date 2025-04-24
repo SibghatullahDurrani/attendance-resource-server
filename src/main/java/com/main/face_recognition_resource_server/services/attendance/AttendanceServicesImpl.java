@@ -104,19 +104,27 @@ public class AttendanceServicesImpl implements AttendanceServices {
         attendanceRepository.saveAndFlush(attendance);
 
         checkInServices.saveCheckIn(checkInDate, attendance, fullImage, faceImage);
+        ImageIO.write(fullImage, "jpg", baos);
+        byte[] fullImageBytes = baos.toByteArray();
+        baos.reset();
+        ImageIO.write(faceImage, "jpg", baos);
+        byte[] faceImageBytes = baos.toByteArray();
+        baos.reset();
+        sendLiveAttendanceFeed(userServices.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder()
+                .userId(userId)
+                .fullName(userServices.getUserFullNameByUserId(userId))
+                .attendanceType(AttendanceType.CHECK_IN)
+                .date(checkInDate.getTime())
+                .fullImage(fullImageBytes)
+                .faceImage(faceImageBytes)
+                .build());
 
       } else {
         attendance.setCurrentAttendanceStatus(AttendanceType.CHECK_IN);
         attendanceRepository.saveAndFlush(attendance);
         checkInServices.saveCheckIn(checkInDate, attendance, fullImage, faceImage);
       }
-      ImageIO.write(fullImage, "jpg", baos);
-      byte[] fullImageBytes = baos.toByteArray();
-      baos.reset();
-      ImageIO.write(faceImage, "jpg", baos);
-      byte[] faceImageBytes = baos.toByteArray();
-      baos.reset();
-      sendLiveAttendanceFeed(userServices.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder().userId(userId).fullName(userServices.getUserFullNameByUserId(userId)).attendanceType(AttendanceType.CHECK_IN).date(checkInDate.getTime()).fullImage(fullImageBytes).faceImage(faceImageBytes).build());
+
     }
   }
 
@@ -129,13 +137,6 @@ public class AttendanceServicesImpl implements AttendanceServices {
       checkOutServices.saveCheckOut(endDate, attendance.get(), fullImage, faceImage);
       attendance.get().setCurrentAttendanceStatus(AttendanceType.CHECK_OUT);
       attendanceRepository.saveAndFlush(attendance.get());
-      ImageIO.write(fullImage, "jpg", baos);
-      byte[] fullImageBytes = baos.toByteArray();
-      baos.reset();
-      ImageIO.write(faceImage, "jpg", baos);
-      byte[] faceImageBytes = baos.toByteArray();
-      baos.reset();
-      sendLiveAttendanceFeed(userServices.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder().userId(userId).fullName(userServices.getUserFullNameByUserId(userId)).attendanceType(AttendanceType.CHECK_OUT).date(endDate.getTime()).fullImage(fullImageBytes).faceImage(faceImageBytes).build());
     }
   }
 
@@ -415,9 +416,7 @@ public class AttendanceServicesImpl implements AttendanceServices {
     Date[] dates = getStartAndEndDateOfToday();
     List<Long> attendanceIds = attendanceRepository.getAllAttendanceIdsOfTodaysPresentUsers(userIds, dates[0]);
 
-    List<AttendanceLiveFeedDTO> recentCheckIns = checkInServices.getRecentCheckInsOfAttendanceIdsForLiveAttendanceFeed(attendanceIds);
-    List<AttendanceLiveFeedDTO> recentCheckOuts = checkOutServices.getRecentCheckOutsOfAttendanceIdsForLiveAttendanceFeed(attendanceIds);
-    recentCheckIns.addAll(recentCheckOuts);
+    List<AttendanceLiveFeedDTO> recentCheckIns = checkInServices.getFirstCheckInsOfAttendanceIdsForLiveAttendanceFeed(attendanceIds);
     return recentCheckIns;
   }
 

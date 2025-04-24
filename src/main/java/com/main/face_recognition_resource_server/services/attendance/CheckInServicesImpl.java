@@ -109,8 +109,8 @@ public class CheckInServicesImpl implements CheckInServices {
   }
 
   @Override
-  public List<AttendanceLiveFeedDTO> getRecentCheckInsOfAttendanceIdsForLiveAttendanceFeed(List<Long> attendanceIds) {
-    List<RecentAttendanceDTO> recentAttendances = checkInRepository.getRecentCheckInsOfAttendanceIds(attendanceIds);
+  public List<AttendanceLiveFeedDTO> getFirstCheckInsOfAttendanceIdsForLiveAttendanceFeed(List<Long> attendanceIds) {
+    List<RecentAttendanceDTO> recentAttendances = checkInRepository.getFirstCheckInsOfAttendanceIds(attendanceIds);
     List<AttendanceLiveFeedDTO> recentLiveFeedCheckIns = new ArrayList<>();
     for (RecentAttendanceDTO recentAttendance : recentAttendances) {
       String fullName = userServices.getUserFullNameByUserId(recentAttendance.getUserId());

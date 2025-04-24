@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.services.department;
 
 import com.main.face_recognition_resource_server.DTOS.department.RegisterDepartmentDTO;
+import com.main.face_recognition_resource_server.DTOS.organization.DepartmentOfOrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Department;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
@@ -21,5 +22,5 @@ public interface DepartmentServices {
 
   String getDepartmentName(Long departmentId) throws DepartmentDoesntExistException;
 
-  List<String> getDepartmentNamesOfOrganization(Long organizationId);
+  List<DepartmentOfOrganizationDTO> getDepartmentNamesOfOrganization(Long organizationId);
 }
