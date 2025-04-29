@@ -472,9 +472,26 @@ public class AttendanceServicesImpl implements AttendanceServices {
   }
 
   @Override
-  public List<AttendanceGraphDataDTO> getOrganizationAttendanceGraphsData(Long organizationId, int year, int month) {
+  public List<DailyAttendanceGraphDataDTO> getOrganizationAttendanceGraphsData(Long organizationId, int year, int month) {
     Date[] dates = getStartAndEndDateOfMonthOfYear(year, month);
     return attendanceRepository.getOrganizationAttendanceChartInfo(organizationId, dates[0], dates[1]);
+  }
+
+  @Override
+  public MonthlyAttendanceGraphDataDTO getUserMonthlyAttendanceGraphData(Long userId, int year, int month) {
+    Optional<MonthlyAttendanceGraphDataDTO> userAttendanceGraphData = attendanceRepository.getUserAttendanceGraphData(userId, year, month);
+    return userAttendanceGraphData.orElseGet(() -> MonthlyAttendanceGraphDataDTO.builder()
+            .month(month)
+            .presentCount(0L)
+            .absentCount(0L)
+            .lateCount(0L)
+            .leaveCount(0L)
+            .build());
+  }
+
+  @Override
+  public List<MonthlyAttendanceGraphDataDTO> getUserYearlyAttendanceGraphData(Long userId, int year) {
+    return attendanceRepository.getUserYearlyAttendanceGraphData(userId, year);
   }
 
   private AttendanceStatsDTO generateAttendanceStatsDTO(Date startDate, Date endDate, Long userId) throws NoStatsAvailableException {

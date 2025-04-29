@@ -11,14 +11,14 @@ import java.util.Date;
 @NoArgsConstructor
 @Builder
 @Data
-public class AttendanceGraphDataDTO {
+public class DailyAttendanceGraphDataDTO {
   private Long date;
   private Long presentCount;
   private Long lateCount;
   private Long absentCount;
   private Long leaveCount;
 
-  public AttendanceGraphDataDTO(Date date, Long presentCount, Long lateCount, Long absentCount, Long leaveCount) {
+  public DailyAttendanceGraphDataDTO(Date date, Long presentCount, Long lateCount, Long absentCount, Long leaveCount) {
     this.date = date.getTime();
     this.presentCount = presentCount;
     this.lateCount = lateCount;

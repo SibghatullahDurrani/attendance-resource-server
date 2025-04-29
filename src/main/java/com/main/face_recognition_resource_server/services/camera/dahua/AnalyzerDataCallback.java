@@ -6,6 +6,7 @@ import com.main.face_recognition_resource_server.constants.CameraType;
 import com.netsdk.lib.NetSDKLib;
 import com.netsdk.lib.ToolKits;
 import com.sun.jna.Pointer;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -14,6 +15,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.concurrent.BlockingQueue;
 
+@Slf4j
 public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
   private final CameraType cameraType;
   private final BlockingQueueAttendanceCacheProducer attendanceCacheProducer;
@@ -42,6 +44,13 @@ public class AnalyzerDataCallback implements NetSDKLib.fAnalyzerDataCallBack {
       ToolKits.GetPointerData(pAlarmInfo, msg);
       try {
         String idString = new String(msg.stuCandidatesEx[0].stPersonInfo.szPersonName).trim();
+        String groupId = new String(msg.stuCandidatesEx[0].stPersonInfo.szGroupID).trim();
+        String groupName = new String(msg.stuCandidatesEx[0].stPersonInfo.szGroupName).trim();
+//        String facePicNum = new String(msg.stuCandidatesEx[0].stPersonInfo.wFacePicNum).trim();
+        int dbType = msg.stuCandidatesEx[0].stPersonInfo.emRegisterDbType;
+        log.info(groupId);
+        log.info(groupName);
+        log.info("{}", dbType);
         time = new GregorianCalendar(msg.UTC.dwYear, msg.UTC.dwMonth - 1, msg.UTC.dwDay, msg.UTC.dwHour, msg.UTC.dwMinute, msg.UTC.dwSecond).getTime();
         byte[] byteBuffer = pBuffer.getByteArray(0, dwBufSize);
         NetSDKLib.DH_RECT boundingBox = msg.stuObject.stuOriginalBoundingBox;

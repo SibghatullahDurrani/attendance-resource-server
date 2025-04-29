@@ -6,15 +6,17 @@ import com.main.face_recognition_resource_server.DTOS.organization.OrganizationD
 import com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO;
 import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
+import com.main.face_recognition_resource_server.DTOS.user.UserDataDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 
 public interface UserServices {
@@ -22,7 +24,7 @@ public interface UserServices {
 
   Page<UserDTO> getAllUsers(Pageable pageable);
 
-  void registerUser(RegisterUserDTO userToRegister, Long organizationId) throws UserAlreadyExistsException;
+  void registerUser(RegisterUserDTO userToRegister, Long organizationId) throws UserAlreadyExistsException, SQLException, IOException;
 
   boolean userExistsWithEmailAndRole(String email, UserRole role) throws UserAlreadyExistsException;
 
@@ -56,7 +58,11 @@ public interface UserServices {
 
   void checkIfOrganizationBelongsToUser(Long organizationId, String username) throws UserDoesntExistException, OrganizationDoesntBelongToYouException;
 
+  void checkIfOrganizationBelongsToUser(Long userId, Long organizationId) throws UserDoesntExistException, OrganizationDoesntBelongToYouException;
+
   Long getTotalUsersOfDepartment(Long departmentId);
 
   Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest);
+
+  UserDataDTO getUserData(Long userId);
 }

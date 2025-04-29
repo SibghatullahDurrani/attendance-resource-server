@@ -30,7 +30,7 @@ public class DepartmentServicesImpl implements DepartmentServices {
   }
 
   @Override
-  public boolean departmentBelongsToOrganization(Long departmentId, Long organizationId)
+  public void checkIfDepartmentBelongsToOrganization(Long departmentId, Long organizationId)
           throws DepartmentDoesntExistException,
           DepartmentDoesntBelongToYourOrganizationException {
     Optional<Long> organizationIdOfDepartment = departmentRepository.getOrganizationIdOfDepartment(departmentId);
@@ -41,7 +41,6 @@ public class DepartmentServicesImpl implements DepartmentServices {
         throw new DepartmentDoesntBelongToYourOrganizationException();
       }
     }
-    return true;
   }
 
   @Override

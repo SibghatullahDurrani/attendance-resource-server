@@ -121,7 +121,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
   DepartmentAttendanceDTO getDepartmentAttendance(Long departmentIds, Date startDate, Date endDate);
 
   @Query("""
-          SELECT new  com.main.face_recognition_resource_server.DTOS.attendance.AttendanceGraphDataDTO(
+          SELECT new  com.main.face_recognition_resource_server.DTOS.attendance.DailyAttendanceGraphDataDTO(
                     a.date,
                     COUNT(*) FILTER(WHERE a.status = 'ON_TIME' OR a.status = 'LATE'),
                     COUNT(*) FILTER(WHERE a.status = 'LATE'),
@@ -130,5 +130,35 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
           ) FROM Attendance a WHERE a.user.department.organization.id = ?1 AND a.date BETWEEN ?2 AND ?3
           GROUP BY a.date
           """)
-  List<AttendanceGraphDataDTO> getOrganizationAttendanceChartInfo(Long organizationId, Date startDate, Date endDate);
+  List<DailyAttendanceGraphDataDTO> getOrganizationAttendanceChartInfo(Long organizationId, Date startDate, Date endDate);
+
+
+  @Query("""
+          SELECT new  com.main.face_recognition_resource_server.DTOS.attendance.MonthlyAttendanceGraphDataDTO(
+                    MONTH(a.date),
+                    COUNT(CASE WHEN a.status = 'ON_TIME' OR a.status = 'LATE' THEN 1 END),
+                    COUNT(CASE WHEN a.status = 'LATE' THEN 1 END),
+                    COUNT(CASE WHEN a.status = 'ABSENT' THEN 1 END),
+                    COUNT(CASE WHEN a.status = 'ON_LEAVE' THEN 1 END)
+          ) FROM Attendance a WHERE a.user.id = ?1 AND YEAR(a.date) = ?2 AND MONTH(a.date) = ?3
+          GROUP BY MONTH(a.date)
+          """)
+  Optional<MonthlyAttendanceGraphDataDTO> getUserAttendanceGraphData(Long userId, int year, int month);
+
+  @Query(value = """
+            SELECT
+                m.month  AS "month",
+                COUNT(CASE WHEN a.status = 'ON_TIME' OR a.status = 'LATE' THEN 1 END),
+                COUNT(CASE WHEN a.status = 'LATE' THEN 1 END),
+                COUNT(CASE WHEN a.status = 'ABSENT' THEN 1 END),
+                COUNT(CASE WHEN a.status = 'ON_LEAVE' THEN 1 END)
+            FROM generate_series(1,12) AS m(month)
+            LEFT JOIN attendances a
+              ON m.month = extract(MONTH FROM a.date)
+              AND a.user_id = ?1
+              AND extract(YEAR FROM a.date) = ?2
+            GROUP BY m.month
+            ORDER BY m.month
+          """, nativeQuery = true)
+  List<MonthlyAttendanceGraphDataDTO> getUserYearlyAttendanceGraphData(Long userId, int year);
 }

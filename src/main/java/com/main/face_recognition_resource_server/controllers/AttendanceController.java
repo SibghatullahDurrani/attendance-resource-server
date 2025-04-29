@@ -9,6 +9,7 @@ import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBe
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.services.attendance.AttendanceServices;
 import com.main.face_recognition_resource_server.services.user.UserServices;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("attendances")
 public class AttendanceController {
@@ -128,9 +130,28 @@ public class AttendanceController {
 
   @GetMapping("/organization/{organizationId}/attendance-graphs-data")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<List<AttendanceGraphDataDTO>> getOrganizationAttendanceGraphsData(@PathVariable Long organizationId, @RequestParam int year, @RequestParam int month, Authentication authentication) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
+  public ResponseEntity<List<DailyAttendanceGraphDataDTO>> getOrganizationAttendanceGraphsData(@PathVariable Long organizationId, @RequestParam int year, @RequestParam int month, Authentication authentication) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
     userServices.checkIfOrganizationBelongsToUser(organizationId, authentication.getName());
-    List<AttendanceGraphDataDTO> chartInfos = attendanceServices.getOrganizationAttendanceGraphsData(organizationId, year, month);
+    List<DailyAttendanceGraphDataDTO> chartInfos = attendanceServices.getOrganizationAttendanceGraphsData(organizationId, year, month);
     return new ResponseEntity<>(chartInfos, HttpStatus.OK);
+  }
+
+  @GetMapping("/user/{userId}/monthly-attendance-graph-data")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<MonthlyAttendanceGraphDataDTO> getUserMonthlyAttendanceGraphData(@PathVariable Long userId, @RequestParam int year, @RequestParam int month, Authentication authentication) throws UserDoesntExistException, OrganizationDoesntBelongToYouException {
+    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+    userServices.checkIfOrganizationBelongsToUser(userId, organizationId);
+    MonthlyAttendanceGraphDataDTO userGraphData = attendanceServices.getUserMonthlyAttendanceGraphData(userId, year, month + 1);
+    userGraphData.setMonth(userGraphData.getMonth() - 1);
+    return new ResponseEntity<>(userGraphData, HttpStatus.OK);
+  }
+
+  @GetMapping("/user/{userId}/yearly-attendance-graph-data")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<List<MonthlyAttendanceGraphDataDTO>> getUserYearlyAttendanceGraphData(@PathVariable Long userId, @RequestParam int year, Authentication authentication) throws UserDoesntExistException, OrganizationDoesntBelongToYouException {
+    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+    userServices.checkIfOrganizationBelongsToUser(userId, organizationId);
+    List<MonthlyAttendanceGraphDataDTO> userGraphData = attendanceServices.getUserYearlyAttendanceGraphData(userId, year);
+    return new ResponseEntity<>(userGraphData, HttpStatus.OK);
   }
 }

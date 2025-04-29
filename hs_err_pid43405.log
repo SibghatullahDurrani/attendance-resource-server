@@ -1,0 +1,59 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x00007bbebd659058, pid=43405, tid=43623
+#
+# JRE version: Java(TM) SE Runtime Environment (23.0.1+11) (build 23.0.1+11-39)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (23.0.1+11-39, mixed mode, emulated-client, sharing, tiered, compressed oops, compressed class ptrs, g1 gc, linux-amd64)
+# Problematic frame:
+# C  0x0000000000007ec7
+#
+# No core dump will be written. Core dumps have been disabled. To enable core dumping, try "ulimit -c unlimited" before starting Java again
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugreport.java.com/bugreport/crash.jsp
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -XX:TieredStopAtLevel=1 -Dspring.output.ansi.enabled=always -Dcom.sun.management.jmxremote -Dspring.jmx.enabled=true -Dspring.liveBeansView.mbeanDomain -Dspring.application.admin.enabled=true -Dmanagement.endpoints.jmx.exposure.include=* -javaagent:/opt/idea-IU-243.22562.218/lib/idea_rt.jar=40153:/opt/idea-IU-243.22562.218/bin -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 com.main.face_recognition_resource_server.FaceRecognitionResourceServerApplication
+
+Host: Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz, 8 cores, 15G, Pop!_OS 22.04 LTS
+Time: Mon Apr 28 16:21:49 2025 PKT elapsed time: 7671.783457 seconds (0d 2h 7m 51s)
+
+---------------  T H R E A D  ---------------
+
+Current thread is native thread
+
+Stack: [0x00007bbe9b601000,0x00007bbe9be01000],  sp=0x00007bbe9bdffdf8,  free space=8187k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  0x0000000000007ec7
+C  0x00007bbebcec2bc0
+
+siginfo: si_signo: 11 (SIGSEGV), si_code: 1 (SEGV_MAPERR), si_addr: 0x00007bbebd659058
+
+Registers:
+RAX=0x0000000000000000, RBX=0x00007bbe9be00640, RCX=0x00007bbf6f2e57f8, RDX=0x0000000000000000
+RSP=0x00007bbe9bdffdf0, RBP=0x00007bbe9bdffe20, RSI=0x0000000000000000, RDI=0x0000000000000000
+R8 =0x0000000000000000, R9 =0x00007bbf473f6f3f, R10=0x0000000000000000, R11=0x0000000000000293
+R12=0x00007bbe9be00640, R13=0x0000000000000002, R14=0x00007bbf6f2947d0, R15=0x00007bbf473f6f80
+RIP=0x00007bbebd659058, EFLAGS=0x0000000000010206, CSGSFS=0x002b000000000033, ERR=0x0000000000000014
+  TRAPNO=0x000000000000000e
+
+
+Top of Stack: (sp=0x00007bbe9bdffdf0)
+0x00007bbe9bdffdf0:   0000000000007ec7 000000050000f8bb
+0x00007bbe9bdffe00:   0000000500000000 00007bbebe0c7038
+0x00007bbe9bdffe10:   00007bbeffffffff 00007bbe00000000
+0x00007bbe9bdffe20:   00007bbe9bdffe50 00007bbebcec2bc0
+0x00007bbe9bdffe30:   0000000000000000 00007bbebe0c7000
+0x00007bbe9bdffe40:   00007bbebe0c7000 ffffffff00000000
+0x00007bbe9bdffe50:   0000000000000000 00007bbf6f294ac3
+0x00007bbe9bdffe60:   0000000000000000 00007bbe9be00640
+0x00007bbe9bdffe70:   00007bbf473f6e20 592a58b6242f083f
+0x00007bbe9bdffe80:   00007bbe9be00640 0000000000000002
+0x00007bbe9bdffe90:   00007bbf6f2947d0 00007bbf473f6f80
+0x00007bbe9bdffea0:   ae576f09d8ef083f ae5486e4b5ad083f
+0x00007bbe9bdffeb0:   0000000000000000 0000000000000000
+0x00007bbe9bdffec0:   0000000000000000 0000000000000000
+0x00007bbe9bdffed0:   0000000000000000 e09266755ceb1d00

@@ -40,27 +40,27 @@ class DepartmentServicesImplTest {
   }
 
   @Test
-  public void departmentBelongsToOrganization_ThrowsDepartmentDoesntExistException() {
+  public void departmentBelongsToOrganization_ThrowsCheckIfDepartmentDoesntExistException() {
     Long departmentId = 1L;
     Long organizationId = 1L;
     when(departmentRepository.getOrganizationIdOfDepartment(departmentId)).thenReturn(Optional.empty());
-    assertThrows(DepartmentDoesntExistException.class, () -> departmentServices.departmentBelongsToOrganization(departmentId, organizationId));
+    assertThrows(DepartmentDoesntExistException.class, () -> departmentServices.checkIfDepartmentBelongsToOrganization(departmentId, organizationId));
   }
 
   @Test
-  public void departmentBelongsToOrganization_ThrowsDepartmentDoesntBelongToYourOrganizationException() {
+  public void departmentBelongsToOrganization_ThrowsCheckIfDepartmentDoesntBelongToYourOrganizationException() {
     Long departmentId = 1L;
     Long organizationId = 1L;
     when(departmentRepository.getOrganizationIdOfDepartment(departmentId)).thenReturn(Optional.of(2L));
-    assertThrows(DepartmentDoesntBelongToYourOrganizationException.class, () -> departmentServices.departmentBelongsToOrganization(departmentId, organizationId));
+    assertThrows(DepartmentDoesntBelongToYourOrganizationException.class, () -> departmentServices.checkIfDepartmentBelongsToOrganization(departmentId, organizationId));
   }
 
   @Test
-  public void departmentBelongsToOrganization_ReturnsTrue() {
+  public void checkIfDepartmentBelongsToOrganization_ReturnsTrue() {
     Long departmentId = 1L;
     Long organizationId = 1L;
     when(departmentRepository.getOrganizationIdOfDepartment(departmentId)).thenReturn(Optional.of(1L));
-    boolean exists = departmentServices.departmentBelongsToOrganization(departmentId, organizationId);
+    boolean exists = departmentServices.checkIfDepartmentBelongsToOrganization(departmentId, organizationId);
     Assertions.assertThat(exists).isEqualTo(true);
   }
 }

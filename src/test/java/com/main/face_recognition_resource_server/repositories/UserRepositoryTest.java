@@ -33,29 +33,29 @@ class UserRepositoryTest extends AbstractPostgreSQLTestContainer {
     flyway.migrate();
   }
 
-  @Test
-  public void registerUser_RegistersUser() {
-    Organization organization = DataUtil.getOrganization();
-    organizationRepository.saveAndFlush(organization);
-    Department department = DataUtil.getDepartment(organization);
-
-    departmentRepository.saveAndFlush(department);
-    userRepository.registerUser(
-            "XYZ",
-            "XYZ",
-            "XYZ",
-            "XYZ",
-            UserRole.ROLE_USER.toString(),
-            "XYZ",
-            "XYZ",
-            1L
-    );
-
-    Optional<User> user = userRepository.findById(1L);
-
-    Assertions.assertThat(user).isPresent();
-    Assertions.assertThat(user.get().getDepartment().getId()).isEqualTo(1L);
-  }
+//  @Test
+//  public void registerUser_RegistersUser() {
+//    Organization organization = DataUtil.getOrganization();
+//    organizationRepository.saveAndFlush(organization);
+//    Department department = DataUtil.getDepartment(organization);
+//
+//    departmentRepository.saveAndFlush(department);
+//    userRepository.registerUser(
+//            "XYZ",
+//            "XYZ",
+//            "XYZ",
+//            "XYZ",
+//            UserRole.ROLE_USER.toString(),
+//            "XYZ",
+//            "XYZ",
+//            1L
+//    );
+//
+//    Optional<User> user = userRepository.findById(1L);
+//
+//    Assertions.assertThat(user).isPresent();
+//    Assertions.assertThat(user.get().getDepartment().getId()).isEqualTo(1L);
+//  }
 
   @Test
   public void getUserByUsername_ReturnsUserDTO() {

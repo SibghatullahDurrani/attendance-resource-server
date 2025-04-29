@@ -49,5 +49,9 @@ public interface AttendanceServices {
 
   Page<DailyUserAttendanceDTO> getDailyUserAttendances(Long organizationId, AttendanceType attendanceType, AttendanceStatus attendanceStatus, String userName, String departmentName, Pageable pageable);
 
-  List<AttendanceGraphDataDTO> getOrganizationAttendanceGraphsData(Long organizationId, int year, int month);
+  List<DailyAttendanceGraphDataDTO> getOrganizationAttendanceGraphsData(Long organizationId, int year, int month);
+
+  MonthlyAttendanceGraphDataDTO getUserMonthlyAttendanceGraphData(Long userId, int year, int month);
+
+  List<MonthlyAttendanceGraphDataDTO> getUserYearlyAttendanceGraphData(Long userId, int year);
 }

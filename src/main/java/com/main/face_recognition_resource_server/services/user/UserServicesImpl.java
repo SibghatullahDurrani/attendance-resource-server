@@ -8,7 +8,10 @@ import com.main.face_recognition_resource_server.DTOS.organization.OrganizationD
 import com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO;
 import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
 import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
+import com.main.face_recognition_resource_server.DTOS.user.UserDataDTO;
 import com.main.face_recognition_resource_server.constants.UserRole;
+import com.main.face_recognition_resource_server.constants.UsernameType;
+import com.main.face_recognition_resource_server.domains.Department;
 import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
@@ -17,10 +20,18 @@ import com.main.face_recognition_resource_server.repositories.UserRepository;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,25 +64,70 @@ public class UserServicesImpl implements UserServices {
 
   @Override
   @Transactional
-  public void registerUser(RegisterUserDTO userToRegister, Long organizationId) throws UserAlreadyExistsException {
+  @Retryable(retryFor = SQLException.class, maxAttempts = 3)
+  public void registerUser(RegisterUserDTO userToRegister, Long organizationId) throws UserAlreadyExistsException, SQLException, IOException {
     boolean userExistsWithEmailAndRole = userExistsWithEmailAndRole(userToRegister.getEmail(), userToRegister.getRole());
     if (!userExistsWithEmailAndRole) {
       String hashedPassword = passwordEncoder.encode(userToRegister.getPassword());
-      Long usernameSequence = userRepository.nextUsernameSequence();
-      String username = userToRegister.getFirstName() + userToRegister.getSecondName() + "#" + usernameSequence;
+      String username;
+      if (userToRegister.getUsernameType() == UsernameType.USERNAME_AS_PHONE_NUMBER) {
+        username = userToRegister.getPhoneNumber();
+        if (userRepository.existsByUsername(username)) {
+          throw new UserAlreadyExistsException();
+        }
+      } else if (userToRegister.getUsernameType() == UsernameType.USERNAME_AS_IDENTIFICATION_NUMBER) {
+        username = userToRegister.getIdentificationNumber();
+        if (userRepository.existsByUsername(username)) {
+          throw new UserAlreadyExistsException();
+        }
+      } else {
+        String cleanedBase = (userToRegister.getFirstName() + userToRegister.getSecondName())
+                .replaceAll("//s", "")
+                .replaceAll("#", "");
+        username = generateUsernameByFirstAndSecondName(cleanedBase);
+      }
       LeavesAllowedPolicyDTO organizationLeavesPolicy = organizationServices.getOrganizationLeavesPolicy(organizationId);
-      userRepository.registerUser(
-              userToRegister.getFirstName(),
-              userToRegister.getSecondName(),
-              hashedPassword,
-              username,
-              userToRegister.getRole().toString(),
-              userToRegister.getIdentificationNumber(),
-              userToRegister.getEmail(),
-              userToRegister.getDepartmentId(),
-              organizationLeavesPolicy.getSickLeavesAllowed(),
-              organizationLeavesPolicy.getAnnualLeavesAllowed()
-      );
+      User user = User.builder()
+              .firstName(userToRegister.getFirstName())
+              .secondName(userToRegister.getSecondName())
+              .password(hashedPassword)
+              .username(username)
+              .role(userToRegister.getRole())
+              .identificationNumber(userToRegister.getIdentificationNumber())
+              .phoneNumber(userToRegister.getPhoneNumber())
+              .email(userToRegister.getEmail())
+              .designation(userToRegister.getDesignation())
+              .department(Department.builder()
+                      .id(userToRegister.getDepartmentId()).build())
+              .remainingSickLeaves(organizationLeavesPolicy.getSickLeavesAllowed())
+              .remainingAnnualLeaves(organizationLeavesPolicy.getAnnualLeavesAllowed())
+              .build();
+
+      user = userRepository.saveAndFlush(user);
+
+      byte[] imageBytes = Base64.getDecoder().decode(userToRegister.getSourceImageBase64());
+      BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
+      if (bufferedImage == null) {
+        throw new IOException("Failed to decode image");
+      }
+      File registerOutputFile = new File("RegisterFaces/" + user.getId() + ".jpg");
+      File sourceFacesOutputFile = new File("SourceFaces/" + user.getId() + ".jpg");
+      ImageIO.write(bufferedImage, "jpg", registerOutputFile);
+      ImageIO.write(bufferedImage, "jpg", sourceFacesOutputFile);
+      userRepository.setUserSourceImage(user.getId() + ".jpg", user.getId());
+    }
+  }
+
+  @Transactional
+  @Retryable(retryFor = SQLException.class)
+  protected String generateUsernameByFirstAndSecondName(String base) throws SQLException {
+    int suffix = userRepository.getUsernameSuffixByBase(base) + 1;
+    String username = base + "#" + suffix;
+    boolean usernameExists = userRepository.existsByUsername(username);
+    if (usernameExists) {
+      throw new SQLException("username exists");
+    } else {
+      return username;
     }
   }
 
@@ -201,7 +257,19 @@ public class UserServicesImpl implements UserServices {
     if (userOrganizationId.isEmpty()) {
       throw new UserDoesntExistException();
     } else {
-      if (userOrganizationId.get() != organizationId) {
+      if (!userOrganizationId.get().equals(organizationId)) {
+        throw new OrganizationDoesntBelongToYouException();
+      }
+    }
+  }
+
+  @Override
+  public void checkIfOrganizationBelongsToUser(Long userId, Long organizationId) throws UserDoesntExistException, OrganizationDoesntBelongToYouException {
+    Optional<Long> userOrganizationId = userRepository.getUserOrganizationId(userId);
+    if (userOrganizationId.isEmpty()) {
+      throw new UserDoesntExistException();
+    } else {
+      if (!userOrganizationId.get().equals(organizationId)) {
         throw new OrganizationDoesntBelongToYouException();
       }
     }
@@ -215,5 +283,10 @@ public class UserServicesImpl implements UserServices {
   @Override
   public Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest) {
     return userRepository.getUsersPageOfOrganization(organizationId, pageRequest);
+  }
+
+  @Override
+  public UserDataDTO getUserData(Long userId) {
+    return userRepository.getUserData(userId);
   }
 }

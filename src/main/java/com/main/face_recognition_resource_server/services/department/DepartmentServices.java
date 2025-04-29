@@ -12,7 +12,7 @@ public interface DepartmentServices {
 
   boolean departmentExist(Long departmentId) throws DepartmentDoesntExistException;
 
-  boolean departmentBelongsToOrganization(Long departmentId, Long organizationId) throws DepartmentDoesntExistException, DepartmentDoesntBelongToYourOrganizationException;
+  void checkIfDepartmentBelongsToOrganization(Long departmentId, Long organizationId) throws DepartmentDoesntExistException, DepartmentDoesntBelongToYourOrganizationException;
 
   void registerDepartment(RegisterDepartmentDTO departmentToRegister);
 
