@@ -1,7 +1,10 @@
 package com.main.face_recognition_resource_server.repositories;
 
+import com.main.face_recognition_resource_server.DTOS.department.DepartmentsTableRecordDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.DepartmentOfOrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Department;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -39,4 +42,11 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
           FROM Department d WHERE d.organization.id = ?1
           """)
   List<DepartmentOfOrganizationDTO> getDepartmentNamesOfOrganization(Long organizationId);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.department.DepartmentsTableRecordDTO(
+          d.departmentName, SIZE(d.users)
+          ) FROM Department d WHERE d.organization.id = ?1
+          """)
+  Page<DepartmentsTableRecordDTO> getDepartmentsTableData(Long organizationId, Pageable pageable);
 }

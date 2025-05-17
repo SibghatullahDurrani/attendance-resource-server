@@ -1,13 +1,18 @@
 package com.main.face_recognition_resource_server.services.department;
 
+import com.main.face_recognition_resource_server.DTOS.department.DepartmentsTableRecordDTO;
 import com.main.face_recognition_resource_server.DTOS.department.RegisterDepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.DepartmentOfOrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Department;
+import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.DepartmentRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,7 +50,7 @@ public class DepartmentServicesImpl implements DepartmentServices {
 
   @Override
   public void registerDepartment(RegisterDepartmentDTO departmentToRegister) {
-    departmentRepository.registerDepartment(departmentToRegister.getDepartmentName(), departmentToRegister.getOrganizationId());
+//    departmentRepository.registerDepartment(departmentToRegister.getDepartmentName(), departmentToRegister.getOrganizationId());
   }
 
   @Override
@@ -75,5 +80,28 @@ public class DepartmentServicesImpl implements DepartmentServices {
   @Override
   public List<DepartmentOfOrganizationDTO> getDepartmentNamesOfOrganization(Long organizationId) {
     return this.departmentRepository.getDepartmentNamesOfOrganization(organizationId);
+  }
+
+  @Override
+  public Page<DepartmentsTableRecordDTO> getDepartmentsTableData(Long organizationId, Pageable pageable) {
+    return departmentRepository.getDepartmentsTableData(organizationId, pageable);
+  }
+
+  @Override
+  public void registerDepartments(List<RegisterDepartmentDTO> departmentsToRegister, Long organizationId) {
+    List<Department> departments = new ArrayList<>();
+    for (RegisterDepartmentDTO departmentToRegister : departmentsToRegister) {
+      departments.add(
+              Department.builder()
+                      .departmentName(departmentToRegister.getDepartmentName())
+                      .organization(
+                              Organization.builder()
+                                      .id(organizationId)
+                                      .build()
+                      )
+                      .build()
+      );
+    }
+    departmentRepository.saveAll(departments);
   }
 }

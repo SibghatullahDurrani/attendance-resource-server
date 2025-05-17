@@ -79,7 +79,7 @@ public class AttendanceController {
 
   @GetMapping("table/monthly")
   @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<List<UserAttendanceTableDTO>> getMonthlyUserAttendance(@RequestParam int year, @RequestParam int month, Authentication authentication) throws UserDoesntExistException, NoStatsAvailableException, IOException {
+  public ResponseEntity<List<UserAttendanceTableDTO>> getOwnMonthlyAttendance(@RequestParam int year, @RequestParam int month, Authentication authentication) throws UserDoesntExistException, NoStatsAvailableException, IOException {
     Long userId = userServices.getUserIdByUsername(authentication.getName());
     List<UserAttendanceTableDTO> attendances = attendanceServices.getMonthlyUserAttendanceTable(month, year, userId);
     return new ResponseEntity<>(attendances, HttpStatus.OK);
@@ -153,5 +153,14 @@ public class AttendanceController {
     userServices.checkIfOrganizationBelongsToUser(userId, organizationId);
     List<MonthlyAttendanceGraphDataDTO> userGraphData = attendanceServices.getUserYearlyAttendanceGraphData(userId, year);
     return new ResponseEntity<>(userGraphData, HttpStatus.OK);
+  }
+
+  @GetMapping("/user/{userId}/monthly-attendance-table")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<List<UserAttendanceTableDTO>> getUserMonthlyAttendanceTable(@PathVariable Long userId, @RequestParam int year, @RequestParam int month, Authentication authentication) throws UserDoesntExistException, OrganizationDoesntBelongToYouException, NoStatsAvailableException, IOException {
+    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+    userServices.checkIfOrganizationBelongsToUser(userId, organizationId);
+    List<UserAttendanceTableDTO> userAttendanceTable = attendanceServices.getMonthlyUserAttendanceTable(month, year, userId);
+    return new ResponseEntity<>(userAttendanceTable, HttpStatus.OK);
   }
 }

@@ -148,7 +148,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
           SELECT new com.main.face_recognition_resource_server.DTOS.user.UserDataDTO(
                     u.id,
                     u.firstName, u.secondName, u.username, u.identificationNumber,
-                    u.department.departmentName, u.designation, u.sourceFacePictureName
+                    u.department.departmentName, u.designation, u.sourceFacePictureName,
+                    u.phoneNumber
           ) FROM User u WHERE u.id = ?1
           """)
   UserDataDTO getUserData(Long userId);

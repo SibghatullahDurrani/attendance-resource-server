@@ -24,10 +24,11 @@ public class UserDataDTO {
   private byte[] sourceFaceImage;
   private String username;
   private String identificationNumber;
+  private String phoneNumber;
   private String departmentName;
   private String designation;
 
-  public UserDataDTO(Long id, String firstName, String secondName, String username, String identificationNumber, String departmentName, String designation, String sourceFacePictureName) throws IOException {
+  public UserDataDTO(Long id, String firstName, String secondName, String username, String identificationNumber, String departmentName, String designation, String sourceFacePictureName, String phoneNumber) throws IOException {
     this.id = id;
     this.firstName = firstName;
     this.secondName = secondName;
@@ -35,6 +36,7 @@ public class UserDataDTO {
     this.identificationNumber = identificationNumber;
     this.departmentName = departmentName;
     this.designation = designation;
+    this.phoneNumber = phoneNumber;
     try {
       BufferedImage bufferedImage = ImageIO.read(new File("SourceFaces/" + sourceFacePictureName));
       ByteArrayOutputStream baos = new ByteArrayOutputStream();

@@ -37,6 +37,7 @@ public class DailyUserAttendanceRepositoryImpl implements DailyUserAttendanceRep
 
     criteriaQuery.select(criteriaBuilder.construct(
             DailyUserAttendanceDTO.class,
+            attendanceUserJoin.get("id"),
             attendanceUserJoin.get("firstName"),
             attendanceUserJoin.get("secondName"),
             root.get("status"),

@@ -12,12 +12,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 public class DailyUserAttendanceDTO {
+  private Long userId;
   private String fullName;
   private AttendanceStatus status;
   private AttendanceType attendanceType;
   private String departmentName;
 
-  public DailyUserAttendanceDTO(String firstName, String secondName, AttendanceStatus status, AttendanceType attendanceType, String departmentName) {
+  public DailyUserAttendanceDTO(Long userId, String firstName, String secondName, AttendanceStatus status, AttendanceType attendanceType, String departmentName) {
+    this.userId = userId;
     this.fullName = firstName + " " + secondName;
     this.status = status;
     this.attendanceType = attendanceType;
