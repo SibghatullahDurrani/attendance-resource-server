@@ -14,7 +14,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-public interface AttendanceRepository extends JpaRepository<Attendance, Long>, JpaSpecificationExecutor<Attendance>, DailyUserAttendanceRepository {
+public interface AttendanceRepository extends JpaRepository<Attendance, Long>, JpaSpecificationExecutor<Attendance>, AttendanceCriteriaRepository {
 
   @Query("""
           SELECT a FROM Attendance a

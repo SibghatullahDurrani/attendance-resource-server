@@ -4,7 +4,6 @@ import com.main.face_recognition_resource_server.DTOS.department.OrganizationDep
 import com.main.face_recognition_resource_server.DTOS.organization.DepartmentOfOrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.RegisterOrganizationDTO;
-import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.services.department.DepartmentServices;
@@ -62,18 +61,18 @@ public class OrganizationController {
     return new ResponseEntity<>(organization, HttpStatus.OK);
   }
 
-  @GetMapping("departments")
-  @PreAuthorize("hasRole('SUPER_ADMIN')")
-  public ResponseEntity<Page<OrganizationDepartmentDTO>> getAllOrganizationsWithDepartments(@RequestParam int page, @RequestParam int size) {
-    PageRequest pageRequest = PageRequest.of(page, size);
-    Page<OrganizationDepartmentDTO> allOrganizationsWithItsDepartments = organizationServices.getAllOrganizationsWithItsDepartments(pageRequest);
-    return new ResponseEntity<>(allOrganizationsWithItsDepartments, HttpStatus.OK);
-  }
+//  @GetMapping("departments")
+//  @PreAuthorize("hasRole('SUPER_ADMIN')")
+//  public ResponseEntity<Page<OrganizationDepartmentDTO>> getAllOrganizationsWithDepartments(@RequestParam int page, @RequestParam int size) {
+//    PageRequest pageRequest = PageRequest.of(page, size);
+//    Page<OrganizationDepartmentDTO> allOrganizationsWithItsDepartments = organizationServices.getAllOrganizationsWithItsDepartments(pageRequest);
+//    return new ResponseEntity<>(allOrganizationsWithItsDepartments, HttpStatus.OK);
+//  }
 
-  @GetMapping("{organizationId}/departments")
+  @GetMapping("/departments")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<List<DepartmentOfOrganizationDTO>> getAllDepartmentsOfOrganization(@PathVariable Long organizationId, Authentication authentication) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
-    userServices.checkIfOrganizationBelongsToUser(organizationId, authentication.getName());
+  public ResponseEntity<List<DepartmentOfOrganizationDTO>> getAllDepartmentsOfOrganization(Authentication authentication) throws UserDoesntExistException {
+    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
     List<DepartmentOfOrganizationDTO> departmentNamesOfOrganization = departmentServices.getDepartmentNamesOfOrganization(organizationId);
     return new ResponseEntity<>(departmentNamesOfOrganization, HttpStatus.OK);
   }

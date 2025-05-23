@@ -110,14 +110,7 @@ public class AttendanceServicesImpl implements AttendanceServices {
         ImageIO.write(faceImage, "jpg", baos);
         byte[] faceImageBytes = baos.toByteArray();
         baos.reset();
-        sendLiveAttendanceFeed(userServices.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder()
-                .userId(userId)
-                .fullName(userServices.getUserFullNameByUserId(userId))
-                .attendanceType(AttendanceType.CHECK_IN)
-                .date(checkInDate.getTime())
-                .fullImage(fullImageBytes)
-                .faceImage(faceImageBytes)
-                .build());
+        sendLiveAttendanceFeed(userServices.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder().userId(userId).fullName(userServices.getUserFullNameByUserId(userId)).attendanceType(AttendanceType.CHECK_IN).date(checkInDate.getTime()).fullImage(fullImageBytes).faceImage(faceImageBytes).build());
 
       } else {
         attendance.setCurrentAttendanceStatus(AttendanceType.CHECK_IN);
@@ -456,12 +449,7 @@ public class AttendanceServicesImpl implements AttendanceServices {
         predicates.add(criteriaBuilder.equal(root.get("status"), attendanceStatus));
       }
       if (userName != null) {
-        predicates.add(
-                criteriaBuilder.or(
-                        criteriaBuilder.like(attendanceUserJoin.get("firstName"), "%" + userName + "%"),
-                        criteriaBuilder.like(attendanceUserJoin.get("secondName"), "%" + userName + "%")
-                )
-        );
+        predicates.add(criteriaBuilder.or(criteriaBuilder.like(attendanceUserJoin.get("firstName"), "%" + userName + "%"), criteriaBuilder.like(attendanceUserJoin.get("secondName"), "%" + userName + "%")));
       }
       if (departmentName != null) {
         predicates.add(criteriaBuilder.equal(attendanceUserDepartmentJoin.get("departmentName"), departmentName));
@@ -480,13 +468,7 @@ public class AttendanceServicesImpl implements AttendanceServices {
   @Override
   public MonthlyAttendanceGraphDataDTO getUserMonthlyAttendanceGraphData(Long userId, int year, int month) {
     Optional<MonthlyAttendanceGraphDataDTO> userAttendanceGraphData = attendanceRepository.getUserAttendanceGraphData(userId, year, month);
-    return userAttendanceGraphData.orElseGet(() -> MonthlyAttendanceGraphDataDTO.builder()
-            .month(month)
-            .presentCount(0L)
-            .absentCount(0L)
-            .lateCount(0L)
-            .leaveCount(0L)
-            .build());
+    return userAttendanceGraphData.orElseGet(() -> MonthlyAttendanceGraphDataDTO.builder().month(month).presentCount(0L).absentCount(0L).lateCount(0L).leaveCount(0L).build());
   }
 
   @Override

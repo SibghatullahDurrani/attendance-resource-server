@@ -15,7 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
-public class DailyUserAttendanceRepositoryImpl implements DailyUserAttendanceRepository {
+public class AttendanceCriteriaRepositoryImpl implements AttendanceCriteriaRepository {
 
   @PersistenceContext
   private EntityManager entityManager;
