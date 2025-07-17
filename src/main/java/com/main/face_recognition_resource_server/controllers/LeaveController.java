@@ -50,17 +50,7 @@ public class LeaveController {
 
   @GetMapping("/organization")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Page<OrganizationLeaveRecordDTO>> getOrganizationLeaves(
-          @RequestParam int page,
-          @RequestParam int size,
-          @RequestParam int year,
-          @RequestParam(required = false) Integer month,
-          @RequestParam(required = false) String userName,
-          @RequestParam(required = false) Long departmentId,
-          @RequestParam(required = false) LeaveType leaveType,
-          @RequestParam(required = false) LeaveStatus leaveStatus,
-          Authentication authentication
-  ) throws UserDoesntExistException {
+  public ResponseEntity<Page<OrganizationLeaveRecordDTO>> getOrganizationLeaves(@RequestParam int page, @RequestParam int size, @RequestParam int year, @RequestParam(required = false) Integer month, @RequestParam(required = false) String userName, @RequestParam(required = false) Long departmentId, @RequestParam(required = false) LeaveType leaveType, @RequestParam(required = false) LeaveStatus leaveStatus, Authentication authentication) throws UserDoesntExistException {
     Long organizationId = userServices.getUserOrganizationId(authentication.getName());
     PageRequest pageRequest = PageRequest.of(page, size);
     Page<OrganizationLeaveRecordDTO> leaveRecordPage = leaveServices.getOrganizationLeavesPage(organizationId, year, month, userName, departmentId, leaveType, leaveStatus, pageRequest);
@@ -83,6 +73,15 @@ public class LeaveController {
     leaveServices.doesLeaveBelongToOrganization(organizationId, leaveId);
     LeaveDataWithApplicationDTO leave = leaveServices.getLeaveDataWithApplication(leaveId);
     return new ResponseEntity<>(leave, HttpStatus.OK);
+  }
+
+  @PostMapping("/respond")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<HttpStatus> respondToLeave(@RequestBody RespondToLeaveDTO respondToLeaveDTO, Authentication authentication) throws UserDoesntExistException, LeaveDoesntBelongToTheOrganizationException {
+    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+    leaveServices.doesLeaveBelongToOrganization(organizationId, respondToLeaveDTO.getLeaveId());
+    leaveServices.respondToLeave(respondToLeaveDTO);
+    return new ResponseEntity<>(HttpStatus.CREATED);
   }
 
 }

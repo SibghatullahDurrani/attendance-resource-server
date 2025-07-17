@@ -61,4 +61,9 @@ public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
           WHERE sub.rn = 1
           """, nativeQuery = true)
   List<RecentAttendanceDTO> getFirstCheckInsOfAttendanceIds(@Param("attendanceIds") List<Long> attendanceIds);
+
+  //  @Query("""
+//SELECT FROM CheckIn ci
+//""")
+  Date getFirstCheckInDateOfAttendanceId(Long id);
 }

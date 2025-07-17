@@ -42,20 +42,22 @@ public class CheckInServicesImpl implements CheckInServices {
   @Override
   @Transactional
   public void saveCheckIn(Date date, Attendance attendance, BufferedImage fullImage, BufferedImage faceImage) throws IOException {
-    String uuid = UUID.randomUUID().toString();
-    String fullImageSnapName = uuid + "full-image" + "FaceRecognition.jpg";
-    String faceImageSnapName = uuid + "face-image" + "FaceRecognition.jpg";
-    String fullImageSnapPath = picturePath + "/" + fullImageSnapName;
-    String faceImageSnapPath = picturePath + "/" + faceImageSnapName;
     CheckIn checkIn = CheckIn.builder()
             .date(date)
             .attendance(attendance)
-            .fullImageName(fullImageSnapName)
-            .faceImageName(faceImageSnapName)
             .build();
+    if (fullImage != null && faceImage != null) {
+      String uuid = UUID.randomUUID().toString();
+      String fullImageSnapName = uuid + "full-image" + "FaceRecognition.jpg";
+      String faceImageSnapName = uuid + "face-image" + "FaceRecognition.jpg";
+      String fullImageSnapPath = picturePath + "/" + fullImageSnapName;
+      String faceImageSnapPath = picturePath + "/" + faceImageSnapName;
+      ImageIO.write(fullImage, "jpg", new File(fullImageSnapPath));
+      ImageIO.write(faceImage, "jpg", new File(faceImageSnapPath));
+      checkIn.setFullImageName(fullImageSnapName);
+      checkIn.setFaceImageName(faceImageSnapName);
+    }
     checkInRepository.saveAndFlush(checkIn);
-    ImageIO.write(fullImage, "jpg", new File(fullImageSnapPath));
-    ImageIO.write(faceImage, "jpg", new File(faceImageSnapPath));
   }
 
   @Override
@@ -114,20 +116,16 @@ public class CheckInServicesImpl implements CheckInServices {
     List<AttendanceLiveFeedDTO> recentLiveFeedCheckIns = new ArrayList<>();
     for (RecentAttendanceDTO recentAttendance : recentAttendances) {
       String fullName = userServices.getUserFullNameByUserId(recentAttendance.getUserId());
-      String fullImageURI = "FaceRecognition/%s".formatted(recentAttendance.getFullImageName());
-      String faceImageURI = "FaceRecognition/%s".formatted(recentAttendance.getFaceImageName());
+      String sourceImageURI = "SourceFaces/%s%s".formatted(recentAttendance.getUserId(), ".jpg");
 
       try {
-        Path fullImagePath = Paths.get(fullImageURI);
-        Path faceImagePath = Paths.get(faceImageURI);
-        byte[] fullImage = Files.readAllBytes(fullImagePath);
-        byte[] faceImage = Files.readAllBytes(faceImagePath);
+        Path sourceImagePath = Paths.get(sourceImageURI);
+        byte[] sourceImage = Files.readAllBytes(sourceImagePath);
         recentLiveFeedCheckIns.add(
                 AttendanceLiveFeedDTO.builder()
                         .userId(recentAttendance.getUserId())
-                        .faceImage(faceImage)
-                        .fullImage(fullImage)
                         .fullName(fullName)
+                        .sourceImage(sourceImage)
                         .date(recentAttendance.getDate().getTime())
                         .attendanceType(AttendanceType.CHECK_IN)
                         .build());
@@ -136,5 +134,10 @@ public class CheckInServicesImpl implements CheckInServices {
       }
     }
     return recentLiveFeedCheckIns;
+  }
+
+  @Override
+  public Date getFirstCheckInOfAttendanceId(Long id) {
+    return checkInRepository.getFirstCheckInDateOfAttendanceId(id);
   }
 }

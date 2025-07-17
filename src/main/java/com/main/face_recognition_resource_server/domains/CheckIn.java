@@ -1,15 +1,13 @@
 package com.main.face_recognition_resource_server.domains;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
 @Builder
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -27,9 +25,7 @@ public class CheckIn {
   @JoinColumn(name = "attendance_id", nullable = false)
   private Attendance attendance;
 
-  @Column(nullable = false)
   private String fullImageName;
 
-  @Column(nullable = false)
   private String faceImageName;
 }

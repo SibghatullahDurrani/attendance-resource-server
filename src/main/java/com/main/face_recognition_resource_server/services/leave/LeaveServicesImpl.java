@@ -1,9 +1,6 @@
 package com.main.face_recognition_resource_server.services.leave;
 
-import com.main.face_recognition_resource_server.DTOS.leave.LeaveDTO;
-import com.main.face_recognition_resource_server.DTOS.leave.LeaveDataWithApplicationDTO;
-import com.main.face_recognition_resource_server.DTOS.leave.LeaveRequestDTO;
-import com.main.face_recognition_resource_server.DTOS.leave.OrganizationLeaveRecordDTO;
+import com.main.face_recognition_resource_server.DTOS.leave.*;
 import com.main.face_recognition_resource_server.constants.LeaveStatus;
 import com.main.face_recognition_resource_server.constants.LeaveType;
 import com.main.face_recognition_resource_server.domains.Department;
@@ -11,8 +8,8 @@ import com.main.face_recognition_resource_server.domains.Leave;
 import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.*;
-import com.main.face_recognition_resource_server.repositories.UserRepository;
 import com.main.face_recognition_resource_server.repositories.leave.LeaveRepository;
+import com.main.face_recognition_resource_server.services.attendance.AttendanceServices;
 import com.main.face_recognition_resource_server.services.user.UserServices;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -20,6 +17,7 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,11 +30,13 @@ import static com.main.face_recognition_resource_server.helpers.DateUtils.getSta
 public class LeaveServicesImpl implements LeaveServices {
   private final LeaveRepository leaveRepository;
   private final UserServices userServices;
+  private final AttendanceServices attendanceServices;
 
 
-  public LeaveServicesImpl(LeaveRepository leaveRepository, UserServices userServices, UserRepository userRepository) {
+  public LeaveServicesImpl(LeaveRepository leaveRepository, UserServices userServices, AttendanceServices attendanceServices) {
     this.leaveRepository = leaveRepository;
     this.userServices = userServices;
+    this.attendanceServices = attendanceServices;
   }
 
   @Override
@@ -139,5 +139,17 @@ public class LeaveServicesImpl implements LeaveServices {
       throw new LeaveDoesntExistException();
     }
     return leave.get();
+  }
+
+  @Override
+  @Modifying
+  @Transactional
+  public void respondToLeave(RespondToLeaveDTO respondToLeaveDTO) {
+    Optional<Long> userId = leaveRepository.getUserIdOfLeave(respondToLeaveDTO.getLeaveId());
+    leaveRepository.changeLeaveStatus(respondToLeaveDTO.getLeaveStatus(), respondToLeaveDTO.getLeaveId());
+    if (respondToLeaveDTO.getLeaveStatus() == LeaveStatus.APPROVED && userId.isPresent()) {
+      Date date = new Date(respondToLeaveDTO.getDate());
+      attendanceServices.markLeaveOfUserOnDate(userId.get(), date);
+    }
   }
 }

@@ -1,10 +1,7 @@
 package com.main.face_recognition_resource_server.domains;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
@@ -13,6 +10,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Setter
 @Table(name = "check_outs")
 public class CheckOut {
   @Id
@@ -27,9 +25,7 @@ public class CheckOut {
   @JoinColumn(name = "attendance_id", nullable = false)
   private Attendance attendance;
 
-  @Column(nullable = false)
   private String fullImageName;
 
-  @Column(nullable = false)
   private String faceImageName;
 }

@@ -39,14 +39,22 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
           SELECT new com.main.face_recognition_resource_server.DTOS.organization.DepartmentOfOrganizationDTO(
           d.id, d.departmentName
           )
-          FROM Department d WHERE d.organization.id = ?1
+          FROM Department d WHERE d.organization.id = ?1 ORDER BY d.departmentName ASC
           """)
   List<DepartmentOfOrganizationDTO> getDepartmentNamesOfOrganization(Long organizationId);
 
   @Query("""
           SELECT new com.main.face_recognition_resource_server.DTOS.department.DepartmentsTableRecordDTO(
           d.departmentName, SIZE(d.users)
-          ) FROM Department d WHERE d.organization.id = ?1
+          ) FROM Department d WHERE d.organization.id = ?1 ORDER BY d.departmentName ASC
           """)
   Page<DepartmentsTableRecordDTO> getDepartmentsTableData(Long organizationId, Pageable pageable);
+
+  @Query(
+          """
+                  SELECT COUNT(d) > 0 FROM Department d
+                  WHERE LOWER(d.departmentName) = ?1 AND d.organization.id = ?2
+                  """
+  )
+  boolean existsByDepartmentName(String departmentName, Long organizationId);
 }

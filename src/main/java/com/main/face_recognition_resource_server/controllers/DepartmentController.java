@@ -3,6 +3,7 @@ package com.main.face_recognition_resource_server.controllers;
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentsTableRecordDTO;
 import com.main.face_recognition_resource_server.DTOS.department.RegisterDepartmentDTO;
+import com.main.face_recognition_resource_server.exceptions.DepartmentAlreadyExistsException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.services.department.DepartmentServices;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
@@ -22,12 +23,10 @@ import java.util.List;
 public class DepartmentController {
   private final DepartmentServices departmentServices;
   private final UserServices userServices;
-  private final OrganizationServices organizationServices;
 
-  public DepartmentController(DepartmentServices departmentServices, UserServices userServices, OrganizationServices organizationServices) {
+  public DepartmentController(DepartmentServices departmentServices, UserServices userServices) {
     this.departmentServices = departmentServices;
     this.userServices = userServices;
-    this.organizationServices = organizationServices;
   }
 
   @GetMapping()
@@ -73,7 +72,7 @@ public class DepartmentController {
 
   @PostMapping()
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<HttpStatus> registerDepartments(@RequestBody List<RegisterDepartmentDTO> departmentsToRegister, Authentication authentication) throws UserDoesntExistException {
+  public ResponseEntity<HttpStatus> registerDepartments(@RequestBody List<RegisterDepartmentDTO> departmentsToRegister, Authentication authentication) throws UserDoesntExistException, DepartmentAlreadyExistsException {
     Long organizationId = userServices.getUserOrganizationId(authentication.getName());
     departmentServices.registerDepartments(departmentsToRegister, organizationId);
     return new ResponseEntity<>(HttpStatus.CREATED);

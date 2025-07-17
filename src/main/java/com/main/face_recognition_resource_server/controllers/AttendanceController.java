@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.controllers;
 
+import com.main.face_recognition_resource_server.DTOS.attendance.OrganizationUserAttendanceDTO;
 import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import com.main.face_recognition_resource_server.constants.AttendanceType;
@@ -111,7 +112,7 @@ public class AttendanceController {
     return new ResponseEntity<>(organizationDepartmentsAttendance, HttpStatus.OK);
   }
 
-  @GetMapping("/organization/{organizationId}/today")
+  @GetMapping("/organization/{organizationId}/users/today")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Page<DailyUserAttendanceDTO>> getOrganizationDailyUserAttendance(
           @PathVariable Long organizationId,
@@ -163,4 +164,30 @@ public class AttendanceController {
     List<UserAttendanceTableDTO> userAttendanceTable = attendanceServices.getMonthlyUserAttendanceTable(month, year, userId);
     return new ResponseEntity<>(userAttendanceTable, HttpStatus.OK);
   }
+
+  @GetMapping("/organization/today-statistics")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<OrganizationAttendanceStatisticsDTO> getCurrentDayOrganizationAttendanceStatistics(Authentication authentication) throws UserDoesntExistException {
+    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+    OrganizationAttendanceStatisticsDTO statistics = attendanceServices.getCurrentDayOrganizationAttendanceStatistics(organizationId);
+    return new ResponseEntity<>(statistics, HttpStatus.OK);
+  }
+
+  @GetMapping("/organization/monthly-user-attendances")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Page<OrganizationUserAttendanceDTO>> getOrganizationMonthlyUserAttendances(
+          @RequestParam int year,
+          @RequestParam int month,
+          @RequestParam int page,
+          @RequestParam int size,
+          @RequestParam(required = false) String fullName,
+          @RequestParam(required = false) Long departmentId,
+          Authentication authentication
+  ) throws UserDoesntExistException {
+    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+    PageRequest pageRequest = PageRequest.of(page, size);
+    Page<OrganizationUserAttendanceDTO> organizationUserAttendances = attendanceServices.getOrganizationMonthlyUserAttendances(pageRequest, year, month, fullName, departmentId, organizationId);
+    return new ResponseEntity<>(organizationUserAttendances, HttpStatus.OK);
+  }
+
 }

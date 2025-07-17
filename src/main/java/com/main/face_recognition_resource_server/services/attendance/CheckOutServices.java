@@ -1,6 +1,5 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
-import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceLiveFeedDTO;
 import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceSnapshotDTO;
 import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
@@ -19,5 +18,4 @@ public interface CheckOutServices {
 
   List<Long> getCheckOutTimesByAttendanceId(Long attendanceId);
 
-  List<AttendanceLiveFeedDTO> getRecentCheckOutsOfAttendanceIdsForLiveAttendanceFeed(List<Long> attendanceIds);
 }

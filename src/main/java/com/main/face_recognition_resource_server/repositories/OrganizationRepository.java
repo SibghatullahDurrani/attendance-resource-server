@@ -69,4 +69,8 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
           """)
   LeavesAllowedPolicyDTO getOrganizationLeavesAllowedPolicies(Long organizationId);
 
+  @Query("""
+          SELECT o.id FROM Organization o
+          """)
+  List<Long> getAllOrganizationIds();
 }

@@ -3,14 +3,12 @@ package com.main.face_recognition_resource_server.services.user;
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
-import com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO;
-import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
-import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
-import com.main.face_recognition_resource_server.DTOS.user.UserDataDTO;
+import com.main.face_recognition_resource_server.DTOS.user.*;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
+import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsWithIdentificationNumberException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +22,7 @@ public interface UserServices {
 
   Page<UserDTO> getAllUsers(Pageable pageable);
 
-  void registerUser(RegisterUserDTO userToRegister, Long organizationId) throws UserAlreadyExistsException, SQLException, IOException;
+  void registerUser(RegisterUserDTO userToRegister, Long organizationId) throws UserAlreadyExistsException, SQLException, IOException, UserAlreadyExistsWithIdentificationNumberException;
 
   boolean userExistsWithEmailAndRole(String email, UserRole role) throws UserAlreadyExistsException;
 
@@ -65,4 +63,12 @@ public interface UserServices {
   Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest);
 
   UserDataDTO getUserData(Long userId);
+
+  List<SearchUserDTO> searchUserByNameOfOrganization(String name, Long organizationId);
+
+  List<Long> getAllUserIdsOfDepartments(List<Long> departmentIds);
+
+  List<Long> getAllUserIds();
+
+  UserLiveFeedMetaData getUserLiveFeedMetaData(Long userId);
 }

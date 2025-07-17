@@ -17,6 +17,7 @@ public class DateUtils {
     Date endDate = endCalendar.getTime();
     return new Date[]{startDate, endDate};
   }
+
   public static Date[] getStartAndEndDateOfDate(int year, int month, int day) {
     Date startDate = new GregorianCalendar(year, month, day, 0, 0).getTime();
     Calendar endCalendar = GregorianCalendar.getInstance();
@@ -45,6 +46,15 @@ public class DateUtils {
     Date dateStart = calendarStart.getTime();
     Date dateEnd = calendarEnd.getTime();
     return new Date[]{dateStart, dateEnd};
+  }
+
+  public static Date getDateOfToday() {
+    Calendar calendar = GregorianCalendar.getInstance();
+    calendar.set(Calendar.HOUR_OF_DAY, 0);
+    calendar.set(Calendar.MINUTE, 0);
+    calendar.set(Calendar.SECOND, 0);
+    calendar.set(Calendar.MILLISECOND, 0);
+    return calendar.getTime();
   }
 
   public static Date[] getStartAndEndDateOfYear(int year) {

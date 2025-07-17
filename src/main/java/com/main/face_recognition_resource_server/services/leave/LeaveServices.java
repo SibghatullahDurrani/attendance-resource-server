@@ -1,9 +1,6 @@
 package com.main.face_recognition_resource_server.services.leave;
 
-import com.main.face_recognition_resource_server.DTOS.leave.LeaveDTO;
-import com.main.face_recognition_resource_server.DTOS.leave.LeaveDataWithApplicationDTO;
-import com.main.face_recognition_resource_server.DTOS.leave.LeaveRequestDTO;
-import com.main.face_recognition_resource_server.DTOS.leave.OrganizationLeaveRecordDTO;
+import com.main.face_recognition_resource_server.DTOS.leave.*;
 import com.main.face_recognition_resource_server.constants.LeaveStatus;
 import com.main.face_recognition_resource_server.constants.LeaveType;
 import com.main.face_recognition_resource_server.exceptions.*;
@@ -24,4 +21,6 @@ public interface LeaveServices {
   String getLeaveApplication(Long leaveId) throws LeaveDoesntExistException;
 
   LeaveDataWithApplicationDTO getLeaveDataWithApplication(Long leaveId) throws LeaveDoesntExistException;
+
+  void respondToLeave(RespondToLeaveDTO respondToLeaveDTO);
 }

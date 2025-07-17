@@ -4,6 +4,7 @@ import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import com.main.face_recognition_resource_server.constants.AttendanceType;
 import com.main.face_recognition_resource_server.constants.CameraType;
+import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
@@ -24,6 +25,8 @@ public interface AttendanceServices {
   void markCheckOut(Long userId, Date endDate, BufferedImage fullImage, BufferedImage faceImage) throws IOException, UserDoesntExistException;
 
   void markAbsentOfAllUsersInOrganizationForCurrentDay(Long OrganizationId);
+
+  void markAbsentOfAllUsersForCurrentDay();
 
   AttendanceStatsDTO getUserAttendanceStats(int year, Long userId) throws NoStatsAvailableException;
 
@@ -54,4 +57,13 @@ public interface AttendanceServices {
   MonthlyAttendanceGraphDataDTO getUserMonthlyAttendanceGraphData(Long userId, int year, int month);
 
   List<MonthlyAttendanceGraphDataDTO> getUserYearlyAttendanceGraphData(Long userId, int year);
+
+  void markLeaveOfUserOnDate(Long userId, Date date);
+
+  OrganizationAttendanceStatisticsDTO getCurrentDayOrganizationAttendanceStatistics(Long organizationId);
+
+  Page<OrganizationUserAttendanceDTO> getOrganizationMonthlyUserAttendances(Pageable pageRequest, int year, int month, String fullName, Long departmentId, Long organizationId);
+
+  void markAbsentOfUserOnToday(User user);
+
 }

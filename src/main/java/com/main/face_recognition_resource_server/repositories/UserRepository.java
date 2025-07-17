@@ -3,9 +3,7 @@ package com.main.face_recognition_resource_server.repositories;
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
-import com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO;
-import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
-import com.main.face_recognition_resource_server.DTOS.user.UserDataDTO;
+import com.main.face_recognition_resource_server.DTOS.user.*;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.domains.User;
 import org.springframework.data.domain.Page;
@@ -153,4 +151,35 @@ public interface UserRepository extends JpaRepository<User, Long> {
           ) FROM User u WHERE u.id = ?1
           """)
   UserDataDTO getUserData(Long userId);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.user.SearchUserDTO(
+          u.id, CONCAT(u.firstName, ' ', u.secondName), u.department.departmentName
+          ) FROM User u WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', ?1, '%'))
+          OR LOWER(u.secondName) LIKE LOWER(CONCAT('%', ?1, '%')) AND u.department.organization.id = ?2
+          """)
+  List<SearchUserDTO> searchUserByNameOfOrganization(String name, Long organizationId);
+
+  @Query("""
+          SELECT u.id FROM User u WHERE u.department.id IN ?1
+          """)
+  List<Long> getAllUserIdsOfDepartments(List<Long> departmentIds);
+
+  @Query("""
+          SELECT u.id FROM User u
+          """)
+  List<Long> getAllUserIds();
+
+  @Query("""
+          SELECT COUNT(u) > 0 FROM User u
+          WHERE LOWER(u.firstName) = ?1 AND LOWER(u.secondName) = ?2 AND u.identificationNumber = ?3
+          """)
+  boolean existsByNameAndIdentificationNumber(String firstName, String secondName, String identificationNumber);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.user.UserLiveFeedMetaData(
+                    CONCAT(u.firstName,CONCAT(' ', u.secondName)), u.designation, u.department.departmentName
+          ) FROM User u WHERE u.id = ?1
+          """)
+  UserLiveFeedMetaData getUserLiveFeedMetaData(Long userId);
 }

@@ -20,4 +20,6 @@ public interface CheckInServices {
   List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> getCheckInSnapshotsOfAttendance(Long attendanceId);
 
   List<AttendanceLiveFeedDTO> getFirstCheckInsOfAttendanceIdsForLiveAttendanceFeed(List<Long> attendanceIds);
+
+  Date getFirstCheckInOfAttendanceId(Long id);
 }

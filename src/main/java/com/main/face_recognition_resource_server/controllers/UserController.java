@@ -1,9 +1,7 @@
 package com.main.face_recognition_resource_server.controllers;
 
-import com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO;
-import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
-import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
-import com.main.face_recognition_resource_server.DTOS.user.UserDataDTO;
+import com.main.face_recognition_resource_server.DTOS.user.*;
+import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.exceptions.*;
 import com.main.face_recognition_resource_server.services.department.DepartmentServices;
 import com.main.face_recognition_resource_server.services.user.UserServices;
@@ -17,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 
 @RestController
@@ -62,7 +61,13 @@ public class UserController {
           UserAlreadyExistsException,
           SQLException,
           IOException,
-          UserDoesntExistException {
+          UserDoesntExistException, UserAlreadyExistsWithIdentificationNumberException {
+    if(userToRegister.getRole() == UserRole.ROLE_USER){
+      Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+      departmentServices.checkIfDepartmentBelongsToOrganization(userToRegister.getDepartmentId(), organizationId);
+      userServices.registerUser(userToRegister, organizationId);
+      return new ResponseEntity<>(HttpStatus.CREATED);
+    }
     Long organizationId = userServices.getUserOrganizationId(authentication.getName());
     departmentServices.checkIfDepartmentBelongsToOrganization(userToRegister.getDepartmentId(), organizationId);
     userServices.registerUser(userToRegister, organizationId);
@@ -75,5 +80,13 @@ public class UserController {
     userServices.checkIfOrganizationBelongsToUser(userId, organizationId);
     UserDataDTO userData = userServices.getUserData(userId);
     return new ResponseEntity<>(userData, HttpStatus.OK);
+  }
+
+  @GetMapping("/search")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<List<SearchUserDTO>> searchUserByName(@RequestParam String name, Authentication authentication) throws UserDoesntExistException {
+    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+    List<SearchUserDTO> users = userServices.searchUserByNameOfOrganization(name, organizationId);
+    return new ResponseEntity<>(users, HttpStatus.OK);
   }
 }

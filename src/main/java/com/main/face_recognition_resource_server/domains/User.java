@@ -4,6 +4,7 @@ import com.main.face_recognition_resource_server.constants.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Collection;
 import java.util.List;
 
 @Builder
@@ -40,11 +41,11 @@ public class User {
   @Enumerated(EnumType.STRING)
   private UserRole role;
 
+  @Column(nullable = false)
   private String identificationNumber;
 
   private String phoneNumber;
 
-  @Column(nullable = false)
   private String email;
 
   private String designation;
@@ -64,4 +65,8 @@ public class User {
 
   @OneToMany(mappedBy = "user")
   private List<Leave> leaves;
+
+  @OneToMany(mappedBy = "user")
+  private List<UserNotification> userNotifications;
+
 }

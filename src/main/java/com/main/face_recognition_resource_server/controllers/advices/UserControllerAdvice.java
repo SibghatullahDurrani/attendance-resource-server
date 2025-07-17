@@ -2,10 +2,7 @@ package com.main.face_recognition_resource_server.controllers.advices;
 
 import com.main.face_recognition_resource_server.DTOS.ErrorDTO;
 import com.main.face_recognition_resource_server.controllers.UserController;
-import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
-import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
-import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
-import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
+import com.main.face_recognition_resource_server.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -41,6 +38,13 @@ public class UserControllerAdvice {
   protected ResponseEntity<ErrorDTO> handleUserAlreadyExistsException(UserAlreadyExistsException exception) {
     return new ResponseEntity<>(ErrorDTO.builder()
             .message("This user already exists with this email")
+            .build(), HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler({UserAlreadyExistsWithIdentificationNumberException.class})
+  protected ResponseEntity<ErrorDTO> handleUserAlreadyExistsWithIdentificationNumberException(UserAlreadyExistsWithIdentificationNumberException exception) {
+    return new ResponseEntity<>(ErrorDTO.builder()
+            .message(exception.getMessage())
             .build(), HttpStatus.BAD_REQUEST);
   }
 

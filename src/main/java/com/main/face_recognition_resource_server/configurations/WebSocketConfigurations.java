@@ -2,6 +2,7 @@ package com.main.face_recognition_resource_server.configurations;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -38,6 +39,9 @@ import java.util.Map;
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
 @Slf4j
 public class WebSocketConfigurations implements WebSocketMessageBrokerConfigurer {
+  @Value("${front-end-url}")
+  private String FRONT_END_URL;
+
   private final AuthenticationManager authenticationManager;
 
   public WebSocketConfigurations(AuthenticationManager authenticationManager) {
@@ -63,7 +67,7 @@ public class WebSocketConfigurations implements WebSocketMessageBrokerConfigurer
 
   @Override
   public void registerStompEndpoints(StompEndpointRegistry registry) {
-    registry.addEndpoint("/ws").setAllowedOrigins("http://127.0.0.1:4000")
+    registry.addEndpoint("/ws").setAllowedOrigins(FRONT_END_URL)
             .setHandshakeHandler(new MyHandshakeHandler())
             .withSockJS();
   }

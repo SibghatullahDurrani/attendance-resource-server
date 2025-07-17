@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: dev
   jpa:
     show-sql: false
     properties:
@@ -13,7 +15,22 @@ spring:
       password: configserver123
   config:
     import: configserver:http://localhost:8181
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
 server:
   port: 8282
 keySetURI: http://localhost:8080/oauth2/jwks
 
+front-end-url: ${FRONT_END_URL_PREFIX}

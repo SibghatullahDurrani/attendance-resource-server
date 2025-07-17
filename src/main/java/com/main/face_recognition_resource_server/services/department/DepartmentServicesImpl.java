@@ -5,6 +5,7 @@ import com.main.face_recognition_resource_server.DTOS.department.RegisterDepartm
 import com.main.face_recognition_resource_server.DTOS.organization.DepartmentOfOrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Department;
 import com.main.face_recognition_resource_server.domains.Organization;
+import com.main.face_recognition_resource_server.exceptions.DepartmentAlreadyExistsException;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.DepartmentRepository;
@@ -88,9 +89,13 @@ public class DepartmentServicesImpl implements DepartmentServices {
   }
 
   @Override
-  public void registerDepartments(List<RegisterDepartmentDTO> departmentsToRegister, Long organizationId) {
+  public void registerDepartments(List<RegisterDepartmentDTO> departmentsToRegister, Long organizationId) throws DepartmentAlreadyExistsException {
     List<Department> departments = new ArrayList<>();
     for (RegisterDepartmentDTO departmentToRegister : departmentsToRegister) {
+      boolean exists = departmentRepository.existsByDepartmentName(departmentToRegister.getDepartmentName().toLowerCase(), organizationId);
+      if (exists) {
+        throw new DepartmentAlreadyExistsException("Department: " + departmentToRegister.getDepartmentName() + " already exists");
+      }
       departments.add(
               Department.builder()
                       .departmentName(departmentToRegister.getDepartmentName())

@@ -5,18 +5,20 @@ import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.LeavesAllowedPolicyDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
-import com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO;
-import com.main.face_recognition_resource_server.DTOS.user.RegisterUserDTO;
-import com.main.face_recognition_resource_server.DTOS.user.UserDTO;
-import com.main.face_recognition_resource_server.DTOS.user.UserDataDTO;
+import com.main.face_recognition_resource_server.DTOS.user.*;
+import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.constants.UsernameType;
+import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.domains.Department;
 import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
+import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsWithIdentificationNumberException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.UserRepository;
+import com.main.face_recognition_resource_server.repositories.attendance.AttendanceRepository;
+import com.main.face_recognition_resource_server.services.attendance.AttendanceServices;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,20 +33,21 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserServicesImpl implements UserServices {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final OrganizationServices organizationServices;
+  private final AttendanceRepository attendanceRepository;
 
-  public UserServicesImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, OrganizationServices organizationServices) {
+
+  public UserServicesImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, OrganizationServices organizationServices, AttendanceRepository attendanceRepository) {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
     this.organizationServices = organizationServices;
+    this.attendanceRepository = attendanceRepository;
   }
 
   @Override
@@ -65,9 +68,10 @@ public class UserServicesImpl implements UserServices {
   @Override
   @Transactional
   @Retryable(retryFor = SQLException.class, maxAttempts = 3)
-  public void registerUser(RegisterUserDTO userToRegister, Long organizationId) throws UserAlreadyExistsException, SQLException, IOException {
-    boolean userExistsWithEmailAndRole = userExistsWithEmailAndRole(userToRegister.getEmail(), userToRegister.getRole());
-    if (!userExistsWithEmailAndRole) {
+  public void registerUser(RegisterUserDTO userToRegister, Long organizationId) throws UserAlreadyExistsException, SQLException, IOException, UserAlreadyExistsWithIdentificationNumberException {
+//    boolean userExistsWithEmailAndRole = userExistsWithEmailAndRole(userToRegister.getEmail(), userToRegister.getRole());
+    boolean userExistsWithIdentificationNumber = userExistsWithIdentificationNumber(userToRegister.getFirstName(), userToRegister.getSecondName(), userToRegister.getIdentificationNumber());
+    if (!userExistsWithIdentificationNumber) {
       String hashedPassword = passwordEncoder.encode(userToRegister.getPassword());
       String username;
       if (userToRegister.getUsernameType() == UsernameType.USERNAME_AS_PHONE_NUMBER) {
@@ -110,11 +114,43 @@ public class UserServicesImpl implements UserServices {
       if (bufferedImage == null) {
         throw new IOException("Failed to decode image");
       }
-      File registerOutputFile = new File("RegisterFaces/" + user.getId() + ".jpg");
-      File sourceFacesOutputFile = new File("SourceFaces/" + user.getId() + ".jpg");
+      File registerDir = new File("RegisterFaces");
+      if (!registerDir.exists()) {
+        registerDir.mkdirs();
+      }
+      File sourceFacesDir = new File("SourceFaces");
+      if (!sourceFacesDir.exists()) {
+        sourceFacesDir.mkdirs();
+      }
+
+      File registerOutputFile = new File(registerDir, user.getId() + ".jpg");
+      File sourceFacesOutputFile = new File(sourceFacesDir, user.getId() + ".jpg");
+
       ImageIO.write(bufferedImage, "jpg", registerOutputFile);
       ImageIO.write(bufferedImage, "jpg", sourceFacesOutputFile);
       userRepository.setUserSourceImage(user.getId() + ".jpg", user.getId());
+
+      Calendar calendar = GregorianCalendar.getInstance();
+      calendar.set(Calendar.HOUR_OF_DAY, 0);
+      calendar.set(Calendar.MINUTE, 0);
+      calendar.set(Calendar.SECOND, 0);
+      calendar.set(Calendar.MILLISECOND, 0);
+      Attendance attendance = Attendance.builder()
+              .user(user)
+              .date(calendar.getTime())
+              .status(AttendanceStatus.ABSENT)
+              .build();
+
+      attendanceRepository.saveAndFlush(attendance);
+    }
+  }
+
+  private boolean userExistsWithIdentificationNumber(String firstName, String secondName, String identificationNumber) throws UserAlreadyExistsWithIdentificationNumberException {
+    boolean exists = userRepository.existsByNameAndIdentificationNumber(firstName.toLowerCase(), secondName.toLowerCase(), identificationNumber);
+    if (exists) {
+      throw new UserAlreadyExistsWithIdentificationNumberException("Member: " + firstName + " " + secondName + " already exists with CNIC#: " + identificationNumber);
+    } else {
+      return false;
     }
   }
 
@@ -288,5 +324,25 @@ public class UserServicesImpl implements UserServices {
   @Override
   public UserDataDTO getUserData(Long userId) {
     return userRepository.getUserData(userId);
+  }
+
+  @Override
+  public List<SearchUserDTO> searchUserByNameOfOrganization(String name, Long organizationId) {
+    return userRepository.searchUserByNameOfOrganization(name, organizationId);
+  }
+
+  @Override
+  public List<Long> getAllUserIdsOfDepartments(List<Long> departmentIds) {
+    return userRepository.getAllUserIdsOfDepartments(departmentIds);
+  }
+
+  @Override
+  public List<Long> getAllUserIds() {
+    return userRepository.getAllUserIds();
+  }
+
+  @Override
+  public UserLiveFeedMetaData getUserLiveFeedMetaData(Long userId) {
+    return userRepository.getUserLiveFeedMetaData(userId);
   }
 }

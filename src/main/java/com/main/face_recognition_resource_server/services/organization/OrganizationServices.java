@@ -38,4 +38,5 @@ public interface OrganizationServices {
 
   LeavesAllowedPolicyDTO getOrganizationLeavesPolicy(Long organizationId);
 
+  List<Long> getAllOrganizationIds();
 }

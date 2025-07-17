@@ -2,10 +2,13 @@ package com.main.face_recognition_resource_server.repositories.leave;
 
 import com.main.face_recognition_resource_server.DTOS.leave.LeaveDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.LeaveDataWithApplicationDTO;
+import com.main.face_recognition_resource_server.constants.LeaveStatus;
 import com.main.face_recognition_resource_server.domains.Leave;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -35,4 +38,16 @@ public interface LeaveRepository extends JpaRepository<Leave, Long>, JpaSpecific
           ) FROM Leave l WHERE l.id = ?1
           """)
   Optional<LeaveDataWithApplicationDTO> getLeaveDataWithApplication(Long leaveId);
+
+  @Query("""
+          SELECT l.user.id FROM Leave l WHERE l.id = ?1
+          """)
+  Optional<Long> getUserIdOfLeave(Long leaveId);
+
+  @Query("""
+          UPDATE Leave l SET l.status = ?1 WHERE l.id = ?2
+          """)
+  @Modifying
+  @Transactional
+  void changeLeaveStatus(LeaveStatus leaveStatus, Long leaveId);
 }

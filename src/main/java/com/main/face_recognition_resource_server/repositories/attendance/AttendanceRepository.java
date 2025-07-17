@@ -33,9 +33,16 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
   @Query("""
           SELECT CASE WHEN COUNT(a) > 0
           THEN TRUE ELSE FALSE END FROM Attendance a
-          WHERE a.date >= ?1 and a.user.department.organization.id = ?2
+          WHERE a.date >= ?1 and a.user.department.organization.id = ?2 and a.status != "ON_LEAVE"
           """)
   boolean existsByDateAndOrganizationId(Date dateAfter, Long organizationId);
+
+  @Query("""
+          SELECT CASE WHEN COUNT(a) > 0
+          THEN TRUE ELSE FALSE END FROM Attendance a
+          WHERE a.date >= ?1 and a.status != "ON_LEAVE"
+          """)
+  boolean existsByDate(Date date);
 
   @Query("""
           SELECT a.id FROM Attendance a
@@ -161,4 +168,21 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
             ORDER BY m.month
           """, nativeQuery = true)
   List<MonthlyAttendanceGraphDataDTO> getUserYearlyAttendanceGraphData(Long userId, int year);
+
+  @Query("""
+          SELECT a.user.id FROM Attendance a WHERE a.date = ?1 AND a.status = 'ON_LEAVE'
+          """)
+  List<Long> getUserIdsOfLeaveOfDate(Date time);
+
+  @Query("""
+          SELECT new com.main.face_recognition_resource_server.DTOS.attendance.OrganizationAttendanceStatisticsDTO(
+                    COUNT(a),
+                    COUNT(CASE WHEN a.status = 'ON_TIME' OR a.status = 'LATE' THEN 1 END),
+                    COUNT(CASE WHEN a.status = 'ON_TIME' THEN 1 END),
+                    COUNT(CASE WHEN a.status = 'ABSENT' THEN 1 END),
+                    COUNT(CASE WHEN a.status = 'ON_LEAVE' THEN 1 END),
+                    COUNT(CASE WHEN a.status = 'LATE' THEN 1 END)
+          )FROM Attendance a WHERE a.user.department.organization.id = ?1 AND a.date = ?2
+          """)
+  OrganizationAttendanceStatisticsDTO getOrganizationAttendanceStatisticsForDate(Long organizationId, Date today);
 }

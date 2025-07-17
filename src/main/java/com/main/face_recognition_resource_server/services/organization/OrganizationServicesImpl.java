@@ -127,4 +127,9 @@ public class OrganizationServicesImpl implements OrganizationServices {
     return organizationRepository.getOrganizationLeavesAllowedPolicies(organizationId);
   }
 
+  @Override
+  public List<Long> getAllOrganizationIds() {
+    return organizationRepository.getAllOrganizationIds();
+  }
+
 }

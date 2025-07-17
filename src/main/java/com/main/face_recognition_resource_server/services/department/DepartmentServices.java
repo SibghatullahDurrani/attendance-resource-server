@@ -4,6 +4,7 @@ import com.main.face_recognition_resource_server.DTOS.department.DepartmentsTabl
 import com.main.face_recognition_resource_server.DTOS.department.RegisterDepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.DepartmentOfOrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Department;
+import com.main.face_recognition_resource_server.exceptions.DepartmentAlreadyExistsException;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntBelongToYourOrganizationException;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import org.springframework.data.domain.Page;
@@ -29,5 +30,5 @@ public interface DepartmentServices {
 
   Page<DepartmentsTableRecordDTO> getDepartmentsTableData(Long organizationId, Pageable pageable);
 
-  void registerDepartments(List<RegisterDepartmentDTO> departmentsToRegister, Long organizationId);
+  void registerDepartments(List<RegisterDepartmentDTO> departmentsToRegister, Long organizationId) throws DepartmentAlreadyExistsException;
 }
