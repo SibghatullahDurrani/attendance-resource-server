@@ -4,7 +4,6 @@ import com.main.face_recognition_resource_server.constants.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Collection;
 import java.util.List;
 
 @Builder
@@ -15,58 +14,58 @@ import java.util.List;
 @Setter
 @Table(name = "users")
 public class User {
-  @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_generator")
-  @SequenceGenerator(name = "user_id_generator", sequenceName = "user_id_sequence", allocationSize = 1)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_generator")
+    @SequenceGenerator(name = "user_id_generator", sequenceName = "user_id_sequence", allocationSize = 1)
+    private Long id;
 
-  @Column(name = "first_name", nullable = false, length = 30)
-  private String firstName;
+    @Column(name = "first_name", nullable = false, length = 30)
+    private String firstName;
 
-  private String profilePictureName;
+    private String profilePictureName;
 
-  private String sourceFacePictureName;
+    private String sourceFacePictureName;
 
-  @Column(name = "second_name", nullable = false, length = 30)
-  private String secondName;
+    @Column(name = "second_name", nullable = false, length = 30)
+    private String secondName;
 
-  @Column(name = "password", nullable = false)
-  private String password;
+    @Column(name = "password", nullable = false)
+    private String password;
 
-  @Column(name = "username", nullable = false, unique = true)
-  private String username;
-  //TODO: generate unique usernames
+    @Column(name = "username", nullable = false, unique = true)
+    private String username;
+    //TODO: generate unique usernames
 
-  @Column(name = "role", nullable = false, length = 30)
-  @Enumerated(EnumType.STRING)
-  private UserRole role;
+    @Column(name = "role", nullable = false, length = 30)
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
 
-  @Column(nullable = false)
-  private String identificationNumber;
+    @Column(nullable = false)
+    private String identificationNumber;
 
-  private String phoneNumber;
+    private String phoneNumber;
 
-  private String email;
+    private String email;
 
-  private String designation;
+    private String designation;
 
-  @ManyToOne
-  @JoinColumn(name = "department_id", nullable = false)
-  private Department department;
+    @ManyToOne
+    @JoinColumn(name = "department_id", nullable = false)
+    private Department department;
 
-  @OneToMany(mappedBy = "user")
-  private List<Attendance> attendances;
+    @OneToMany(mappedBy = "user")
+    private List<Attendance> attendances;
 
-  @Column(nullable = false)
-  private int remainingSickLeaves;
+    @Column(nullable = false)
+    private int remainingSickLeaves;
 
-  @Column(nullable = false)
-  private int remainingAnnualLeaves;
+    @Column(nullable = false)
+    private int remainingAnnualLeaves;
 
-  @OneToMany(mappedBy = "user")
-  private List<Leave> leaves;
+    @OneToMany(mappedBy = "user")
+    private List<Leave> leaves;
 
-  @OneToMany(mappedBy = "user")
-  private List<UserNotification> userNotifications;
+    @OneToMany(mappedBy = "user")
+    private List<UserNotification> userNotifications;
 
 }

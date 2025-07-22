@@ -14,7 +14,7 @@ import java.util.List;
 public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
     @Query("""
             SELECT ci.date FROM CheckIn ci
-            WHERE ci.attendance.id IN ?1 
+            WHERE ci.attendance.id IN ?1
             """)
     List<Date> getCheckInDatesOfAttendanceIds(List<Long> attendanceIds);
 
@@ -63,7 +63,7 @@ public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
     List<RecentAttendanceDTO> getFirstCheckInsOfAttendanceIds(@Param("attendanceIds") List<Long> attendanceIds);
 
     @Query("""
-            SELECT LEAST(ci.date) FROM CheckIn ci WHERE ci.attendance.id = ?1
+            SELECT MIN(ci.date) FROM CheckIn ci WHERE ci.attendance.id = ?1
             """)
     Date getFirstCheckInDateOfAttendanceId(Long attendanceId);
 }
