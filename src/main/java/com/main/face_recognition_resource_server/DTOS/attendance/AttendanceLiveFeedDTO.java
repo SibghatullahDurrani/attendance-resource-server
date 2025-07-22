@@ -12,12 +12,13 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class AttendanceLiveFeedDTO {
-  private long userId;
-  private String fullName;
-  private String designation;
-  private String departmentName;
-  private AttendanceType attendanceType;
-  private AttendanceStatus attendanceStatus;
-  private long date;
-  private byte[] sourceImage;
+    private long userId;
+    private String fullName;
+    private String designation;
+    private String departmentName;
+    private AttendanceType attendanceType;
+    private AttendanceStatus attendanceStatus;
+    private long checkInTime;
+    private long checkOutTime;
+    private byte[] sourceImage;
 }

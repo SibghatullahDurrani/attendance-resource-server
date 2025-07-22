@@ -11,15 +11,15 @@ import java.util.Date;
 import java.util.List;
 
 public interface CheckInServices {
-  void saveCheckIn(Date date, Attendance attendance, BufferedImage fullImage, BufferedImage faceImage) throws IOException;
+    void saveCheckIn(Date date, Attendance attendance, BufferedImage fullImage, BufferedImage faceImage) throws IOException;
 
-  List<Long> getCheckInTimesByAttendanceId(Long attendanceId);
+    List<Long> getCheckInTimesByAttendanceId(Long attendanceId);
 
-  String getAverageCheckInOfAttendances(List<Long> attendanceIds) throws NoStatsAvailableException;
+    String getAverageCheckInOfAttendances(List<Long> attendanceIds) throws NoStatsAvailableException;
 
-  List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> getCheckInSnapshotsOfAttendance(Long attendanceId);
+    List<AttendanceSnapshotDTO.AttendanceSnapShotDTOData> getCheckInSnapshotsOfAttendance(Long attendanceId);
 
-  List<AttendanceLiveFeedDTO> getFirstCheckInsOfAttendanceIdsForLiveAttendanceFeed(List<Long> attendanceIds);
+    List<AttendanceLiveFeedDTO> getFirstCheckInsOfAttendanceIdsForLiveAttendanceFeed(List<Long> attendanceIds);
 
-  Date getFirstCheckInOfAttendanceId(Long id);
+    Date getFirstCheckInOfAttendanceId(Long attendanceId);
 }
