@@ -7,24 +7,20 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class OrganizationPoliciesServicesImpl implements OrganizationPoliciesServices {
-  private final OrganizationPoliciesRepository organizationPoliciesRepository;
+    private final OrganizationPoliciesRepository organizationPoliciesRepository;
 
-  public OrganizationPoliciesServicesImpl(OrganizationPoliciesRepository organizationPoliciesRepository) {
-    this.organizationPoliciesRepository = organizationPoliciesRepository;
-  }
+    public OrganizationPoliciesServicesImpl(OrganizationPoliciesRepository organizationPoliciesRepository) {
+        this.organizationPoliciesRepository = organizationPoliciesRepository;
+    }
 
-  @Override
-  public OrganizationPolicies saveOrganizationPolicies(RegisterOrganizationPoliciesDTO organizationPoliciesDTO) {
-    OrganizationPolicies organizationPolicies = OrganizationPolicies.builder()
-            .checkInTimeForUser(organizationPoliciesDTO.getCheckInTimeForUser())
-            .checkOutTimeForUser(organizationPoliciesDTO.getCheckOutTimeForUser())
-            .sickLeavesAllowed(organizationPoliciesDTO.getSickLeavesAllowed())
-            .annualLeavesAllowed(organizationPoliciesDTO.getAnnualLeavesAllowed())
-            .checkOutToleranceTimeInHour(organizationPoliciesDTO.getCheckOutToleranceTimeInHour())
-            .retakeAttendanceInHour(organizationPoliciesDTO.getRetakeAttendanceInHour())
-            .lateAttendanceToleranceTimeInMinutes(organizationPoliciesDTO.getLateAttendanceToleranceTimeInMinutes())
-            .build();
+    @Override
+    public OrganizationPolicies saveOrganizationPolicies(RegisterOrganizationPoliciesDTO organizationPoliciesDTO) {
+        OrganizationPolicies organizationPolicies = OrganizationPolicies.builder()
+                .sickLeavesAllowed(organizationPoliciesDTO.getSickLeavesAllowed())
+                .annualLeavesAllowed(organizationPoliciesDTO.getAnnualLeavesAllowed())
+                .lateAttendanceToleranceTimeInMinutes(organizationPoliciesDTO.getLateAttendanceToleranceTimeInMinutes())
+                .build();
 
-    return organizationPoliciesRepository.saveAndFlush(organizationPolicies);
-  }
+        return organizationPoliciesRepository.saveAndFlush(organizationPolicies);
+    }
 }

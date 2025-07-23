@@ -1,0 +1,7 @@
+ALTER TABLE organization_policies
+DROP
+COLUMN check_out_tolerance_time_in_hour;
+
+ALTER TABLE organization_policies
+DROP
+COLUMN retake_attendance_in_hour;

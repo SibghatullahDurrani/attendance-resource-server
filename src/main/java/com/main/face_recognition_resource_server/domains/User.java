@@ -34,7 +34,6 @@ public class User {
 
     @Column(name = "username", nullable = false, unique = true)
     private String username;
-    //TODO: generate unique usernames
 
     @Column(name = "role", nullable = false, length = 30)
     @Enumerated(EnumType.STRING)
@@ -67,5 +66,4 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<UserNotification> userNotifications;
-
 }

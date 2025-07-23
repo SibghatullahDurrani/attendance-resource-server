@@ -12,31 +12,25 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface OrganizationServices {
-  boolean organizationExists(Long organizationId) throws OrganizationDoesntExistException;
+    boolean organizationExists(Long organizationId) throws OrganizationDoesntExistException;
 
-  void registerOrganization(RegisterOrganizationDTO organizationToRegister);
+    void registerOrganization(RegisterOrganizationDTO organizationToRegister);
 
-  Page<OrganizationDTO> getAllOrganizations(Pageable pageable);
+    Page<OrganizationDTO> getAllOrganizations(Pageable pageable);
 
-  OrganizationDTO getOrganizationDTO(Long id) throws OrganizationDoesntExistException;
+    OrganizationDTO getOrganizationDTO(Long id) throws OrganizationDoesntExistException;
 
-  Organization getOrganization(Long id) throws OrganizationDoesntExistException;
+    Organization getOrganization(Long id) throws OrganizationDoesntExistException;
 
-  Page<OrganizationDepartmentDTO> getAllOrganizationsWithItsDepartments(Pageable pageable);
+    Page<OrganizationDepartmentDTO> getAllOrganizationsWithItsDepartments(Pageable pageable);
 
-  String attendanceRetakeTimingCron(Long organizationId);
+    String getOrganizationCheckInPolicy(Long organizationId);
 
-  int getAttendanceRetakeAttendanceInHourPolicy(Long organizationId);
+    String getOrganizationCheckOutPolicy(Long organizationId);
 
-  String getOrganizationCheckInPolicy(Long organizationId);
+    int getOrganizationLateAttendanceToleranceTimePolicy(Long organizationId);
 
-  String getOrganizationCheckOutPolicy(Long organizationId);
+    LeavesAllowedPolicyDTO getOrganizationLeavesPolicy(Long organizationId);
 
-  int getOrganizationLateAttendanceToleranceTimePolicy(Long organizationId);
-
-  int getOrganizationCheckOutToleranceTimePolicy(Long organizationId);
-
-  LeavesAllowedPolicyDTO getOrganizationLeavesPolicy(Long organizationId);
-
-  List<Long> getAllOrganizationIds();
+    List<Long> getAllOrganizationIds();
 }

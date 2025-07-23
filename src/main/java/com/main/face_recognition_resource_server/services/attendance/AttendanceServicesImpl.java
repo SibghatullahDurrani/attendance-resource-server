@@ -26,7 +26,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -266,130 +265,130 @@ public class AttendanceServicesImpl implements AttendanceServices {
             throw new NoStatsAvailableException();
         }
 
-        Long organizationId = userServices.getUserOrganizationIdByUserId(userId);
-        int lateAttendanceToleranceTimeInMillis = organizationServices.getOrganizationLateAttendanceToleranceTimePolicy(organizationId) * 60000;
-        long organizationRetakeAttendancePolicyInMillis = organizationServices.getAttendanceRetakeAttendanceInHourPolicy(organizationId) * 3600000L;
-        String organizationCheckInTime = organizationServices.getOrganizationCheckInPolicy(organizationId);
-        String[] organizationCheckInTimeSplit = organizationCheckInTime.split(":");
-        int organizationCheckInHour = Integer.parseInt(organizationCheckInTimeSplit[0]);
-        int organizationCheckInMinutes = Integer.parseInt(organizationCheckInTimeSplit[1]);
-        String organizationCheckOutTime = organizationServices.getOrganizationCheckOutPolicy(organizationId);
-        String[] organizationCheckOutTimeSplit = organizationCheckOutTime.split(":");
-        int organizationCheckOutHour = Integer.parseInt(organizationCheckOutTimeSplit[0]);
-        int organizationCheckOutMinutes = Integer.parseInt(organizationCheckOutTimeSplit[1]);
-        int checkOutToleranceTime = organizationServices.getOrganizationCheckOutToleranceTimePolicy(organizationId);
-
-        for (UserAttendanceTableDTO attendanceRecord : attendanceTableRecords) {
-            attendanceRecord.setCheckIns(checkInServices.getCheckInTimesByAttendanceId(attendanceRecord.getId()));
-            attendanceRecord.setCheckOuts(checkOutServices.getCheckOutTimesByAttendanceId(attendanceRecord.getId()));
-
-            BufferedImage scoreImage = new BufferedImage(scoreImageWidth, scoreImageHeight, BufferedImage.TYPE_INT_RGB);
-            Graphics scoreGraphics = scoreImage.createGraphics();
-
-            Calendar policyCheckIn = new GregorianCalendar();
-            Calendar policyCheckOut = new GregorianCalendar();
-
-            policyCheckIn.setTimeInMillis(attendanceRecord.getDate());
-            policyCheckOut.setTimeInMillis(attendanceRecord.getDate());
-
-            policyCheckIn.set(Calendar.HOUR_OF_DAY, organizationCheckInHour);
-            policyCheckIn.set(Calendar.MINUTE, organizationCheckInMinutes);
-
-            policyCheckOut.set(Calendar.HOUR_OF_DAY, organizationCheckOutHour);
-            policyCheckOut.set(Calendar.MINUTE, organizationCheckOutMinutes);
-
-            long policyCheckOutTimeStamp = policyCheckOut.getTime().getTime();
-            long policyCheckInTimeStamp = policyCheckIn.getTime().getTime();
-
-            long totalWorkingHoursTimeStamp = policyCheckOutTimeStamp - policyCheckInTimeStamp;
-
-            List<Long> checkIns = new ArrayList<>(attendanceRecord.getCheckIns());
-            List<Long> checkOuts = new ArrayList<>(attendanceRecord.getCheckOuts());
-
-            long checkIn = 0;
-            long checkOut = 0;
-            if (!checkIns.isEmpty()) {
-                checkIn = checkIns.removeFirst();
-            }
-            if (!checkOuts.isEmpty()) {
-                checkOut = checkOuts.removeFirst();
-            }
-            int previousPoint = 0;
-            boolean first = true;
-
-            if (checkIn == 0 && attendanceRecord.getStatus() == AttendanceStatus.ABSENT) {
-                drawRectangleTillEnd(scoreGraphics, previousPoint, red);
-            } else if (checkIn == 0 && attendanceRecord.getStatus() == AttendanceStatus.ON_LEAVE) {
-                drawRectangleTillEnd(scoreGraphics, previousPoint, cyan);
-            }
-
-            while (checkIn != 0 || checkOut != 0) {
-                if (first) {
-                    if (checkIn > policyCheckInTimeStamp + lateAttendanceToleranceTimeInMillis) {
-                        previousPoint = drawRectangle(scoreGraphics, previousPoint, policyCheckInTimeStamp, checkIn, totalWorkingHoursTimeStamp, red);
-                        if (checkIns.isEmpty()) {
-                            if (checkOut == 0) {
-                                if (checkIn + organizationRetakeAttendancePolicyInMillis > policyCheckOutTimeStamp) {
-                                    drawRectangle(scoreGraphics, previousPoint, checkIn, policyCheckOutTimeStamp, totalWorkingHoursTimeStamp, green);
-                                } else {
-                                    int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkIn + organizationRetakeAttendancePolicyInMillis, totalWorkingHoursTimeStamp, green);
-                                    previousPoint = previousPoint + newPoint;
-                                    drawRectangleTillEnd(scoreGraphics, previousPoint, red);
-                                }
-                            } else {
-                                int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkOut, totalWorkingHoursTimeStamp, green);
-                                previousPoint = previousPoint + newPoint;
-                            }
-                            checkIn = 0;
-                        } else {
-                            checkIn = checkIns.removeFirst();
-                        }
-                    } else {
-                        int newPoint = drawRectangle(scoreGraphics, previousPoint, policyCheckInTimeStamp, checkIn, totalWorkingHoursTimeStamp, green);
-                        previousPoint = previousPoint + newPoint;
-                    }
-                    first = false;
-                } else {
-                    if (checkIn != 0 && checkOut == 0) {
-                        if ((checkIn + organizationRetakeAttendancePolicyInMillis) > policyCheckOutTimeStamp) {
-                            drawRectangle(scoreGraphics, previousPoint, checkIn, policyCheckOutTimeStamp, totalWorkingHoursTimeStamp, green);
-                        } else {
-                            int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkIn + organizationRetakeAttendancePolicyInMillis, totalWorkingHoursTimeStamp, green);
-                            previousPoint = previousPoint + newPoint;
-                            drawRectangleTillEnd(scoreGraphics, previousPoint, red);
-                        }
-                        checkIn = 0;
-                    }
-                    if (checkIn == 0 && checkOut != 0) {
-                        drawRectangleTillEnd(scoreGraphics, previousPoint, red);
-                        checkOut = 0;
-                    }
-                    if (checkOut != 0) {
-                        if (checkOut > checkIn) {
-                            int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkOut, totalWorkingHoursTimeStamp, green);
-                            previousPoint = previousPoint + newPoint;
-                            if (checkIns.isEmpty()) {
-                                checkIn = 0;
-                            } else {
-                                checkIn = checkIns.removeFirst();
-                            }
-                        } else {
-                            int newPoint = drawRectangle(scoreGraphics, previousPoint, checkOut, checkIn, totalWorkingHoursTimeStamp, red);
-                            previousPoint = previousPoint + newPoint;
-                            if (checkOuts.isEmpty()) {
-                                checkOut = 0;
-                            } else {
-                                checkOut = checkOuts.removeFirst();
-                            }
-                        }
-                    }
-                }
-            }
-
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            ImageIO.write(scoreImage, "jpg", byteArrayOutputStream);
-            attendanceRecord.setScore(byteArrayOutputStream.toByteArray());
-        }
+//        Long organizationId = userServices.getUserOrganizationIdByUserId(userId);
+//        int lateAttendanceToleranceTimeInMillis = organizationServices.getOrganizationLateAttendanceToleranceTimePolicy(organizationId) * 60000;
+//        long organizationRetakeAttendancePolicyInMillis = organizationServices.getAttendanceRetakeAttendanceInHourPolicy(organizationId) * 3600000L;
+//        String organizationCheckInTime = organizationServices.getOrganizationCheckInPolicy(organizationId);
+//        String[] organizationCheckInTimeSplit = organizationCheckInTime.split(":");
+//        int organizationCheckInHour = Integer.parseInt(organizationCheckInTimeSplit[0]);
+//        int organizationCheckInMinutes = Integer.parseInt(organizationCheckInTimeSplit[1]);
+//        String organizationCheckOutTime = organizationServices.getOrganizationCheckOutPolicy(organizationId);
+//        String[] organizationCheckOutTimeSplit = organizationCheckOutTime.split(":");
+//        int organizationCheckOutHour = Integer.parseInt(organizationCheckOutTimeSplit[0]);
+//        int organizationCheckOutMinutes = Integer.parseInt(organizationCheckOutTimeSplit[1]);
+//        int checkOutToleranceTime = organizationServices.getOrganizationCheckOutToleranceTimePolicy(organizationId);
+//
+//        for (UserAttendanceTableDTO attendanceRecord : attendanceTableRecords) {
+//            attendanceRecord.setCheckIns(checkInServices.getCheckInTimesByAttendanceId(attendanceRecord.getId()));
+//            attendanceRecord.setCheckOuts(checkOutServices.getCheckOutTimesByAttendanceId(attendanceRecord.getId()));
+//
+//            BufferedImage scoreImage = new BufferedImage(scoreImageWidth, scoreImageHeight, BufferedImage.TYPE_INT_RGB);
+//            Graphics scoreGraphics = scoreImage.createGraphics();
+//
+//            Calendar policyCheckIn = new GregorianCalendar();
+//            Calendar policyCheckOut = new GregorianCalendar();
+//
+//            policyCheckIn.setTimeInMillis(attendanceRecord.getDate());
+//            policyCheckOut.setTimeInMillis(attendanceRecord.getDate());
+//
+//            policyCheckIn.set(Calendar.HOUR_OF_DAY, organizationCheckInHour);
+//            policyCheckIn.set(Calendar.MINUTE, organizationCheckInMinutes);
+//
+//            policyCheckOut.set(Calendar.HOUR_OF_DAY, organizationCheckOutHour);
+//            policyCheckOut.set(Calendar.MINUTE, organizationCheckOutMinutes);
+//
+//            long policyCheckOutTimeStamp = policyCheckOut.getTime().getTime();
+//            long policyCheckInTimeStamp = policyCheckIn.getTime().getTime();
+//
+//            long totalWorkingHoursTimeStamp = policyCheckOutTimeStamp - policyCheckInTimeStamp;
+//
+//            List<Long> checkIns = new ArrayList<>(attendanceRecord.getCheckIns());
+//            List<Long> checkOuts = new ArrayList<>(attendanceRecord.getCheckOuts());
+//
+//            long checkIn = 0;
+//            long checkOut = 0;
+//            if (!checkIns.isEmpty()) {
+//                checkIn = checkIns.removeFirst();
+//            }
+//            if (!checkOuts.isEmpty()) {
+//                checkOut = checkOuts.removeFirst();
+//            }
+//            int previousPoint = 0;
+//            boolean first = true;
+//
+//            if (checkIn == 0 && attendanceRecord.getStatus() == AttendanceStatus.ABSENT) {
+//                drawRectangleTillEnd(scoreGraphics, previousPoint, red);
+//            } else if (checkIn == 0 && attendanceRecord.getStatus() == AttendanceStatus.ON_LEAVE) {
+//                drawRectangleTillEnd(scoreGraphics, previousPoint, cyan);
+//            }
+//
+//            while (checkIn != 0 || checkOut != 0) {
+//                if (first) {
+//                    if (checkIn > policyCheckInTimeStamp + lateAttendanceToleranceTimeInMillis) {
+//                        previousPoint = drawRectangle(scoreGraphics, previousPoint, policyCheckInTimeStamp, checkIn, totalWorkingHoursTimeStamp, red);
+//                        if (checkIns.isEmpty()) {
+//                            if (checkOut == 0) {
+//                                if (checkIn + organizationRetakeAttendancePolicyInMillis > policyCheckOutTimeStamp) {
+//                                    drawRectangle(scoreGraphics, previousPoint, checkIn, policyCheckOutTimeStamp, totalWorkingHoursTimeStamp, green);
+//                                } else {
+//                                    int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkIn + organizationRetakeAttendancePolicyInMillis, totalWorkingHoursTimeStamp, green);
+//                                    previousPoint = previousPoint + newPoint;
+//                                    drawRectangleTillEnd(scoreGraphics, previousPoint, red);
+//                                }
+//                            } else {
+//                                int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkOut, totalWorkingHoursTimeStamp, green);
+//                                previousPoint = previousPoint + newPoint;
+//                            }
+//                            checkIn = 0;
+//                        } else {
+//                            checkIn = checkIns.removeFirst();
+//                        }
+//                    } else {
+//                        int newPoint = drawRectangle(scoreGraphics, previousPoint, policyCheckInTimeStamp, checkIn, totalWorkingHoursTimeStamp, green);
+//                        previousPoint = previousPoint + newPoint;
+//                    }
+//                    first = false;
+//                } else {
+//                    if (checkIn != 0 && checkOut == 0) {
+//                        if ((checkIn + organizationRetakeAttendancePolicyInMillis) > policyCheckOutTimeStamp) {
+//                            drawRectangle(scoreGraphics, previousPoint, checkIn, policyCheckOutTimeStamp, totalWorkingHoursTimeStamp, green);
+//                        } else {
+//                            int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkIn + organizationRetakeAttendancePolicyInMillis, totalWorkingHoursTimeStamp, green);
+//                            previousPoint = previousPoint + newPoint;
+//                            drawRectangleTillEnd(scoreGraphics, previousPoint, red);
+//                        }
+//                        checkIn = 0;
+//                    }
+//                    if (checkIn == 0 && checkOut != 0) {
+//                        drawRectangleTillEnd(scoreGraphics, previousPoint, red);
+//                        checkOut = 0;
+//                    }
+//                    if (checkOut != 0) {
+//                        if (checkOut > checkIn) {
+//                            int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkOut, totalWorkingHoursTimeStamp, green);
+//                            previousPoint = previousPoint + newPoint;
+//                            if (checkIns.isEmpty()) {
+//                                checkIn = 0;
+//                            } else {
+//                                checkIn = checkIns.removeFirst();
+//                            }
+//                        } else {
+//                            int newPoint = drawRectangle(scoreGraphics, previousPoint, checkOut, checkIn, totalWorkingHoursTimeStamp, red);
+//                            previousPoint = previousPoint + newPoint;
+//                            if (checkOuts.isEmpty()) {
+//                                checkOut = 0;
+//                            } else {
+//                                checkOut = checkOuts.removeFirst();
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+//            ImageIO.write(scoreImage, "jpg", byteArrayOutputStream);
+//            attendanceRecord.setScore(byteArrayOutputStream.toByteArray());
+//        }
         return attendanceTableRecords;
     }
 
