@@ -14,25 +14,28 @@ import java.util.List;
 @Entity
 @Table(name = "organizations")
 public class Organization {
-  @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "organization_id_generator")
-  @SequenceGenerator(name = "organization_id_generator", sequenceName = "organization_id_sequence", allocationSize = 1)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "organization_id_generator")
+    @SequenceGenerator(name = "organization_id_generator", sequenceName = "organization_id_sequence", allocationSize = 1)
+    private Long id;
 
-  @Column(nullable = false)
-  private String organizationName;
+    @Column(nullable = false)
+    private String organizationName;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private OrganizationType organizationType;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrganizationType organizationType;
 
-  @OneToMany(mappedBy = "organization")
-  private List<Department> departments;
+    @OneToMany(mappedBy = "organization")
+    private List<Department> departments;
 
-  @OneToMany(mappedBy = "organization")
-  private List<Camera> cameras;
+    @OneToMany(mappedBy = "organization")
+    private List<Camera> cameras;
 
-  @OneToOne(cascade = CascadeType.ALL)
-  @JoinColumn(name = "organization_policies_id", referencedColumnName = "id")
-  private OrganizationPolicies organizationPolicies;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "organization_policies_id", referencedColumnName = "id")
+    private OrganizationPolicies organizationPolicies;
+
+    @OneToMany(mappedBy = "organization")
+    private List<Shift> organizationShifts;
 }

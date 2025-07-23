@@ -82,16 +82,6 @@ public class OrganizationServicesImpl implements OrganizationServices {
     }
 
     @Override
-    public String getOrganizationCheckInPolicy(Long organizationId) {
-        return organizationRepository.getCheckInPolicy(organizationId);
-    }
-
-    @Override
-    public String getOrganizationCheckOutPolicy(Long organizationId) {
-        return organizationRepository.getCheckOutPolicy(organizationId);
-    }
-
-    @Override
     public int getOrganizationLateAttendanceToleranceTimePolicy(Long organizationId) {
         return organizationRepository.getLateAttendanceToleranceTimePolicy(organizationId);
     }

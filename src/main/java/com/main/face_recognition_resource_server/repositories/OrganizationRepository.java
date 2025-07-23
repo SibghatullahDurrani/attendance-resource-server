@@ -38,19 +38,9 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
     Page<Organization> getAllOrganizationsWithDepartments(Pageable pageable);
 
     @Query("""
-            SELECT o.organizationPolicies.checkInTimeForUser FROM Organization o WHERE o.id = ?1
-            """)
-    String getCheckInPolicy(Long organizationId);
-
-    @Query("""
             SELECT o.organizationPolicies.lateAttendanceToleranceTimeInMinutes FROM Organization o WHERE o.id = ?1
             """)
     int getLateAttendanceToleranceTimePolicy(Long organizationId);
-
-    @Query("""
-            SELECT o.organizationPolicies.checkOutTimeForUser FROM Organization o WHERE o.id = ?1
-            """)
-    String getCheckOutPolicy(Long organizationId);
 
     @Query("""
             SELECT new com.main.face_recognition_resource_server.DTOS.leave.LeavesAllowedPolicyDTO(

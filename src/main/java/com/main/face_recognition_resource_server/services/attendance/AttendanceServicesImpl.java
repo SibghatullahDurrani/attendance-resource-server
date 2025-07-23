@@ -71,81 +71,81 @@ public class AttendanceServicesImpl implements AttendanceServices {
     @Transactional
     @Async
     public void markCheckIn(Long userId, Date checkInDate, BufferedImage fullImage, BufferedImage faceImage) throws UserDoesntExistException, IOException {
-        Optional<Attendance> attendanceOptional = getUserAttendanceFromDayStartTillDate(userId, checkInDate);
-        Long organizationId = this.userServices.getUserOrganizationIdByUserId(userId);
-
-        if (attendanceOptional.isPresent()) {
-            Attendance attendance = attendanceOptional.get();
-            if (attendance.getCheckIns() == null || attendance.getCheckIns().isEmpty()) {
-                String checkInPolicyTime = organizationServices.getOrganizationCheckInPolicy(organizationId);
-                int lateAttendanceToleranceTimePolicy = organizationServices.getOrganizationLateAttendanceToleranceTimePolicy(organizationId);
-
-                int lateAttendanceToleranceTimeHours = 0;
-                int lateAttendanceToleranceTimeMinutes = 0;
-                while (lateAttendanceToleranceTimePolicy >= 60) {
-                    lateAttendanceToleranceTimeHours += 1;
-                    lateAttendanceToleranceTimePolicy -= 60;
-                }
-                lateAttendanceToleranceTimeMinutes += lateAttendanceToleranceTimePolicy;
-
-
-                String[] timeSplit = checkInPolicyTime.split(":");
-                Calendar requiredCheckInTime = GregorianCalendar.getInstance();
-                requiredCheckInTime.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeSplit[0]) + lateAttendanceToleranceTimeHours);
-                requiredCheckInTime.set(Calendar.MINUTE, Integer.parseInt(timeSplit[1]) + lateAttendanceToleranceTimeMinutes);
-
-                System.out.println(requiredCheckInTime.getTime());
-
-                Calendar checkedInTime = GregorianCalendar.getInstance();
-                checkedInTime.setTime(checkInDate);
-
-                System.out.println(checkedInTime.getTime());
-
-                AttendanceStatus attendanceStatus;
-                if (checkedInTime.after(requiredCheckInTime)) {
-                    attendanceStatus = AttendanceStatus.LATE;
-                } else {
-                    attendanceStatus = AttendanceStatus.ON_TIME;
-                }
-
-                attendance.setStatus(attendanceStatus);
-                attendance.setCurrentAttendanceStatus(AttendanceType.CHECK_IN);
-                attendanceRepository.saveAndFlush(attendance);
-
-                checkInServices.saveCheckIn(checkInDate, attendance, fullImage, faceImage);
-//        if (fullImage != null && faceImage != null) {
-//          ImageIO.write(fullImage, "jpg", baos);
-//          byte[] fullImageBytes = baos.toByteArray();
-//          baos.reset();
-//          ImageIO.write(faceImage, "jpg", baos);
-//          byte[] faceImageBytes = baos.toByteArray();
-//          baos.reset();
-//          sendLiveAttendanceFeed(userServices.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder().userId(userId).fullName(userServices.getUserFullNameByUserId(userId)).attendanceType(AttendanceType.CHECK_IN).date(checkInDate.getTime()).fullImage(fullImageBytes).faceImage(faceImageBytes).build());
+//        Optional<Attendance> attendanceOptional = getUserAttendanceFromDayStartTillDate(userId, checkInDate);
+//        Long organizationId = this.userServices.getUserOrganizationIdByUserId(userId);
+//
+//        if (attendanceOptional.isPresent()) {
+//            Attendance attendance = attendanceOptional.get();
+//            if (attendance.getCheckIns() == null || attendance.getCheckIns().isEmpty()) {
+//                String checkInPolicyTime = organizationServices.getOrganizationCheckInPolicy(organizationId);
+//                int lateAttendanceToleranceTimePolicy = organizationServices.getOrganizationLateAttendanceToleranceTimePolicy(organizationId);
+//
+//                int lateAttendanceToleranceTimeHours = 0;
+//                int lateAttendanceToleranceTimeMinutes = 0;
+//                while (lateAttendanceToleranceTimePolicy >= 60) {
+//                    lateAttendanceToleranceTimeHours += 1;
+//                    lateAttendanceToleranceTimePolicy -= 60;
+//                }
+//                lateAttendanceToleranceTimeMinutes += lateAttendanceToleranceTimePolicy;
+//
+//
+//                String[] timeSplit = checkInPolicyTime.split(":");
+//                Calendar requiredCheckInTime = GregorianCalendar.getInstance();
+//                requiredCheckInTime.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeSplit[0]) + lateAttendanceToleranceTimeHours);
+//                requiredCheckInTime.set(Calendar.MINUTE, Integer.parseInt(timeSplit[1]) + lateAttendanceToleranceTimeMinutes);
+//
+//                System.out.println(requiredCheckInTime.getTime());
+//
+//                Calendar checkedInTime = GregorianCalendar.getInstance();
+//                checkedInTime.setTime(checkInDate);
+//
+//                System.out.println(checkedInTime.getTime());
+//
+//                AttendanceStatus attendanceStatus;
+//                if (checkedInTime.after(requiredCheckInTime)) {
+//                    attendanceStatus = AttendanceStatus.LATE;
+//                } else {
+//                    attendanceStatus = AttendanceStatus.ON_TIME;
+//                }
+//
+//                attendance.setStatus(attendanceStatus);
+//                attendance.setCurrentAttendanceStatus(AttendanceType.CHECK_IN);
+//                attendanceRepository.saveAndFlush(attendance);
+//
+//                checkInServices.saveCheckIn(checkInDate, attendance, fullImage, faceImage);
+////        if (fullImage != null && faceImage != null) {
+////          ImageIO.write(fullImage, "jpg", baos);
+////          byte[] fullImageBytes = baos.toByteArray();
+////          baos.reset();
+////          ImageIO.write(faceImage, "jpg", baos);
+////          byte[] faceImageBytes = baos.toByteArray();
+////          baos.reset();
+////          sendLiveAttendanceFeed(userServices.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder().userId(userId).fullName(userServices.getUserFullNameByUserId(userId)).attendanceType(AttendanceType.CHECK_IN).date(checkInDate.getTime()).fullImage(fullImageBytes).faceImage(faceImageBytes).build());
+////        }
+//                String sourceImageURI = "SourceFaces/%s%s".formatted(userId, ".jpg");
+//                Path sourceImagePath = Paths.get(sourceImageURI);
+//                byte[] sourceImage = Files.readAllBytes(sourceImagePath);
+//                UserLiveFeedMetaData userLiveFeedMetaData = userServices.getUserLiveFeedMetaData(userId);
+//                sendLiveAttendanceFeed(
+//                        userServices.getUserOrganizationIdByUserId(userId),
+//                        AttendanceLiveFeedDTO.builder()
+//                                .userId(userId)
+//                                .fullName(userLiveFeedMetaData.getFullName())
+//                                .designation(userLiveFeedMetaData.getDesignation())
+//                                .departmentName(userLiveFeedMetaData.getDepartmentName())
+//                                .attendanceType(AttendanceType.CHECK_IN)
+//                                .attendanceStatus(attendanceStatus)
+//                                .checkInTime(checkInDate.getTime())
+//                                .checkOutTime(0L)
+//                                .sourceImage(sourceImage)
+//                                .build());
+//
+//            } else {
+//                attendance.setCurrentAttendanceStatus(AttendanceType.CHECK_IN);
+//                attendanceRepository.saveAndFlush(attendance);
+//                checkInServices.saveCheckIn(checkInDate, attendance, fullImage, faceImage);
+//            }
 //        }
-                String sourceImageURI = "SourceFaces/%s%s".formatted(userId, ".jpg");
-                Path sourceImagePath = Paths.get(sourceImageURI);
-                byte[] sourceImage = Files.readAllBytes(sourceImagePath);
-                UserLiveFeedMetaData userLiveFeedMetaData = userServices.getUserLiveFeedMetaData(userId);
-                sendLiveAttendanceFeed(
-                        userServices.getUserOrganizationIdByUserId(userId),
-                        AttendanceLiveFeedDTO.builder()
-                                .userId(userId)
-                                .fullName(userLiveFeedMetaData.getFullName())
-                                .designation(userLiveFeedMetaData.getDesignation())
-                                .departmentName(userLiveFeedMetaData.getDepartmentName())
-                                .attendanceType(AttendanceType.CHECK_IN)
-                                .attendanceStatus(attendanceStatus)
-                                .checkInTime(checkInDate.getTime())
-                                .checkOutTime(0L)
-                                .sourceImage(sourceImage)
-                                .build());
-
-            } else {
-                attendance.setCurrentAttendanceStatus(AttendanceType.CHECK_IN);
-                attendanceRepository.saveAndFlush(attendance);
-                checkInServices.saveCheckIn(checkInDate, attendance, fullImage, faceImage);
-            }
-        }
     }
 
     @Override
