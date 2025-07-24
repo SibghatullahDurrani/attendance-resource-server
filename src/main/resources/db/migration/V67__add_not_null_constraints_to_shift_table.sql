@@ -1,0 +1,8 @@
+ALTER TABLE shifts
+    ALTER COLUMN check_in_time SET NOT NULL;
+
+ALTER TABLE shifts
+    ALTER COLUMN check_out_time SET NOT NULL;
+
+ALTER TABLE shifts
+    ALTER COLUMN name SET NOT NULL;
