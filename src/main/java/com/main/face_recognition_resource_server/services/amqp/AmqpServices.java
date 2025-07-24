@@ -5,7 +5,6 @@ import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceMessa
 import com.main.face_recognition_resource_server.constants.AttendanceType;
 import com.main.face_recognition_resource_server.services.attendance.AttendanceServices;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
-import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
@@ -18,70 +17,90 @@ import java.util.List;
 
 @Service
 public class AmqpServices {
-  private final OrganizationServices organizationServices;
-  private final String EXHANGE_NAME = "attendance.exchange";
-  private final AmqpAdmin amqpAdmin;
-  private final ConnectionFactory connectionFactory;
-  private final TopicExchange exchange;
-  private final ObjectMapper objectMapper = new ObjectMapper();
-  private final AttendanceServices attendanceServices;
+    private final OrganizationServices organizationServices;
+    private final AmqpAdmin amqpAdmin;
+    private final ConnectionFactory connectionFactory;
+    private final TopicExchange attendance_exchange;
+    private final TopicExchange control_exchange;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final AttendanceServices attendanceServices;
 
-  public AmqpServices(OrganizationServices organizationServices, AmqpAdmin amqpAdmin, ConnectionFactory connectionFactory, AttendanceServices attendanceServices) {
-    this.organizationServices = organizationServices;
-    this.amqpAdmin = amqpAdmin;
-    this.connectionFactory = connectionFactory;
-    this.attendanceServices = attendanceServices;
-    exchange = new TopicExchange(EXHANGE_NAME, true, false);
-    amqpAdmin.declareExchange(exchange);
-  }
+    public AmqpServices(OrganizationServices organizationServices, AmqpAdmin amqpAdmin, ConnectionFactory connectionFactory, AttendanceServices attendanceServices) {
+        this.organizationServices = organizationServices;
+        this.amqpAdmin = amqpAdmin;
+        this.connectionFactory = connectionFactory;
+        this.attendanceServices = attendanceServices;
 
-  public void registerQueueAndListener(Long organizationId) {
-    String queueName = "attendance." + organizationId + ".queue";
-    String routingKey = "attendance." + organizationId + ".key";
+        String ATTENDANCE_EXCHANGE_NAME = "attendance.exchange";
+        String CONTROL_EXCHANGE_NAME = "control.exchange";
 
-    Queue queue = QueueBuilder.durable(queueName).build();
-    amqpAdmin.declareQueue(queue);
-
-    Binding binding = BindingBuilder.bind(queue).to(exchange).with(routingKey);
-    amqpAdmin.declareBinding(binding);
-
-    SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
-    container.setConnectionFactory(connectionFactory);
-    container.setQueueNames(queueName);
-    container.setAcknowledgeMode(AcknowledgeMode.MANUAL);
-//    container.setMessageListener(new MessageListenerAdapter(new MessageConsumer(), "handleMessage"));
-    container.setMessageListener((ChannelAwareMessageListener) (message, channel) -> {
-      long tag = message.getMessageProperties().getDeliveryTag();
-      try {
-        String json = new String(message.getBody(), StandardCharsets.UTF_8);
-        AttendanceMessage attendance = objectMapper.readValue(json, AttendanceMessage.class);
-        if (attendance.getAttendanceType() == AttendanceType.CHECK_IN) {
-          attendanceServices.markCheckIn(attendance.getUserId(), new Date(attendance.getDate()), null, null);
-        } else {
-          attendanceServices.markCheckOut(attendance.getUserId(), new Date(attendance.getDate()), null, null);
-        }
-        System.out.println("✅ " + attendance);
-
-        if (channel != null) {
-          channel.basicAck(tag, false);
-        }
-      } catch (Exception e) {
-        System.err.println("❌ Failed: " + e.getMessage());
-        if (channel != null) {
-          channel.basicNack(tag, false, true); // requeue
-        }
-      }
-    });
-    container.start();
-    System.out.println("Queue: " + queueName);
-
-  }
-
-  public void initQueueAndListener() {
-    List<Long> organizationIds = organizationServices.getAllOrganizationIds();
-
-    for (Long organizationId : organizationIds) {
-      registerQueueAndListener(organizationId);
+        attendance_exchange = new TopicExchange(ATTENDANCE_EXCHANGE_NAME, true, false);
+        control_exchange = new TopicExchange(CONTROL_EXCHANGE_NAME, true, false);
+        amqpAdmin.declareExchange(attendance_exchange);
+        amqpAdmin.declareExchange(control_exchange);
     }
-  }
+
+    public void registerQueueAndListener(Long organizationId) {
+        String attendanceQueueName = "attendance." + organizationId + ".queue";
+        String attendanceRoutingKey = "attendance." + organizationId + ".key";
+        Queue attendanceQueue = QueueBuilder.durable(attendanceQueueName).build();
+        amqpAdmin.declareQueue(attendanceQueue);
+        Binding attendanceBinding = BindingBuilder.bind(attendanceQueue).to(attendance_exchange).with(attendanceRoutingKey);
+        amqpAdmin.declareBinding(attendanceBinding);
+
+        String userControlQueueName = "control." + organizationId + ".user.queue";
+        String userControlRoutingKey = "control." + organizationId + ".user.key";
+        Queue userControlQueue = QueueBuilder.durable(userControlQueueName).build();
+        amqpAdmin.declareQueue(userControlQueue);
+        Binding userControlBinding = BindingBuilder.bind(userControlQueue).to(control_exchange).with(userControlRoutingKey);
+        amqpAdmin.declareBinding(userControlBinding);
+
+        String shiftControlQueueName = "control." + organizationId + ".shift.queue";
+        String shiftControlRoutingKey = "attendance." + organizationId + ".shift.key";
+        Queue shiftControlQueue = QueueBuilder.durable(shiftControlQueueName).build();
+        amqpAdmin.declareQueue(shiftControlQueue);
+        Binding shiftControlBinding = BindingBuilder.bind(shiftControlQueue).to(control_exchange).with(shiftControlRoutingKey);
+        amqpAdmin.declareBinding(shiftControlBinding);
+
+        SimpleMessageListenerContainer attendanceMessageListenerContainer = attendanceMessageListenerContainer(attendanceQueueName);
+        attendanceMessageListenerContainer.start();
+    }
+
+    private SimpleMessageListenerContainer attendanceMessageListenerContainer(String attendanceQueueName) {
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.setQueueNames(attendanceQueueName);
+        container.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+        container.setMessageListener((ChannelAwareMessageListener) (message, channel) -> {
+            long tag = message.getMessageProperties().getDeliveryTag();
+            try {
+                String json = new String(message.getBody(), StandardCharsets.UTF_8);
+                AttendanceMessage attendance = objectMapper.readValue(json, AttendanceMessage.class);
+                if (attendance.getAttendanceType() == AttendanceType.CHECK_IN) {
+                    attendanceServices.markCheckIn(attendance.getUserId(), new Date(attendance.getDate()), null, null);
+                } else {
+                    attendanceServices.markCheckOut(attendance.getUserId(), new Date(attendance.getDate()), null, null);
+                }
+                System.out.println("✅ " + attendance);
+
+                if (channel != null) {
+                    channel.basicAck(tag, false);
+                }
+            } catch (Exception e) {
+                System.err.println("❌ Failed: " + e.getMessage());
+                if (channel != null) {
+                    channel.basicNack(tag, false, true); // requeue
+                }
+            }
+        });
+        return container;
+    }
+
+    public void initQueueAndListener() {
+        List<Long> organizationIds = organizationServices.getAllOrganizationIds();
+
+        for (Long organizationId : organizationIds) {
+            registerQueueAndListener(organizationId);
+        }
+    }
 }

@@ -96,4 +96,9 @@ public class OrganizationServicesImpl implements OrganizationServices {
         return organizationRepository.getAllOrganizationIds();
     }
 
+    @Override
+    public Long getShiftsCount(Long organizationId) {
+        return organizationRepository.getShiftsCount(organizationId);
+    }
+
 }

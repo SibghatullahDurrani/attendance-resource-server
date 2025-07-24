@@ -67,7 +67,7 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<UserNotification> userNotifications;
 
-    @ManyToOne
-    @JoinColumn(name = "shift_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "shift_id", nullable = false)
     private Shift userShift;
 }

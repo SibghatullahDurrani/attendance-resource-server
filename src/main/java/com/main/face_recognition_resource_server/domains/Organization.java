@@ -29,9 +29,6 @@ public class Organization {
     @OneToMany(mappedBy = "organization")
     private List<Department> departments;
 
-    @OneToMany(mappedBy = "organization")
-    private List<Camera> cameras;
-
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "organization_policies_id", referencedColumnName = "id")
     private OrganizationPolicies organizationPolicies;
