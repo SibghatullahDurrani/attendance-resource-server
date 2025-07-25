@@ -6,12 +6,14 @@ import com.main.face_recognition_resource_server.DTOS.shift.RegisterShiftDTO;
 import com.main.face_recognition_resource_server.DTOS.shift.ShiftCreationMessageDTO;
 import com.main.face_recognition_resource_server.DTOS.shift.ShiftMessageDTO;
 import com.main.face_recognition_resource_server.DTOS.shift.ShiftTableRowDTO;
+import com.main.face_recognition_resource_server.constants.RoutingType;
 import com.main.face_recognition_resource_server.constants.ShiftMessageType;
 import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.domains.Shift;
 import com.main.face_recognition_resource_server.repositories.shift.ShiftRepository;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import com.main.face_recognition_resource_server.services.rabbitmqmessagebackup.RabbitMQMessageBackupServices;
+import com.main.face_recognition_resource_server.utilities.MessageCorrelationMetaDataWrapper;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -19,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.ReturnedMessage;
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
@@ -31,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ShiftServicesImpl implements ShiftServices {
@@ -60,6 +63,7 @@ public class ShiftServicesImpl implements ShiftServices {
         Shift registeredShift = shiftRepository.saveAndFlush(shiftToRegister);
         try {
             String SHIFT_CONTROL_ROUTING_KEY = "control." + organizationId + ".shift.key";
+
             ShiftCreationMessageDTO shiftCreationMessageDTO = ShiftCreationMessageDTO.builder()
                     .id(registeredShift.getId())
                     .name(registeredShift.getName())
@@ -67,22 +71,25 @@ public class ShiftServicesImpl implements ShiftServices {
                     .checkOutTime(registerShiftDTO.getCheckOutTime())
                     .build();
 
-            ShiftMessageDTO shiftMessageDTO = rabbitMQMessageBackupServices.backupAndReturnMessage(
-                    ShiftMessageDTO.builder()
-                            .shiftMessageType(ShiftMessageType.CREATE_SHIFT)
-                            .payload(shiftCreationMessageDTO)
-                            .build()
-            );
+            ShiftMessageDTO shiftMessageDTO = ShiftMessageDTO.builder()
+                    .shiftMessageType(ShiftMessageType.CREATE_SHIFT)
+                    .payload(shiftCreationMessageDTO)
+                    .build();
+
+            UUID backupMessageId = rabbitMQMessageBackupServices.backupAndReturnMessage(shiftMessageDTO);
             String shiftMessageJson = mapper.writeValueAsString(shiftMessageDTO);
-            CorrelationData correlationData = new CorrelationData();
-            correlationData.setReturned(new ReturnedMessage(
-                    new Message(shiftMessageJson.getBytes(StandardCharsets.UTF_8)),
-                    1,
-                    "message sent",
-                    CONTROL_EXCHANGE_NAME,
-                    SHIFT_CONTROL_ROUTING_KEY
-            ));
-            rabbitTemplate.convertAndSend(CONTROL_EXCHANGE_NAME, SHIFT_CONTROL_ROUTING_KEY, shiftMessageJson, correlationData);
+
+            String messageCorrelationMetaDataWrapperJson = mapper.writeValueAsString(
+                    new MessageCorrelationMetaDataWrapper(backupMessageId, RoutingType.SHIFT)
+            );
+            CorrelationData correlationData = new CorrelationData(messageCorrelationMetaDataWrapperJson);
+
+            MessageProperties messageProperties = new MessageProperties();
+            messageProperties.setHeader("uuid", backupMessageId.toString());
+            messageProperties.setHeader("routingType", RoutingType.SHIFT.name());
+            Message message = new Message(shiftMessageJson.getBytes(StandardCharsets.UTF_8));
+
+            rabbitTemplate.convertAndSend(CONTROL_EXCHANGE_NAME, SHIFT_CONTROL_ROUTING_KEY, message, correlationData);
         } catch (JsonProcessingException e) {
             logger.error("Error Converting Message To JSON");
         } catch (AmqpException e) {

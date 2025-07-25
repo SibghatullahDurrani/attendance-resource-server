@@ -23,133 +23,133 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
-import static com.main.face_recognition_resource_server.helpers.DateUtils.getStartAndEndDateOfMonthOfYear;
-import static com.main.face_recognition_resource_server.helpers.DateUtils.getStartAndEndDateOfYear;
+import static com.main.face_recognition_resource_server.utilities.DateUtils.getStartAndEndDateOfMonthOfYear;
+import static com.main.face_recognition_resource_server.utilities.DateUtils.getStartAndEndDateOfYear;
 
 @Service
 public class LeaveServicesImpl implements LeaveServices {
-  private final LeaveRepository leaveRepository;
-  private final UserServices userServices;
-  private final AttendanceServices attendanceServices;
+    private final LeaveRepository leaveRepository;
+    private final UserServices userServices;
+    private final AttendanceServices attendanceServices;
 
 
-  public LeaveServicesImpl(LeaveRepository leaveRepository, UserServices userServices, AttendanceServices attendanceServices) {
-    this.leaveRepository = leaveRepository;
-    this.userServices = userServices;
-    this.attendanceServices = attendanceServices;
-  }
-
-  @Override
-  @Transactional
-  public void requestLeave(LeaveRequestDTO leaveRequest, String username) throws UserDoesntExistException, NoMoreLeavesRemainingException {
-    User user = userServices.getUserByUsername(username);
-    if (leaveRequest.getLeaveType() == LeaveType.SICK_LEAVE && user.getRemainingSickLeaves() == 0)
-      throw new NoMoreLeavesRemainingException();
-    else if (leaveRequest.getLeaveType() == LeaveType.ANNUAL_LEAVE && user.getRemainingAnnualLeaves() == 0)
-      throw new NoMoreLeavesRemainingException();
-    else if (leaveRequest.getLeaveType() == LeaveType.ANNUAL_LEAVE)
-      user.setRemainingAnnualLeaves(user.getRemainingAnnualLeaves() - 1);
-    else
-      user.setRemainingSickLeaves(user.getRemainingSickLeaves() - 1);
-
-
-    userServices.saveUser(user);
-
-    Leave leave = Leave.builder()
-            .date(new GregorianCalendar(leaveRequest.getYear(), leaveRequest.getMonth(), leaveRequest.getDate()).getTime())
-            .leaveApplication(leaveRequest.getLeaveApplication())
-            .type(leaveRequest.getLeaveType())
-            .status(LeaveStatus.PENDING)
-            .user(user)
-            .build();
-
-    leaveRepository.saveAndFlush(leave);
-  }
-
-  @Override
-  public List<LeaveDTO> getUserLeaves(String username, int year, int month) throws NoLeaveAvailableException {
-    Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
-    List<LeaveDTO> userLeaves = leaveRepository.getUserLeavesBetweenDates(startAndEndDate[0], startAndEndDate[1], username);
-    if (userLeaves.isEmpty()) {
-      throw new NoLeaveAvailableException();
-    } else {
-      return userLeaves;
+    public LeaveServicesImpl(LeaveRepository leaveRepository, UserServices userServices, AttendanceServices attendanceServices) {
+        this.leaveRepository = leaveRepository;
+        this.userServices = userServices;
+        this.attendanceServices = attendanceServices;
     }
-  }
 
-  @Override
-  public Page<OrganizationLeaveRecordDTO> getOrganizationLeavesPage(Long organizationId, int year, Integer month, String userName, Long departmentId, LeaveType leaveType, LeaveStatus leaveStatus, PageRequest pageRequest) {
-    Specification<Leave> specification = (root, query, criteriaBuilder) -> {
-      List<Predicate> predicates = new ArrayList<>();
-      Join<Leave, User> leaveUserJoin = root.join("user", JoinType.INNER);
-      Join<User, Department> leaveUserDepartmentJoin = leaveUserJoin.join("department", JoinType.INNER);
-      Join<Department, Organization> leaveUserDepartmentOrganizationJoin = leaveUserDepartmentJoin.join("organization", JoinType.INNER);
+    @Override
+    @Transactional
+    public void requestLeave(LeaveRequestDTO leaveRequest, String username) throws UserDoesntExistException, NoMoreLeavesRemainingException {
+        User user = userServices.getUserByUsername(username);
+        if (leaveRequest.getLeaveType() == LeaveType.SICK_LEAVE && user.getRemainingSickLeaves() == 0)
+            throw new NoMoreLeavesRemainingException();
+        else if (leaveRequest.getLeaveType() == LeaveType.ANNUAL_LEAVE && user.getRemainingAnnualLeaves() == 0)
+            throw new NoMoreLeavesRemainingException();
+        else if (leaveRequest.getLeaveType() == LeaveType.ANNUAL_LEAVE)
+            user.setRemainingAnnualLeaves(user.getRemainingAnnualLeaves() - 1);
+        else
+            user.setRemainingSickLeaves(user.getRemainingSickLeaves() - 1);
 
-      predicates.add(criteriaBuilder.equal(leaveUserDepartmentOrganizationJoin.get("id"), organizationId));
 
-      Date[] dates;
-      if (month != null) {
-        dates = getStartAndEndDateOfMonthOfYear(year, month);
-      } else {
-        dates = getStartAndEndDateOfYear(year);
-      }
-      predicates.add(criteriaBuilder.between(root.get("date"), dates[0].getTime(), dates[1].getTime()));
-      if (userName != null) {
-        predicates.add(criteriaBuilder.or(
-                criteriaBuilder.like(leaveUserJoin.get("firstName"), "%" + userName + "%"),
-                criteriaBuilder.like(leaveUserJoin.get("secondName"), "%" + userName + "%")
-        ));
-      }
-      if (departmentId != null) {
-        predicates.add(criteriaBuilder.equal(leaveUserDepartmentJoin.get("id"), departmentId));
-      }
-      if (leaveType != null) {
-        predicates.add(criteriaBuilder.equal(root.get("type"), leaveType));
-      }
-      if (leaveStatus != null) {
-        predicates.add(criteriaBuilder.equal(root.get("status"), leaveStatus));
-      }
-      return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-    };
-    return leaveRepository.getOrganizationLeaves(specification, pageRequest);
-  }
+        userServices.saveUser(user);
 
-  @Override
-  public void doesLeaveBelongToOrganization(Long organizationId, Long leaveId) throws LeaveDoesntBelongToTheOrganizationException {
-    Long organizationIdOfLeave = leaveRepository.getOrganizationIdOfLeave(leaveId);
-    if (!organizationIdOfLeave.equals(organizationId)) {
-      throw new LeaveDoesntBelongToTheOrganizationException();
+        Leave leave = Leave.builder()
+                .date(new GregorianCalendar(leaveRequest.getYear(), leaveRequest.getMonth(), leaveRequest.getDate()).getTime())
+                .leaveApplication(leaveRequest.getLeaveApplication())
+                .type(leaveRequest.getLeaveType())
+                .status(LeaveStatus.PENDING)
+                .user(user)
+                .build();
+
+        leaveRepository.saveAndFlush(leave);
     }
-  }
 
-  @Override
-  public String getLeaveApplication(Long leaveId) throws LeaveDoesntExistException {
-    Optional<String> leaveApplication = leaveRepository.getLeaveApplication(leaveId);
-    if (leaveApplication.isEmpty()) {
-      throw new LeaveDoesntExistException();
-    } else {
-      return leaveApplication.get();
+    @Override
+    public List<LeaveDTO> getUserLeaves(String username, int year, int month) throws NoLeaveAvailableException {
+        Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
+        List<LeaveDTO> userLeaves = leaveRepository.getUserLeavesBetweenDates(startAndEndDate[0], startAndEndDate[1], username);
+        if (userLeaves.isEmpty()) {
+            throw new NoLeaveAvailableException();
+        } else {
+            return userLeaves;
+        }
     }
-  }
 
-  @Override
-  public LeaveDataWithApplicationDTO getLeaveDataWithApplication(Long leaveId) throws LeaveDoesntExistException {
-    Optional<LeaveDataWithApplicationDTO> leave = leaveRepository.getLeaveDataWithApplication(leaveId);
-    if (leave.isEmpty()) {
-      throw new LeaveDoesntExistException();
-    }
-    return leave.get();
-  }
+    @Override
+    public Page<OrganizationLeaveRecordDTO> getOrganizationLeavesPage(Long organizationId, int year, Integer month, String userName, Long departmentId, LeaveType leaveType, LeaveStatus leaveStatus, PageRequest pageRequest) {
+        Specification<Leave> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            Join<Leave, User> leaveUserJoin = root.join("user", JoinType.INNER);
+            Join<User, Department> leaveUserDepartmentJoin = leaveUserJoin.join("department", JoinType.INNER);
+            Join<Department, Organization> leaveUserDepartmentOrganizationJoin = leaveUserDepartmentJoin.join("organization", JoinType.INNER);
 
-  @Override
-  @Modifying
-  @Transactional
-  public void respondToLeave(RespondToLeaveDTO respondToLeaveDTO) {
-    Optional<Long> userId = leaveRepository.getUserIdOfLeave(respondToLeaveDTO.getLeaveId());
-    leaveRepository.changeLeaveStatus(respondToLeaveDTO.getLeaveStatus(), respondToLeaveDTO.getLeaveId());
-    if (respondToLeaveDTO.getLeaveStatus() == LeaveStatus.APPROVED && userId.isPresent()) {
-      Date date = new Date(respondToLeaveDTO.getDate());
-      attendanceServices.markLeaveOfUserOnDate(userId.get(), date);
+            predicates.add(criteriaBuilder.equal(leaveUserDepartmentOrganizationJoin.get("id"), organizationId));
+
+            Date[] dates;
+            if (month != null) {
+                dates = getStartAndEndDateOfMonthOfYear(year, month);
+            } else {
+                dates = getStartAndEndDateOfYear(year);
+            }
+            predicates.add(criteriaBuilder.between(root.get("date"), dates[0].getTime(), dates[1].getTime()));
+            if (userName != null) {
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.like(leaveUserJoin.get("firstName"), "%" + userName + "%"),
+                        criteriaBuilder.like(leaveUserJoin.get("secondName"), "%" + userName + "%")
+                ));
+            }
+            if (departmentId != null) {
+                predicates.add(criteriaBuilder.equal(leaveUserDepartmentJoin.get("id"), departmentId));
+            }
+            if (leaveType != null) {
+                predicates.add(criteriaBuilder.equal(root.get("type"), leaveType));
+            }
+            if (leaveStatus != null) {
+                predicates.add(criteriaBuilder.equal(root.get("status"), leaveStatus));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+        return leaveRepository.getOrganizationLeaves(specification, pageRequest);
     }
-  }
+
+    @Override
+    public void doesLeaveBelongToOrganization(Long organizationId, Long leaveId) throws LeaveDoesntBelongToTheOrganizationException {
+        Long organizationIdOfLeave = leaveRepository.getOrganizationIdOfLeave(leaveId);
+        if (!organizationIdOfLeave.equals(organizationId)) {
+            throw new LeaveDoesntBelongToTheOrganizationException();
+        }
+    }
+
+    @Override
+    public String getLeaveApplication(Long leaveId) throws LeaveDoesntExistException {
+        Optional<String> leaveApplication = leaveRepository.getLeaveApplication(leaveId);
+        if (leaveApplication.isEmpty()) {
+            throw new LeaveDoesntExistException();
+        } else {
+            return leaveApplication.get();
+        }
+    }
+
+    @Override
+    public LeaveDataWithApplicationDTO getLeaveDataWithApplication(Long leaveId) throws LeaveDoesntExistException {
+        Optional<LeaveDataWithApplicationDTO> leave = leaveRepository.getLeaveDataWithApplication(leaveId);
+        if (leave.isEmpty()) {
+            throw new LeaveDoesntExistException();
+        }
+        return leave.get();
+    }
+
+    @Override
+    @Modifying
+    @Transactional
+    public void respondToLeave(RespondToLeaveDTO respondToLeaveDTO) {
+        Optional<Long> userId = leaveRepository.getUserIdOfLeave(respondToLeaveDTO.getLeaveId());
+        leaveRepository.changeLeaveStatus(respondToLeaveDTO.getLeaveStatus(), respondToLeaveDTO.getLeaveId());
+        if (respondToLeaveDTO.getLeaveStatus() == LeaveStatus.APPROVED && userId.isPresent()) {
+            Date date = new Date(respondToLeaveDTO.getDate());
+            attendanceServices.markLeaveOfUserOnDate(userId.get(), date);
+        }
+    }
 }

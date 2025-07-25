@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -15,5 +13,4 @@ import java.util.UUID;
 public class ShiftMessageDTO {
     private ShiftMessageType shiftMessageType;
     private Object payload;
-    private UUID messageBackupId;
 }

@@ -37,7 +37,7 @@ import java.text.DateFormatSymbols;
 import java.util.*;
 import java.util.List;
 
-import static com.main.face_recognition_resource_server.helpers.DateUtils.*;
+import static com.main.face_recognition_resource_server.utilities.DateUtils.*;
 
 @Slf4j
 @Service

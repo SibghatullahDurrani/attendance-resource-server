@@ -26,12 +26,11 @@ public class RabbitMQMessageBackupServicesImpl implements RabbitMQMessageBackupS
     @Override
     @Transactional
     @Retryable(retryFor = {SQLException.class, DataIntegrityViolationException.class})
-    public ShiftMessageDTO backupAndReturnMessage(ShiftMessageDTO shiftMessageDTO) throws SQLException, JsonProcessingException {
+    public UUID backupAndReturnMessage(ShiftMessageDTO shiftMessageDTO) throws SQLException, JsonProcessingException {
         UUID id = UUID.randomUUID();
         if (rabbitMQMessageBackupRepository.existsById(id)) {
             throw new SQLException();
         }
-        shiftMessageDTO.setMessageBackupId(id);
         String shiftMessageString = objectMapper.writeValueAsString(shiftMessageDTO);
         RabbitMQMessageBackup backup = RabbitMQMessageBackup.builder()
                 .id(id)
@@ -39,8 +38,8 @@ public class RabbitMQMessageBackupServicesImpl implements RabbitMQMessageBackupS
                 .messageStatus(MessageStatus.SENT)
                 .build();
 
-        rabbitMQMessageBackupRepository.saveAndFlush(backup);
-        return shiftMessageDTO;
+        RabbitMQMessageBackup message = rabbitMQMessageBackupRepository.saveAndFlush(backup);
+        return message.getId();
     }
 
     @Override

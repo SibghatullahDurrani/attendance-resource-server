@@ -1,19 +1,20 @@
 package com.main.face_recognition_resource_server.configurations;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.main.face_recognition_resource_server.DTOS.shift.ShiftMessageDTO;
 import com.main.face_recognition_resource_server.constants.MessageStatus;
 import com.main.face_recognition_resource_server.domains.RabbitMQMessageBackup;
 import com.main.face_recognition_resource_server.services.rabbitmqmessagebackup.RabbitMQMessageBackupServices;
-import com.main.face_recognition_resource_server.utilities.ControlRoutingKey;
+import com.main.face_recognition_resource_server.utilities.MessageCorrelationMetaDataWrapper;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageDeliveryMode;
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
-import java.util.Objects;
+import java.util.UUID;
 
 @Configuration
 public class RabbitMQConfigurations {
@@ -39,64 +40,33 @@ public class RabbitMQConfigurations {
                 return;
             }
             try {
-                if (Objects.requireNonNull(correlationData.getReturned()).getExchange().equals(CONTROL_EXCHANGE_NAME)) {
-                    ControlRoutingKey controlRoutingKey = new ControlRoutingKey(correlationData.getReturned().getRoutingKey());
-                    switch (controlRoutingKey.getControlRoutingType()) {
-                        case SHIFT:
-                            handleShiftConfirmCallback(correlationData.getReturned().getMessage().getBody(), ack);
-                            break;
-                        case USER:
-                            break;
-                    }
+                MessageCorrelationMetaDataWrapper metaDataWrapper = objectMapper.readValue(correlationData.getId(), MessageCorrelationMetaDataWrapper.class);
+                RabbitMQMessageBackup messageBackup = RabbitMQMessageBackup.builder()
+                        .id(metaDataWrapper.backupMessageId())
+                        .build();
+
+                if (!ack) {
+                    messageBackup.setMessageStatus(MessageStatus.PENDING);
+                } else {
+                    messageBackup.setMessageStatus(MessageStatus.DELIVERED);
                 }
+                rabbitMQMessageBackupServices.backupAndReturnMessage(messageBackup);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });
         rabbitTemplate.setReturnsCallback(returned -> {
-            byte[] message = returned.getMessage().getBody();
-            String exchangeName = returned.getExchange();
-            String routingKey = returned.getRoutingKey();
-            try {
-                if (exchangeName.equals(CONTROL_EXCHANGE_NAME)) {
-                    ControlRoutingKey controlRoutingKey = new ControlRoutingKey(routingKey);
-                    switch (controlRoutingKey.getControlRoutingType()) {
-                        case SHIFT:
-                            handleShiftReturnsCallBack(message);
-                            break;
-                        case USER:
-                            break;
-                    }
+            Message message = returned.getMessage();
+            MessageProperties messageProperties = message.getMessageProperties();
+            UUID backupMessageId = UUID.fromString(messageProperties.getHeader("uuid"));
+            RabbitMQMessageBackup messageBackup = RabbitMQMessageBackup.builder()
+                    .id(backupMessageId)
+                    .messageStatus(MessageStatus.PENDING)
+                    .build();
+            rabbitMQMessageBackupServices.backupAndReturnMessage(messageBackup);
 
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
         });
         return rabbitTemplate;
     }
 
-    private void handleShiftConfirmCallback(byte[] message, boolean isAcknowledged) throws IOException {
-        ShiftMessageDTO shiftMessageDTO = objectMapper.readValue(message, ShiftMessageDTO.class);
-        RabbitMQMessageBackup messageBackup = RabbitMQMessageBackup.builder()
-                .id(shiftMessageDTO.getMessageBackupId())
-                .build();
-
-        if (!isAcknowledged) {
-            messageBackup.setMessageStatus(MessageStatus.PENDING);
-        } else {
-            messageBackup.setMessageStatus(MessageStatus.DELIVERED);
-        }
-
-        rabbitMQMessageBackupServices.backupAndReturnMessage(messageBackup);
-    }
-
-    private void handleShiftReturnsCallBack(byte[] message) throws IOException {
-        ShiftMessageDTO shiftMessageDTO = objectMapper.readValue(message, ShiftMessageDTO.class);
-        RabbitMQMessageBackup messageBackup = RabbitMQMessageBackup.builder()
-                .id(shiftMessageDTO.getMessageBackupId())
-                .messageStatus(MessageStatus.PENDING)
-                .build();
-        rabbitMQMessageBackupServices.backupAndReturnMessage(messageBackup);
-    }
 }
