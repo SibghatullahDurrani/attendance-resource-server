@@ -1,11 +1,12 @@
 package com.main.face_recognition_resource_server.configurations;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.main.face_recognition_resource_server.DTOS.shift.ShiftMessage;
+import com.main.face_recognition_resource_server.DTOS.shift.ShiftMessageDTO;
 import com.main.face_recognition_resource_server.constants.MessageStatus;
 import com.main.face_recognition_resource_server.domains.RabbitMQMessageBackup;
 import com.main.face_recognition_resource_server.services.rabbitmqmessagebackup.RabbitMQMessageBackupServices;
 import com.main.face_recognition_resource_server.utilities.ControlRoutingKey;
+import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Bean;
@@ -28,7 +29,12 @@ public class RabbitMQConfigurations {
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
 
-        rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
+        rabbitTemplate.setBeforePublishPostProcessors(message -> {
+            message.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+            return message;
+        });
+
+        rabbitTemplate.setConfirmCallback((correlationData, ack, _) -> {
             if (correlationData == null) {
                 return;
             }
@@ -71,9 +77,9 @@ public class RabbitMQConfigurations {
     }
 
     private void handleShiftConfirmCallback(byte[] message, boolean isAcknowledged) throws IOException {
-        ShiftMessage shiftMessage = objectMapper.readValue(message, ShiftMessage.class);
+        ShiftMessageDTO shiftMessageDTO = objectMapper.readValue(message, ShiftMessageDTO.class);
         RabbitMQMessageBackup messageBackup = RabbitMQMessageBackup.builder()
-                .id(shiftMessage.getMessageBackupId())
+                .id(shiftMessageDTO.getMessageBackupId())
                 .build();
 
         if (!isAcknowledged) {
@@ -86,9 +92,9 @@ public class RabbitMQConfigurations {
     }
 
     private void handleShiftReturnsCallBack(byte[] message) throws IOException {
-        ShiftMessage shiftMessage = objectMapper.readValue(message, ShiftMessage.class);
+        ShiftMessageDTO shiftMessageDTO = objectMapper.readValue(message, ShiftMessageDTO.class);
         RabbitMQMessageBackup messageBackup = RabbitMQMessageBackup.builder()
-                .id(shiftMessage.getMessageBackupId())
+                .id(shiftMessageDTO.getMessageBackupId())
                 .messageStatus(MessageStatus.PENDING)
                 .build();
         rabbitMQMessageBackupServices.backupAndReturnMessage(messageBackup);

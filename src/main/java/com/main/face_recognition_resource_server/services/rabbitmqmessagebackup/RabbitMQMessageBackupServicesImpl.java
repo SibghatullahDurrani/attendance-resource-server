@@ -2,7 +2,7 @@ package com.main.face_recognition_resource_server.services.rabbitmqmessagebackup
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.main.face_recognition_resource_server.DTOS.shift.ShiftMessage;
+import com.main.face_recognition_resource_server.DTOS.shift.ShiftMessageDTO;
 import com.main.face_recognition_resource_server.constants.MessageStatus;
 import com.main.face_recognition_resource_server.domains.RabbitMQMessageBackup;
 import com.main.face_recognition_resource_server.repositories.RabbitMQMessageBackupRepository;
@@ -26,13 +26,13 @@ public class RabbitMQMessageBackupServicesImpl implements RabbitMQMessageBackupS
     @Override
     @Transactional
     @Retryable(retryFor = {SQLException.class, DataIntegrityViolationException.class})
-    public ShiftMessage backupAndReturnMessage(ShiftMessage shiftMessage) throws SQLException, JsonProcessingException {
+    public ShiftMessageDTO backupAndReturnMessage(ShiftMessageDTO shiftMessageDTO) throws SQLException, JsonProcessingException {
         UUID id = UUID.randomUUID();
         if (rabbitMQMessageBackupRepository.existsById(id)) {
             throw new SQLException();
         }
-        shiftMessage.setMessageBackupId(id);
-        String shiftMessageString = objectMapper.writeValueAsString(shiftMessage);
+        shiftMessageDTO.setMessageBackupId(id);
+        String shiftMessageString = objectMapper.writeValueAsString(shiftMessageDTO);
         RabbitMQMessageBackup backup = RabbitMQMessageBackup.builder()
                 .id(id)
                 .message(shiftMessageString)
@@ -40,7 +40,7 @@ public class RabbitMQMessageBackupServicesImpl implements RabbitMQMessageBackupS
                 .build();
 
         rabbitMQMessageBackupRepository.saveAndFlush(backup);
-        return shiftMessage;
+        return shiftMessageDTO;
     }
 
     @Override

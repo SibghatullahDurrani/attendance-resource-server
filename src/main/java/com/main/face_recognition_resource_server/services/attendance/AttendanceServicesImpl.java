@@ -525,7 +525,6 @@ public class AttendanceServicesImpl implements AttendanceServices {
                         criteriaBuilder.like(criteriaBuilder.lower(attendanceUserJoin.get("secondName")), "%" + fullNameLower + "%"),
                         criteriaBuilder.like(criteriaBuilder.lower(criteriaBuilder.concat(attendanceUserJoin.get("firstName"), criteriaBuilder.concat(" ", attendanceUserJoin.get("secondName")))), "%" + fullNameLower + "%")
                 ));
-//        predicates.add(criteriaBuilder.or(criteriaBuilder.like(attendanceUserJoin.get("firstName"), "%" + userName + "%"), criteriaBuilder.like(attendanceUserJoin.get("secondName"), "%" + userName + "%")));
             }
             if (departmentName != null) {
                 predicates.add(criteriaBuilder.equal(attendanceUserDepartmentJoin.get("departmentName"), departmentName));

@@ -12,7 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Data
 @Builder
-public class ShiftMessage {
+public class ShiftMessageDTO {
     private ShiftMessageType shiftMessageType;
     private Object payload;
     private UUID messageBackupId;
