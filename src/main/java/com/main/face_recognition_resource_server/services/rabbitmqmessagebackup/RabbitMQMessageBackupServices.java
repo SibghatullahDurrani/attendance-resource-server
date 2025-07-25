@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 public interface RabbitMQMessageBackupServices {
-    UUID backupAndReturnMessage(ShiftMessageDTO shiftMessageDTO) throws SQLException, JsonProcessingException;
+    UUID backupMessageAndReturnId(ShiftMessageDTO shiftMessageDTO) throws SQLException, JsonProcessingException;
 
-    void backupAndReturnMessage(RabbitMQMessageBackup rabbitMQMessageBackup);
+    void backupMessage(RabbitMQMessageBackup rabbitMQMessageBackup);
 }

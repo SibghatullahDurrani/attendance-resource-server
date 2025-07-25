@@ -6,14 +6,14 @@ import com.main.face_recognition_resource_server.DTOS.shift.RegisterShiftDTO;
 import com.main.face_recognition_resource_server.DTOS.shift.ShiftCreationMessageDTO;
 import com.main.face_recognition_resource_server.DTOS.shift.ShiftMessageDTO;
 import com.main.face_recognition_resource_server.DTOS.shift.ShiftTableRowDTO;
-import com.main.face_recognition_resource_server.constants.RoutingType;
+import com.main.face_recognition_resource_server.constants.RabbitMQMessageType;
 import com.main.face_recognition_resource_server.constants.ShiftMessageType;
 import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.domains.Shift;
 import com.main.face_recognition_resource_server.repositories.shift.ShiftRepository;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
 import com.main.face_recognition_resource_server.services.rabbitmqmessagebackup.RabbitMQMessageBackupServices;
-import com.main.face_recognition_resource_server.utilities.MessageCorrelationMetaDataWrapper;
+import com.main.face_recognition_resource_server.utilities.MessageMetadataWrapper;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -76,17 +76,17 @@ public class ShiftServicesImpl implements ShiftServices {
                     .payload(shiftCreationMessageDTO)
                     .build();
 
-            UUID backupMessageId = rabbitMQMessageBackupServices.backupAndReturnMessage(shiftMessageDTO);
+            UUID backupMessageId = rabbitMQMessageBackupServices.backupMessageAndReturnId(shiftMessageDTO);
             String shiftMessageJson = mapper.writeValueAsString(shiftMessageDTO);
 
-            String messageCorrelationMetaDataWrapperJson = mapper.writeValueAsString(
-                    new MessageCorrelationMetaDataWrapper(backupMessageId, RoutingType.SHIFT)
+            String messageMetadataWrapper = mapper.writeValueAsString(
+                    new MessageMetadataWrapper(backupMessageId, RabbitMQMessageType.SHIFT)
             );
-            CorrelationData correlationData = new CorrelationData(messageCorrelationMetaDataWrapperJson);
+            CorrelationData correlationData = new CorrelationData(messageMetadataWrapper);
 
             MessageProperties messageProperties = new MessageProperties();
             messageProperties.setHeader("uuid", backupMessageId.toString());
-            messageProperties.setHeader("routingType", RoutingType.SHIFT.name());
+            messageProperties.setHeader("routingType", RabbitMQMessageType.SHIFT.name());
             Message message = new Message(shiftMessageJson.getBytes(StandardCharsets.UTF_8));
 
             rabbitTemplate.convertAndSend(CONTROL_EXCHANGE_NAME, SHIFT_CONTROL_ROUTING_KEY, message, correlationData);

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.main.face_recognition_resource_server.constants.MessageStatus;
 import com.main.face_recognition_resource_server.domains.RabbitMQMessageBackup;
 import com.main.face_recognition_resource_server.services.rabbitmqmessagebackup.RabbitMQMessageBackupServices;
-import com.main.face_recognition_resource_server.utilities.MessageCorrelationMetaDataWrapper;
+import com.main.face_recognition_resource_server.utilities.MessageMetadataWrapper;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.core.MessageProperties;
@@ -40,9 +40,10 @@ public class RabbitMQConfigurations {
                 return;
             }
             try {
-                MessageCorrelationMetaDataWrapper metaDataWrapper = objectMapper.readValue(correlationData.getId(), MessageCorrelationMetaDataWrapper.class);
+                MessageMetadataWrapper metaDataWrapper = objectMapper.readValue(correlationData.getId(), MessageMetadataWrapper.class);
+                UUID backupMessageId = objectMapper.convertValue(metaDataWrapper.backupMessageId(), UUID.class);
                 RabbitMQMessageBackup messageBackup = RabbitMQMessageBackup.builder()
-                        .id(metaDataWrapper.backupMessageId())
+                        .id(backupMessageId)
                         .build();
 
                 if (!ack) {
@@ -50,7 +51,7 @@ public class RabbitMQConfigurations {
                 } else {
                     messageBackup.setMessageStatus(MessageStatus.DELIVERED);
                 }
-                rabbitMQMessageBackupServices.backupAndReturnMessage(messageBackup);
+                rabbitMQMessageBackupServices.backupMessage(messageBackup);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -63,7 +64,7 @@ public class RabbitMQConfigurations {
                     .id(backupMessageId)
                     .messageStatus(MessageStatus.PENDING)
                     .build();
-            rabbitMQMessageBackupServices.backupAndReturnMessage(messageBackup);
+            rabbitMQMessageBackupServices.backupMessage(messageBackup);
 
         });
         return rabbitTemplate;

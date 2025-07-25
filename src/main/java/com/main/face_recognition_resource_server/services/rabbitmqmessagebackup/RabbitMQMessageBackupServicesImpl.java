@@ -26,7 +26,7 @@ public class RabbitMQMessageBackupServicesImpl implements RabbitMQMessageBackupS
     @Override
     @Transactional
     @Retryable(retryFor = {SQLException.class, DataIntegrityViolationException.class})
-    public UUID backupAndReturnMessage(ShiftMessageDTO shiftMessageDTO) throws SQLException, JsonProcessingException {
+    public UUID backupMessageAndReturnId(ShiftMessageDTO shiftMessageDTO) throws SQLException, JsonProcessingException {
         UUID id = UUID.randomUUID();
         if (rabbitMQMessageBackupRepository.existsById(id)) {
             throw new SQLException();
@@ -43,7 +43,7 @@ public class RabbitMQMessageBackupServicesImpl implements RabbitMQMessageBackupS
     }
 
     @Override
-    public void backupAndReturnMessage(RabbitMQMessageBackup rabbitMQMessageBackup) {
+    public void backupMessage(RabbitMQMessageBackup rabbitMQMessageBackup) {
         rabbitMQMessageBackupRepository.saveAndFlush(rabbitMQMessageBackup);
     }
 }
