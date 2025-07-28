@@ -11,6 +11,7 @@ import com.main.face_recognition_resource_server.domains.OrganizationPolicies;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.OrganizationRepository;
 import com.main.face_recognition_resource_server.services.organizationpolicies.OrganizationPoliciesServices;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 
+@Slf4j
 @Service
 public class OrganizationServicesImpl implements OrganizationServices {
     private final OrganizationRepository organizationRepository;
@@ -95,10 +97,4 @@ public class OrganizationServicesImpl implements OrganizationServices {
     public List<Long> getAllOrganizationIds() {
         return organizationRepository.getAllOrganizationIds();
     }
-
-    @Override
-    public Long getShiftsCount(Long organizationId) {
-        return organizationRepository.getShiftsCount(organizationId);
-    }
-
 }

@@ -53,9 +53,4 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
             SELECT o.id FROM Organization o
             """)
     List<Long> getAllOrganizationIds();
-
-    @Query("""
-            SELECT COUNT(o.organizationShifts) FROM Organization o WHERE o.id = ?1
-            """)
-    Long getShiftsCount(Long organizationId);
 }

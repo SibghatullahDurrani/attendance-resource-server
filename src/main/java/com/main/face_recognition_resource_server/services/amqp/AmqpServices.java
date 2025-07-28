@@ -22,13 +22,14 @@ public class AmqpServices {
     private final ConnectionFactory connectionFactory;
     private final TopicExchange attendance_exchange;
     private final TopicExchange control_exchange;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final AttendanceServices attendanceServices;
 
-    public AmqpServices(OrganizationServices organizationServices, AmqpAdmin amqpAdmin, ConnectionFactory connectionFactory, AttendanceServices attendanceServices) {
+    public AmqpServices(OrganizationServices organizationServices, AmqpAdmin amqpAdmin, ConnectionFactory connectionFactory, ObjectMapper objectMapper, AttendanceServices attendanceServices) {
         this.organizationServices = organizationServices;
         this.amqpAdmin = amqpAdmin;
         this.connectionFactory = connectionFactory;
+        this.objectMapper = objectMapper;
         this.attendanceServices = attendanceServices;
 
         String ATTENDANCE_EXCHANGE_NAME = "attendance.exchange";

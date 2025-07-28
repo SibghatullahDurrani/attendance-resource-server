@@ -25,4 +25,7 @@ public class RabbitMQMessageBackup {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MessageStatus messageStatus;
+
+    @Column(nullable = false)
+    private Long organizationId;
 }

@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.configurations;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.auth.JwtAuthenticationConverter;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +44,11 @@ public class ProjectConfigurations {
 
     public ProjectConfigurations(JwtAuthenticationConverter converter) {
         this.converter = converter;
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 
     @Bean

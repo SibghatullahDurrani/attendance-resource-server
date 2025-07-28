@@ -38,3 +38,4 @@ server:
 keySetURI: http://localhost:8080/oauth2/jwks
 
 front-end-url: ${FRONT_END_URL_PREFIX}
+shift-control-acknowledgement-queue-name: ${SHIFT_CONTROL_ACKNOWLEDGEMENT_QUEUE_NAME}
