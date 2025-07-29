@@ -70,4 +70,8 @@ public class User {
     @ManyToOne(optional = false)
     @JoinColumn(name = "shift_id", nullable = false)
     private Shift userShift;
+
+    @OneToOne
+    @JoinColumn(name = "user_shift_setting_id", nullable = false)
+    private UserShiftSetting userShiftSetting;
 }

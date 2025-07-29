@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.controllers;
 
 import com.main.face_recognition_resource_server.DTOS.shift.RegisterShiftDTO;
+import com.main.face_recognition_resource_server.DTOS.shift.ShiftOptionDTO;
 import com.main.face_recognition_resource_server.DTOS.shift.ShiftTableRowDTO;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.services.shift.ShiftServices;
@@ -14,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
+import java.util.List;
 
 @RestController
 @RequestMapping("shifts")
@@ -37,6 +39,14 @@ public class ShiftController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ShiftOptionDTO>> getShiftOptions(Authentication authentication) throws UserDoesntExistException {
+        Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+        List<ShiftOptionDTO> shiftOptions = shiftServices.getShiftOptions(organizationId);
+        return new ResponseEntity<>(shiftOptions, HttpStatus.OK);
+    }
+
+    @GetMapping("shifts-table")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<ShiftTableRowDTO>> getShiftTable(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String checkInTime,
@@ -50,4 +60,5 @@ public class ShiftController {
         Page<ShiftTableRowDTO> shiftTablePage = shiftServices.getShiftsPage(organizationId, name, checkInTime, checkOutTime, pageRequest);
         return new ResponseEntity<>(shiftTablePage, HttpStatus.OK);
     }
+
 }

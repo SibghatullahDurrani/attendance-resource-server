@@ -21,72 +21,89 @@ import java.util.List;
 @RestController
 @RequestMapping("users")
 public class UserController {
-  private final UserServices userServices;
-  private final DepartmentServices departmentServices;
+    private final UserServices userServices;
+    private final DepartmentServices departmentServices;
 
-  public UserController(UserServices userServices, DepartmentServices departmentServices) {
-    this.userServices = userServices;
-    this.departmentServices = departmentServices;
-  }
-
-  @GetMapping
-  @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<UserDTO> getOwnUserData(Authentication authentication) throws UserDoesntExistException {
-    UserDTO user = userServices.getUserDataByUsername(authentication.getName());
-    return new ResponseEntity<>(user, HttpStatus.OK);
-  }
-
-  @GetMapping("all")
-  @PreAuthorize("hasRole('SUPER_ADMIN')")
-  public ResponseEntity<Page<UserDTO>> getAllUsers(@RequestParam int page, @RequestParam int size) {
-    PageRequest pageRequest = PageRequest.of(page, size);
-    Page<UserDTO> usersPage = userServices.getAllUsers(pageRequest);
-    return new ResponseEntity<>(usersPage, HttpStatus.OK);
-  }
-
-  @GetMapping("organization/{organizationId}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Page<AdminUsersTableRecordDTO>> getUsersPageOfOrganization(@PathVariable Long organizationId, @RequestParam int page, @RequestParam int size, Authentication authentication) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
-    userServices.checkIfOrganizationBelongsToUser(organizationId, authentication.getName());
-    PageRequest pageRequest = PageRequest.of(page, size);
-    Page<AdminUsersTableRecordDTO> adminUsersTableRecordDTOPage = userServices.getUsersPageOfOrganization(organizationId, pageRequest);
-    return new ResponseEntity<>(adminUsersTableRecordDTOPage, HttpStatus.OK);
-  }
-
-  @PostMapping()
-  @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
-  public ResponseEntity<HttpStatus> registerUser(@RequestBody RegisterUserDTO userToRegister, Authentication authentication)
-          throws DepartmentDoesntExistException,
-          DepartmentDoesntBelongToYourOrganizationException,
-          UserAlreadyExistsException,
-          SQLException,
-          IOException,
-          UserDoesntExistException, UserAlreadyExistsWithIdentificationNumberException {
-    if(userToRegister.getRole() == UserRole.ROLE_USER){
-      Long organizationId = userServices.getUserOrganizationId(authentication.getName());
-      departmentServices.checkIfDepartmentBelongsToOrganization(userToRegister.getDepartmentId(), organizationId);
-      userServices.registerUser(userToRegister, organizationId);
-      return new ResponseEntity<>(HttpStatus.CREATED);
+    public UserController(UserServices userServices, DepartmentServices departmentServices) {
+        this.userServices = userServices;
+        this.departmentServices = departmentServices;
     }
-    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
-    departmentServices.checkIfDepartmentBelongsToOrganization(userToRegister.getDepartmentId(), organizationId);
-    userServices.registerUser(userToRegister, organizationId);
-    return new ResponseEntity<>(HttpStatus.CREATED);
-  }
 
-  @GetMapping("/{userId}")
-  public ResponseEntity<UserDataDTO> getUserData(@PathVariable Long userId, Authentication authentication) throws UserDoesntExistException, OrganizationDoesntBelongToYouException {
-    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
-    userServices.checkIfOrganizationBelongsToUser(userId, organizationId);
-    UserDataDTO userData = userServices.getUserData(userId);
-    return new ResponseEntity<>(userData, HttpStatus.OK);
-  }
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserDTO> getOwnUserData(Authentication authentication) throws UserDoesntExistException {
+        UserDTO user = userServices.getUserDataByUsername(authentication.getName());
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
 
-  @GetMapping("/search")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<List<SearchUserDTO>> searchUserByName(@RequestParam String name, Authentication authentication) throws UserDoesntExistException {
-    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
-    List<SearchUserDTO> users = userServices.searchUserByNameOfOrganization(name, organizationId);
-    return new ResponseEntity<>(users, HttpStatus.OK);
-  }
+    @GetMapping("all")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Page<UserDTO>> getAllUsers(@RequestParam int page, @RequestParam int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<UserDTO> usersPage = userServices.getAllUsers(pageRequest);
+        return new ResponseEntity<>(usersPage, HttpStatus.OK);
+    }
+
+    @GetMapping("organization/{organizationId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<AdminUsersTableRecordDTO>> getUsersPageOfOrganization(@PathVariable Long organizationId, @RequestParam int page, @RequestParam int size, Authentication authentication) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
+        userServices.checkIfOrganizationBelongsToUser(organizationId, authentication.getName());
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<AdminUsersTableRecordDTO> adminUsersTableRecordDTOPage = userServices.getUsersPageOfOrganization(organizationId, pageRequest);
+        return new ResponseEntity<>(adminUsersTableRecordDTOPage, HttpStatus.OK);
+    }
+
+    @PostMapping()
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    public ResponseEntity<HttpStatus> registerUser(@RequestBody RegisterUserDTO userToRegister, Authentication authentication)
+            throws DepartmentDoesntExistException,
+            DepartmentDoesntBelongToYourOrganizationException,
+            UserAlreadyExistsException,
+            SQLException,
+            IOException,
+            UserDoesntExistException, UserAlreadyExistsWithIdentificationNumberException {
+        if (userToRegister.getRole() == UserRole.ROLE_USER) {
+            Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+            departmentServices.checkIfDepartmentBelongsToOrganization(userToRegister.getDepartmentId(), organizationId);
+            userServices.registerUser(userToRegister, organizationId);
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        }
+        Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+        departmentServices.checkIfDepartmentBelongsToOrganization(userToRegister.getDepartmentId(), organizationId);
+        userServices.registerUser(userToRegister, organizationId);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserDataDTO> getUserData(@PathVariable Long userId, Authentication authentication) throws UserDoesntExistException, OrganizationDoesntBelongToYouException {
+        Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+        userServices.checkIfOrganizationBelongsToUser(userId, organizationId);
+        UserDataDTO userData = userServices.getUserData(userId);
+        return new ResponseEntity<>(userData, HttpStatus.OK);
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<SearchUserDTO>> searchUserByName(@RequestParam String name, Authentication authentication) throws UserDoesntExistException {
+        Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+        List<SearchUserDTO> users = userServices.searchUserByNameOfOrganization(name, organizationId);
+        return new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+    @GetMapping("/shift-allocations")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<ShiftAllocationDTO>> getUserShiftAllocations(
+            @RequestParam(required = false) String fullName,
+            @RequestParam(required = false) String designation,
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) Long shiftId,
+            @RequestParam int page,
+            @RequestParam int size,
+            Authentication authentication
+    ) throws UserDoesntExistException {
+        Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<ShiftAllocationDTO> shiftAllocationDTOPage = userServices.getUserShiftAllocations(organizationId, fullName, designation, departmentId, shiftId, pageRequest);
+        return new ResponseEntity<>(shiftAllocationDTOPage, HttpStatus.OK);
+    }
 }

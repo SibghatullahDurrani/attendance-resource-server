@@ -11,6 +11,7 @@ import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsExc
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsWithIdentificationNumberException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
@@ -18,57 +19,59 @@ import java.sql.SQLException;
 import java.util.List;
 
 public interface UserServices {
-  UserDTO getUserDataByUsername(String username) throws UserDoesntExistException;
+    UserDTO getUserDataByUsername(String username) throws UserDoesntExistException;
 
-  Page<UserDTO> getAllUsers(Pageable pageable);
+    Page<UserDTO> getAllUsers(Pageable pageable);
 
-  void registerUser(RegisterUserDTO userToRegister, Long organizationId) throws UserAlreadyExistsException, SQLException, IOException, UserAlreadyExistsWithIdentificationNumberException;
+    void registerUser(RegisterUserDTO userToRegister, Long organizationId) throws UserAlreadyExistsException, SQLException, IOException, UserAlreadyExistsWithIdentificationNumberException;
 
-  boolean userExistsWithEmailAndRole(String email, UserRole role) throws UserAlreadyExistsException;
+    boolean userExistsWithEmailAndRole(String email, UserRole role) throws UserAlreadyExistsException;
 
-  Long getUserOrganizationId(String username) throws UserDoesntExistException;
+    Long getUserOrganizationId(String username) throws UserDoesntExistException;
 
-  DepartmentDTO getDepartmentByUsername(String username) throws UserDoesntExistException;
+    DepartmentDTO getDepartmentByUsername(String username) throws UserDoesntExistException;
 
-  OrganizationDTO getOrganizationByUsername(String username) throws UserDoesntExistException;
+    OrganizationDTO getOrganizationByUsername(String username) throws UserDoesntExistException;
 
-  Long getUserDepartmentId(String username) throws UserDoesntExistException;
+    Long getUserDepartmentId(String username) throws UserDoesntExistException;
 
-  User getUserById(Long userId) throws UserDoesntExistException;
+    User getUserById(Long userId) throws UserDoesntExistException;
 
-  boolean userExistsWithUserId(Long userId);
+    boolean userExistsWithUserId(Long userId);
 
-  Long getUserOrganizationIdByUserId(Long userId) throws UserDoesntExistException;
+    Long getUserOrganizationIdByUserId(Long userId) throws UserDoesntExistException;
 
-  List<User> getUsersByOrganizationId(Long organizationId);
+    List<User> getUsersByOrganizationId(Long organizationId);
 
-  Long getUserIdByUsername(String name) throws UserDoesntExistException;
+    Long getUserIdByUsername(String name) throws UserDoesntExistException;
 
-  User getUserByUsername(String username) throws UserDoesntExistException;
+    User getUserByUsername(String username) throws UserDoesntExistException;
 
-  User saveUser(User user);
+    User saveUser(User user);
 
-  RemainingLeavesDTO getRemainingLeavesOfUser(String username);
+    RemainingLeavesDTO getRemainingLeavesOfUser(String username);
 
-  String getUserFullNameByUserId(Long userId);
+    String getUserFullNameByUserId(Long userId);
 
-  List<Long> getAllUserIdsOfOrganization(long organizationId);
+    List<Long> getAllUserIdsOfOrganization(long organizationId);
 
-  void checkIfOrganizationBelongsToUser(Long organizationId, String username) throws UserDoesntExistException, OrganizationDoesntBelongToYouException;
+    void checkIfOrganizationBelongsToUser(Long organizationId, String username) throws UserDoesntExistException, OrganizationDoesntBelongToYouException;
 
-  void checkIfOrganizationBelongsToUser(Long userId, Long organizationId) throws UserDoesntExistException, OrganizationDoesntBelongToYouException;
+    void checkIfOrganizationBelongsToUser(Long userId, Long organizationId) throws UserDoesntExistException, OrganizationDoesntBelongToYouException;
 
-  Long getTotalUsersOfDepartment(Long departmentId);
+    Long getTotalUsersOfDepartment(Long departmentId);
 
-  Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest);
+    Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest);
 
-  UserDataDTO getUserData(Long userId);
+    UserDataDTO getUserData(Long userId);
 
-  List<SearchUserDTO> searchUserByNameOfOrganization(String name, Long organizationId);
+    List<SearchUserDTO> searchUserByNameOfOrganization(String name, Long organizationId);
 
-  List<Long> getAllUserIdsOfDepartments(List<Long> departmentIds);
+    List<Long> getAllUserIdsOfDepartments(List<Long> departmentIds);
 
-  List<Long> getAllUserIds();
+    List<Long> getAllUserIds();
 
-  UserLiveFeedMetaData getUserLiveFeedMetaData(Long userId);
+    UserLiveFeedMetaData getUserLiveFeedMetaData(Long userId);
+
+    Page<ShiftAllocationDTO> getUserShiftAllocations(Long organizationId, String fullName, String designation, Long departmentId, Long shiftId, PageRequest pageRequest);
 }

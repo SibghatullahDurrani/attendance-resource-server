@@ -9,18 +9,21 @@ import com.main.face_recognition_resource_server.DTOS.user.*;
 import com.main.face_recognition_resource_server.constants.AttendanceStatus;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.constants.UsernameType;
-import com.main.face_recognition_resource_server.domains.Attendance;
-import com.main.face_recognition_resource_server.domains.Department;
-import com.main.face_recognition_resource_server.domains.User;
+import com.main.face_recognition_resource_server.domains.*;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsWithIdentificationNumberException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
-import com.main.face_recognition_resource_server.repositories.UserRepository;
 import com.main.face_recognition_resource_server.repositories.attendance.AttendanceRepository;
+import com.main.face_recognition_resource_server.repositories.user.UserRepository;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -343,5 +346,47 @@ public class UserServicesImpl implements UserServices {
     @Override
     public UserLiveFeedMetaData getUserLiveFeedMetaData(Long userId) {
         return userRepository.getUserLiveFeedMetaData(userId);
+    }
+
+    @Override
+    public Page<ShiftAllocationDTO> getUserShiftAllocations(Long organizationId, String fullName, String designation, Long departmentId, Long shiftId, PageRequest pageRequest) {
+        Specification<User> specification = (root, _, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            Join<User, Department> userDepartmentJoin = root.join("department", JoinType.INNER);
+            Join<Department, Organization> userDepartmentOrganizationJoin = userDepartmentJoin.join("organization", JoinType.INNER);
+            Join<User, Shift> userShiftJoin = root.join("userShift", JoinType.INNER);
+
+            predicates.add(criteriaBuilder.equal(userDepartmentOrganizationJoin.get("id"), organizationId));
+
+            if (fullName != null && !fullName.isEmpty()) {
+                String fullNameLower = fullName.toLowerCase();
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("firstName")), "%" + fullNameLower + "%"),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("secondName")), "%" + fullNameLower + "%"),
+                        criteriaBuilder.like(criteriaBuilder.lower(
+                                criteriaBuilder.concat(
+                                        root.get("fullName"),
+                                        criteriaBuilder.concat(
+                                                " ",
+                                                root.get("secondName")
+                                        )
+                                )
+                        ), "%" + fullNameLower + "%")
+                ));
+            }
+            if (designation != null && !designation.isEmpty()) {
+                String designationLower = designation.toLowerCase();
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("designation")), "%" + designationLower + "%"));
+            }
+            if (departmentId != null) {
+                predicates.add(criteriaBuilder.equal(userDepartmentJoin.get("id"), departmentId));
+            }
+            if (shiftId != null) {
+                predicates.add(criteriaBuilder.equal(userShiftJoin.get("id"), shiftId));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+        return userRepository.getUserShiftAllocations(specification, pageRequest);
     }
 }

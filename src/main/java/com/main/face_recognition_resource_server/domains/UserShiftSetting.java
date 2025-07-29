@@ -20,6 +20,7 @@ public class UserShiftSetting {
     private Long id;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private ShiftMode shiftMode;
 
     private Date from;

@@ -36,7 +36,7 @@ public class ShiftCriteriaRepositoryImpl implements ShiftCriteriaRepository {
             criteriaQuery.where(predicate);
         }
 
-        criteriaQuery.orderBy(criteriaBuilder.desc(root.get("name")));
+        criteriaQuery.orderBy(criteriaBuilder.asc(root.get("name")));
 
         criteriaQuery.select(criteriaBuilder.construct(
                 ShiftTableRowDTO.class,

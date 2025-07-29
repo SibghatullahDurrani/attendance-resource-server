@@ -142,4 +142,9 @@ public class ShiftServicesImpl implements ShiftServices {
         }
 
     }
+
+    @Override
+    public List<ShiftOptionDTO> getShiftOptions(Long organizationId) {
+        return shiftRepository.getShiftOptionsByOrganizationId(organizationId);
+    }
 }
