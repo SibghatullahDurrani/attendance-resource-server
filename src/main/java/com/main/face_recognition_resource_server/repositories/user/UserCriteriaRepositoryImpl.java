@@ -45,8 +45,8 @@ public class UserCriteriaRepositoryImpl implements UserCriteriaRepository {
                 userDepartmentJoin.get("departmentName"),
                 userShiftJoin.get("name"),
                 userShiftSettingJoin.get("shiftMode"),
-                userShiftSettingJoin.get("from"),
-                userShiftSettingJoin.get("to")
+                userShiftSettingJoin.get("startDate"),
+                userShiftSettingJoin.get("endDate")
         ));
 
         TypedQuery<ShiftAllocationDTO> typedQuery = entityManager.createQuery(criteriaQuery)

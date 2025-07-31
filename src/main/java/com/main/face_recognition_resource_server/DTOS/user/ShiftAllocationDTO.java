@@ -13,31 +13,31 @@ import java.util.Date;
 @Data
 @Builder
 public class ShiftAllocationDTO {
-    private Long id;
+    private Long userId;
     private String fullName;
     private String designation;
     private String department;
     private String shiftName;
     private ShiftMode shiftMode;
-    private Long from;
-    private Long to;
+    private Long startDate;
+    private Long endDate;
 
-    public ShiftAllocationDTO(Long id, String firstName, String secondName, String designation, String department, String shiftName, ShiftMode shiftMode, Date from, Date to) {
-        this.id = id;
+    public ShiftAllocationDTO(Long userId, String firstName, String secondName, String designation, String department, String shiftName, ShiftMode shiftMode, Date startDate, Date endDate) {
+        this.userId = userId;
         this.fullName = firstName + " " + secondName;
         this.designation = designation;
         this.department = department;
         this.shiftName = shiftName;
         this.shiftMode = shiftMode;
-        if (from == null) {
-            this.from = 0L;
+        if (startDate == null) {
+            this.startDate = 0L;
         } else {
-            this.from = from.getTime();
+            this.startDate = startDate.getTime();
         }
-        if (to == null) {
-            this.to = 0L;
+        if (endDate == null) {
+            this.endDate = 0L;
         } else {
-            this.to = to.getTime();
+            this.endDate = endDate.getTime();
         }
     }
 }

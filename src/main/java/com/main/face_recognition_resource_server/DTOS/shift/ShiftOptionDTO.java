@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class ShiftOptionDTO {
     private Long id;
     private String shiftName;
+    private boolean isDefault;
 }

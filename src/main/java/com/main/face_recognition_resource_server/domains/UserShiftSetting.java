@@ -13,6 +13,7 @@ import java.util.Date;
 @Getter
 @Setter
 @Table(name = "user_shift_settings")
+@ToString
 public class UserShiftSetting {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_shift_settings_id_generator")
@@ -23,7 +24,7 @@ public class UserShiftSetting {
     @Enumerated(EnumType.STRING)
     private ShiftMode shiftMode;
 
-    private Date from;
+    private Date startDate;
 
-    private Date to;
+    private Date endDate;
 }

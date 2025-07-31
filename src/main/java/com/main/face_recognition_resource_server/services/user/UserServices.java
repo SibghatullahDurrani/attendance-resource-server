@@ -74,4 +74,6 @@ public interface UserServices {
     UserLiveFeedMetaData getUserLiveFeedMetaData(Long userId);
 
     Page<ShiftAllocationDTO> getUserShiftAllocations(Long organizationId, String fullName, String designation, Long departmentId, Long shiftId, PageRequest pageRequest);
+
+    void changeUserShiftAllocations(List<EditedShiftAllocationDTO> editedShiftAllocations, Long organizationId) throws OrganizationDoesntBelongToYouException, UserDoesntExistException;
 }

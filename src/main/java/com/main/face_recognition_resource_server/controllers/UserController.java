@@ -90,7 +90,7 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
-    @GetMapping("/shift-allocations")
+    @GetMapping("/shifts")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<ShiftAllocationDTO>> getUserShiftAllocations(
             @RequestParam(required = false) String fullName,
@@ -105,5 +105,14 @@ public class UserController {
         PageRequest pageRequest = PageRequest.of(page, size);
         Page<ShiftAllocationDTO> shiftAllocationDTOPage = userServices.getUserShiftAllocations(organizationId, fullName, designation, departmentId, shiftId, pageRequest);
         return new ResponseEntity<>(shiftAllocationDTOPage, HttpStatus.OK);
+    }
+
+    @PostMapping("/change/shifts")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<HttpStatus> changeUserShiftAllocations(@RequestBody List<EditedShiftAllocationDTO> editedShiftAllocations, Authentication authentication) throws UserDoesntExistException, OrganizationDoesntBelongToYouException {
+        Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+        this.userServices.changeUserShiftAllocations(editedShiftAllocations, organizationId);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+
     }
 }

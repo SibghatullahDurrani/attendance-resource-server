@@ -16,7 +16,7 @@ public interface ShiftRepository extends JpaRepository<Shift, Long>, JpaSpecific
 
     @Query("""
             SELECT new com.main.face_recognition_resource_server.DTOS.shift.ShiftOptionDTO(
-                        s.id, s.name
+                        s.id, s.name, s.isDefault
             )FROM Shift s WHERE s.organization.id = ?1 ORDER BY s.name ASC
             """)
     List<ShiftOptionDTO> getShiftOptionsByOrganizationId(Long organizationId);

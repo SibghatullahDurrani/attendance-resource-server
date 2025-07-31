@@ -11,6 +11,7 @@ import com.main.face_recognition_resource_server.repositories.shift.ShiftReposit
 import com.main.face_recognition_resource_server.services.rabbitmqmessagebackup.RabbitMQMessageBackupServices;
 import com.main.face_recognition_resource_server.utilities.MessageMetadataWrapper;
 import com.rabbitmq.client.Channel;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -146,5 +147,11 @@ public class ShiftServicesImpl implements ShiftServices {
     @Override
     public List<ShiftOptionDTO> getShiftOptions(Long organizationId) {
         return shiftRepository.getShiftOptionsByOrganizationId(organizationId);
+    }
+
+    @Override
+    public Shift getShiftById(Long shiftId) {
+        return shiftRepository.findById(shiftId)
+                .orElseThrow(() -> new EntityNotFoundException("Shift with id: " + shiftId + " not found"));
     }
 }

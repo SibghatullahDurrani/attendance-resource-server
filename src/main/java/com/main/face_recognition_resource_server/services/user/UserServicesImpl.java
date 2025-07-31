@@ -7,6 +7,7 @@ import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.user.*;
 import com.main.face_recognition_resource_server.constants.AttendanceStatus;
+import com.main.face_recognition_resource_server.constants.ShiftMode;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.constants.UsernameType;
 import com.main.face_recognition_resource_server.domains.*;
@@ -15,15 +16,20 @@ import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsExc
 import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsWithIdentificationNumberException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.attendance.AttendanceRepository;
+import com.main.face_recognition_resource_server.repositories.shift.ShiftRepository;
 import com.main.face_recognition_resource_server.repositories.user.UserRepository;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
+import com.main.face_recognition_resource_server.services.shift.ShiftServices;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,19 +43,24 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 
+@Slf4j
 @Service
 public class UserServicesImpl implements UserServices {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final OrganizationServices organizationServices;
     private final AttendanceRepository attendanceRepository;
+    private final ShiftRepository shiftRepository;
+    private final ShiftServices shiftServices;
 
 
-    public UserServicesImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, OrganizationServices organizationServices, AttendanceRepository attendanceRepository) {
+    public UserServicesImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, OrganizationServices organizationServices, AttendanceRepository attendanceRepository, ShiftRepository shiftRepository, ShiftServices shiftServices) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.organizationServices = organizationServices;
         this.attendanceRepository = attendanceRepository;
+        this.shiftRepository = shiftRepository;
+        this.shiftServices = shiftServices;
     }
 
     @Override
@@ -388,5 +399,33 @@ public class UserServicesImpl implements UserServices {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
         return userRepository.getUserShiftAllocations(specification, pageRequest);
+    }
+
+    @Override
+    @Transactional
+    @Modifying
+    public void changeUserShiftAllocations(List<EditedShiftAllocationDTO> editedShiftAllocations, Long organizationId) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
+        for (EditedShiftAllocationDTO editedShiftAllocation : editedShiftAllocations) {
+            checkIfOrganizationBelongsToUser(editedShiftAllocation.getUserId(), organizationId);
+
+            User user = userRepository.findById(editedShiftAllocation.getUserId())
+                    .orElseThrow(EntityNotFoundException::new);
+
+            if (editedShiftAllocation.getNewShiftId() != null) {
+                Shift shift = shiftServices.getShiftById(editedShiftAllocation.getNewShiftId());
+                user.setUserShift(shift);
+            }
+            if (editedShiftAllocation.getNewShiftMode() != null) {
+                user.getUserShiftSetting().setShiftMode(editedShiftAllocation.getNewShiftMode());
+                if (editedShiftAllocation.getNewShiftMode() == ShiftMode.TEMPORARY) {
+                    user.getUserShiftSetting().setStartDate(new Date(editedShiftAllocation.getNewStartDate()));
+                    user.getUserShiftSetting().setEndDate(new Date(editedShiftAllocation.getNewEndDate()));
+                } else {
+                    user.getUserShiftSetting().setStartDate(null);
+                    user.getUserShiftSetting().setEndDate(null);
+                }
+            }
+            userRepository.save(user);
+        }
     }
 }

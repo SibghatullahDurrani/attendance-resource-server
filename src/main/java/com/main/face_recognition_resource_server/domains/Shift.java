@@ -12,7 +12,14 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "shifts")
+@Table(
+        name = "shifts",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_shift_name_organization",
+                        columnNames = {"name", "organization_id"}
+                )
+        })
 public class Shift {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "shift_id_generator")
