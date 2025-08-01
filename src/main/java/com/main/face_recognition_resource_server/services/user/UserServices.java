@@ -1,15 +1,15 @@
 package com.main.face_recognition_resource_server.services.user;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.user.*;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.domains.User;
-import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
-import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
-import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsWithIdentificationNumberException;
-import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
+import com.main.face_recognition_resource_server.exceptions.*;
+import com.rabbitmq.client.Channel;
+import org.springframework.amqp.core.Message;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -75,5 +75,7 @@ public interface UserServices {
 
     Page<ShiftAllocationDTO> getUserShiftAllocations(Long organizationId, String fullName, String designation, Long departmentId, Long shiftId, PageRequest pageRequest);
 
-    void changeUserShiftAllocations(List<EditedShiftAllocationDTO> editedShiftAllocations, Long organizationId) throws OrganizationDoesntBelongToYouException, UserDoesntExistException;
+    void changeUserShiftAllocations(List<EditedShiftAllocationDTO> editedShiftAllocations, Long organizationId) throws OrganizationDoesntBelongToYouException, UserDoesntExistException, JsonProcessingException, InvalidShiftSelectionException;
+
+    void handleUserAcknowledgementMessage(Message message, Channel channel) throws IOException;
 }

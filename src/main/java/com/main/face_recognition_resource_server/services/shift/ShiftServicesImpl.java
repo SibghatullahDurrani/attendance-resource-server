@@ -89,7 +89,7 @@ public class ShiftServicesImpl implements ShiftServices {
             MessageProperties messageProperties = new MessageProperties();
             messageProperties.setHeader("uuid", backupMessageId.toString());
             messageProperties.setHeader("routingType", RabbitMQMessageType.SHIFT.name());
-            Message message = new Message(shiftMessageJson.getBytes(StandardCharsets.UTF_8));
+            Message message = new Message(shiftMessageJson.getBytes(StandardCharsets.UTF_8), messageProperties);
 
             rabbitTemplate.convertAndSend(CONTROL_EXCHANGE_NAME, SHIFT_CONTROL_ROUTING_KEY, message, correlationData);
         } catch (JsonProcessingException e) {
@@ -126,10 +126,10 @@ public class ShiftServicesImpl implements ShiftServices {
     public void handleShiftAcknowledgementMessage(Message message, Channel channel) throws IOException {
         try {
             byte[] messageBody = message.getBody();
-            ShiftControlAcknowledgementDTO shiftControlAcknowledgementDTO = mapper.readValue(messageBody, ShiftControlAcknowledgementDTO.class);
-            shiftRepository.findById(shiftControlAcknowledgementDTO.getId()).ifPresent(shiftControlAcknowledgement -> {
+            ControlAcknowledgementDTO controlAcknowledgementDTO = mapper.readValue(messageBody, ControlAcknowledgementDTO.class);
+            shiftRepository.findById(controlAcknowledgementDTO.getId()).ifPresent(shiftControlAcknowledgement -> {
                 shiftControlAcknowledgement.setSavedInProducer(true);
-                shiftControlAcknowledgement.setLastSavedInProducerDate(new Date());
+                shiftControlAcknowledgement.setLastSavedInProducerDate(new Date(controlAcknowledgementDTO.getSavedAt()));
                 shiftRepository.saveAndFlush(shiftControlAcknowledgement);
                 try {
                     channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);

@@ -30,6 +30,5 @@ public class RabbitMQReturnsCallback implements RabbitTemplate.ReturnsCallback {
         messageBackup.setMessageStatus(MessageStatus.PENDING);
 
         rabbitMQMessageBackupServices.backupMessage(messageBackup);
-
     }
 }

@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.main.face_recognition_resource_server.DTOS.user.*;
 import com.main.face_recognition_resource_server.constants.UserRole;
 import com.main.face_recognition_resource_server.exceptions.*;
@@ -109,10 +110,9 @@ public class UserController {
 
     @PostMapping("/change/shifts")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<HttpStatus> changeUserShiftAllocations(@RequestBody List<EditedShiftAllocationDTO> editedShiftAllocations, Authentication authentication) throws UserDoesntExistException, OrganizationDoesntBelongToYouException {
+    public ResponseEntity<HttpStatus> changeUserShiftAllocations(@RequestBody List<EditedShiftAllocationDTO> editedShiftAllocations, Authentication authentication) throws UserDoesntExistException, OrganizationDoesntBelongToYouException, JsonProcessingException, InvalidShiftSelectionException {
         Long organizationId = userServices.getUserOrganizationId(authentication.getName());
         this.userServices.changeUserShiftAllocations(editedShiftAllocations, organizationId);
         return new ResponseEntity<>(HttpStatus.CREATED);
-
     }
 }

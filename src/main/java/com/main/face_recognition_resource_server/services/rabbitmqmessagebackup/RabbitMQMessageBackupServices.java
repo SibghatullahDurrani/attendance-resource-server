@@ -2,6 +2,7 @@ package com.main.face_recognition_resource_server.services.rabbitmqmessagebackup
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.main.face_recognition_resource_server.DTOS.shift.ShiftMessageDTO;
+import com.main.face_recognition_resource_server.DTOS.user.UserMessageDTO;
 import com.main.face_recognition_resource_server.domains.RabbitMQMessageBackup;
 
 import java.sql.SQLException;
@@ -9,6 +10,8 @@ import java.util.UUID;
 
 public interface RabbitMQMessageBackupServices {
     UUID backupMessageAndReturnId(ShiftMessageDTO shiftMessageDTO, Long organizationId) throws SQLException, JsonProcessingException;
+
+    UUID backupMessageAndReturnId(UserMessageDTO userMessageDTO, Long organizationId) throws JsonProcessingException;
 
     void backupMessage(RabbitMQMessageBackup rabbitMQMessageBackup);
 

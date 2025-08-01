@@ -1,6 +1,7 @@
 package com.main.face_recognition_resource_server.domains;
 
 import com.main.face_recognition_resource_server.constants.MessageStatus;
+import com.main.face_recognition_resource_server.constants.MessageType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,4 +29,8 @@ public class RabbitMQMessageBackup {
 
     @Column(nullable = false)
     private Long organizationId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MessageType messageType;
 }

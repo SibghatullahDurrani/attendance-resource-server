@@ -1,4 +1,4 @@
-package com.main.face_recognition_resource_server.DTOS.shift;
+package com.main.face_recognition_resource_server.DTOS.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class ShiftControlAcknowledgementDTO {
-    private Long id;
+public class UserShiftChangeMessageDTO {
+    private Long userId;
+    private Long changedShiftId;
 }

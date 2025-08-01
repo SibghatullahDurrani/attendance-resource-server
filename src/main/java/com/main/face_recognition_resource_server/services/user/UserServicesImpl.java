@@ -1,30 +1,36 @@
 package com.main.face_recognition_resource_server.services.user;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.LeavesAllowedPolicyDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
+import com.main.face_recognition_resource_server.DTOS.shift.ControlAcknowledgementDTO;
 import com.main.face_recognition_resource_server.DTOS.user.*;
-import com.main.face_recognition_resource_server.constants.AttendanceStatus;
-import com.main.face_recognition_resource_server.constants.ShiftMode;
-import com.main.face_recognition_resource_server.constants.UserRole;
-import com.main.face_recognition_resource_server.constants.UsernameType;
+import com.main.face_recognition_resource_server.constants.*;
 import com.main.face_recognition_resource_server.domains.*;
-import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;
-import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsException;
-import com.main.face_recognition_resource_server.exceptions.UserAlreadyExistsWithIdentificationNumberException;
-import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
+import com.main.face_recognition_resource_server.exceptions.*;
 import com.main.face_recognition_resource_server.repositories.attendance.AttendanceRepository;
-import com.main.face_recognition_resource_server.repositories.shift.ShiftRepository;
 import com.main.face_recognition_resource_server.repositories.user.UserRepository;
 import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
+import com.main.face_recognition_resource_server.services.rabbitmqmessagebackup.RabbitMQMessageBackupServices;
 import com.main.face_recognition_resource_server.services.shift.ShiftServices;
+import com.main.face_recognition_resource_server.utilities.MessageMetadataWrapper;
+import com.rabbitmq.client.Channel;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +46,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -50,17 +57,21 @@ public class UserServicesImpl implements UserServices {
     private final PasswordEncoder passwordEncoder;
     private final OrganizationServices organizationServices;
     private final AttendanceRepository attendanceRepository;
-    private final ShiftRepository shiftRepository;
     private final ShiftServices shiftServices;
+    private final RabbitMQMessageBackupServices rabbitMQMessageBackupServices;
+    private final ObjectMapper objectMapper;
+    private final RabbitTemplate rabbitTemplate;
 
 
-    public UserServicesImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, OrganizationServices organizationServices, AttendanceRepository attendanceRepository, ShiftRepository shiftRepository, ShiftServices shiftServices) {
+    public UserServicesImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, OrganizationServices organizationServices, AttendanceRepository attendanceRepository, ShiftServices shiftServices, RabbitMQMessageBackupServices rabbitMQMessageBackupServices, ObjectMapper objectMapper, RabbitTemplate rabbitTemplate) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.organizationServices = organizationServices;
         this.attendanceRepository = attendanceRepository;
-        this.shiftRepository = shiftRepository;
         this.shiftServices = shiftServices;
+        this.rabbitMQMessageBackupServices = rabbitMQMessageBackupServices;
+        this.objectMapper = objectMapper;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Override
@@ -404,28 +415,91 @@ public class UserServicesImpl implements UserServices {
     @Override
     @Transactional
     @Modifying
-    public void changeUserShiftAllocations(List<EditedShiftAllocationDTO> editedShiftAllocations, Long organizationId) throws OrganizationDoesntBelongToYouException, UserDoesntExistException {
+    public void changeUserShiftAllocations(List<EditedShiftAllocationDTO> editedShiftAllocations, Long organizationId) throws OrganizationDoesntBelongToYouException, UserDoesntExistException, JsonProcessingException, InvalidShiftSelectionException {
         for (EditedShiftAllocationDTO editedShiftAllocation : editedShiftAllocations) {
             checkIfOrganizationBelongsToUser(editedShiftAllocation.getUserId(), organizationId);
 
             User user = userRepository.findById(editedShiftAllocation.getUserId())
                     .orElseThrow(EntityNotFoundException::new);
 
-            if (editedShiftAllocation.getNewShiftId() != null) {
-                Shift shift = shiftServices.getShiftById(editedShiftAllocation.getNewShiftId());
-                user.setUserShift(shift);
+            if (editedShiftAllocation.getNewShiftId() == null) {
+                throw new InvalidShiftSelectionException("Invalid Shift");
             }
-            if (editedShiftAllocation.getNewShiftMode() != null) {
-                user.getUserShiftSetting().setShiftMode(editedShiftAllocation.getNewShiftMode());
-                if (editedShiftAllocation.getNewShiftMode() == ShiftMode.TEMPORARY) {
-                    user.getUserShiftSetting().setStartDate(new Date(editedShiftAllocation.getNewStartDate()));
-                    user.getUserShiftSetting().setEndDate(new Date(editedShiftAllocation.getNewEndDate()));
-                } else {
-                    user.getUserShiftSetting().setStartDate(null);
-                    user.getUserShiftSetting().setEndDate(null);
+            if (editedShiftAllocation.getNewShiftMode() == null) {
+                throw new InvalidShiftSelectionException("Invalid Shift Allocation Mode");
+            }
+
+            Shift shift = shiftServices.getShiftById(editedShiftAllocation.getNewShiftId());
+            if (!shift.getOrganization().getId().equals(organizationId)) {
+                throw new InvalidShiftSelectionException("Invalid Shift");
+            }
+
+            user.setUserShift(shift);
+            user.getUserShiftSetting().setShiftMode(editedShiftAllocation.getNewShiftMode());
+            if (editedShiftAllocation.getNewShiftMode() == ShiftMode.TEMPORARY) {
+                if (editedShiftAllocation.getNewStartDate() == null || editedShiftAllocation.getNewEndDate() == null) {
+                    throw new InvalidShiftSelectionException("Invalid Dates");
                 }
+                user.getUserShiftSetting().setStartDate(new Date(editedShiftAllocation.getNewStartDate()));
+                user.getUserShiftSetting().setEndDate(new Date(editedShiftAllocation.getNewEndDate()));
+            } else {
+                user.getUserShiftSetting().setStartDate(null);
+                user.getUserShiftSetting().setEndDate(null);
             }
             userRepository.save(user);
+            String CONTROL_EXCHANGE_NAME = "control.exchange";
+            String USER_CONTROL_ROUTING_KEY = "control." + organizationId + ".user.key";
+
+            UserShiftChangeMessageDTO userShiftChangeMessageDTO = UserShiftChangeMessageDTO.builder()
+                    .userId(user.getId())
+                    .changedShiftId(user.getUserShift().getId())
+                    .build();
+
+            UserMessageDTO userMessage = UserMessageDTO.builder()
+                    .userMessageType(UserMessageType.CHANGE_USER_SHIFT)
+                    .payload(userShiftChangeMessageDTO)
+                    .build();
+
+            UUID backupMessageId = rabbitMQMessageBackupServices.backupMessageAndReturnId(userMessage, organizationId);
+            String userMessageJson = objectMapper.writeValueAsString(userMessage);
+
+            String messageMetaDataWrapper = objectMapper.writeValueAsString(
+                    new MessageMetadataWrapper(backupMessageId, RabbitMQMessageType.USER)
+            );
+            CorrelationData correlationData = new CorrelationData(messageMetaDataWrapper);
+
+            MessageProperties messageProperties = new MessageProperties();
+            messageProperties.setHeader("uuid", backupMessageId.toString());
+            messageProperties.setHeader("routingType", RabbitMQMessageType.USER.name());
+            Message message = new Message(userMessageJson.getBytes(StandardCharsets.UTF_8), messageProperties);
+
+            rabbitTemplate.convertAndSend(CONTROL_EXCHANGE_NAME, USER_CONTROL_ROUTING_KEY, message, correlationData);
         }
+    }
+
+    @Override
+    @RabbitListener(queues = {"${user-control-acknowledgement-queue-name}"})
+    public void handleUserAcknowledgementMessage(Message message, Channel channel) throws IOException {
+        try {
+            Logger logger = LoggerFactory.getLogger(UserServicesImpl.class);
+            logger.info("Message received");
+            byte[] messageBody = message.getBody();
+            ControlAcknowledgementDTO controlAcknowledgementDTO = objectMapper.readValue(messageBody, ControlAcknowledgementDTO.class);
+            logger.info("Received control acknowledgement {}", controlAcknowledgementDTO.toString());
+            userRepository.findById(controlAcknowledgementDTO.getId()).ifPresent(user -> {
+                user.setSavedInProducer(true);
+                user.setLastSavedInProducerDate(new Date(controlAcknowledgementDTO.getSavedAt()));
+                userRepository.saveAndFlush(user);
+                try {
+                    channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } catch (Exception e) {
+            channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, true);
+            throw new RuntimeException(e);
+        }
+
     }
 }

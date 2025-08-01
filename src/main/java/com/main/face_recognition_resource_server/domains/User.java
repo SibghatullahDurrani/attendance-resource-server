@@ -4,6 +4,7 @@ import com.main.face_recognition_resource_server.constants.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Date;
 import java.util.List;
 
 @Builder
@@ -74,4 +75,10 @@ public class User {
     @OneToOne
     @JoinColumn(name = "user_shift_setting_id", nullable = false)
     private UserShiftSetting userShiftSetting;
+
+    @Column(nullable = false)
+    private boolean isSavedInProducer;
+
+    private Date lastSavedInProducerDate;
+
 }

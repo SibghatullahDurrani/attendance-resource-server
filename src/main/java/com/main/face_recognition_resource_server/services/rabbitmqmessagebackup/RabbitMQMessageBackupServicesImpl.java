@@ -3,7 +3,9 @@ package com.main.face_recognition_resource_server.services.rabbitmqmessagebackup
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.main.face_recognition_resource_server.DTOS.shift.ShiftMessageDTO;
+import com.main.face_recognition_resource_server.DTOS.user.UserMessageDTO;
 import com.main.face_recognition_resource_server.constants.MessageStatus;
+import com.main.face_recognition_resource_server.constants.MessageType;
 import com.main.face_recognition_resource_server.constants.RabbitMQMessageType;
 import com.main.face_recognition_resource_server.domains.RabbitMQMessageBackup;
 import com.main.face_recognition_resource_server.repositories.RabbitMQMessageBackupRepository;
@@ -40,6 +42,21 @@ public class RabbitMQMessageBackupServicesImpl implements RabbitMQMessageBackupS
                 .message(shiftMessageString)
                 .messageStatus(MessageStatus.SENT)
                 .organizationId(organizationId)
+                .messageType(MessageType.SHIFT)
+                .build();
+
+        RabbitMQMessageBackup message = rabbitMQMessageBackupRepository.saveAndFlush(backup);
+        return message.getId();
+    }
+
+    @Override
+    public UUID backupMessageAndReturnId(UserMessageDTO userMessageDTO, Long organizationId) throws JsonProcessingException {
+        String userMessageString = objectMapper.writeValueAsString(userMessageDTO);
+        RabbitMQMessageBackup backup = RabbitMQMessageBackup.builder()
+                .message(userMessageString)
+                .messageStatus(MessageStatus.SENT)
+                .organizationId(organizationId)
+                .messageType(MessageType.USER)
                 .build();
 
         RabbitMQMessageBackup message = rabbitMQMessageBackupRepository.saveAndFlush(backup);
@@ -61,19 +78,35 @@ public class RabbitMQMessageBackupServicesImpl implements RabbitMQMessageBackupS
     public void resendPendingMessages() throws JsonProcessingException {
         List<RabbitMQMessageBackup> pendingMessages = rabbitMQMessageBackupRepository.getPendingMessages();
         for (RabbitMQMessageBackup pendingMessage : pendingMessages) {
-            String messageMetadataWrapper = objectMapper.writeValueAsString(
-                    new MessageMetadataWrapper(pendingMessage.getId(), RabbitMQMessageType.SHIFT)
-            );
-            CorrelationData correlationData = new CorrelationData(messageMetadataWrapper);
+            if (pendingMessage.getMessageType() == MessageType.SHIFT) {
+                String messageMetadataWrapper = objectMapper.writeValueAsString(
+                        new MessageMetadataWrapper(pendingMessage.getId(), RabbitMQMessageType.SHIFT)
+                );
+                CorrelationData correlationData = new CorrelationData(messageMetadataWrapper);
 
-            MessageProperties messageProperties = new MessageProperties();
-            messageProperties.setHeader("uuid", pendingMessage.getId().toString());
-            messageProperties.setHeader("routingType", RabbitMQMessageType.SHIFT.name());
-            Message message = new Message(pendingMessage.getMessage().getBytes(StandardCharsets.UTF_8));
+                MessageProperties messageProperties = new MessageProperties();
+                messageProperties.setHeader("uuid", pendingMessage.getId().toString());
+                messageProperties.setHeader("routingType", RabbitMQMessageType.SHIFT.name());
+                Message message = new Message(pendingMessage.getMessage().getBytes(StandardCharsets.UTF_8), messageProperties);
 
-            String CONTROL_EXCHANGE_NAME = "control.exchange";
-            String SHIFT_CONTROL_ROUTING_KEY = "control." + pendingMessage.getOrganizationId() + ".shift.key";
-            rabbitTemplate.convertAndSend(CONTROL_EXCHANGE_NAME, SHIFT_CONTROL_ROUTING_KEY, message, correlationData);
+                String CONTROL_EXCHANGE_NAME = "control.exchange";
+                String SHIFT_CONTROL_ROUTING_KEY = "control." + pendingMessage.getOrganizationId() + ".shift.key";
+                rabbitTemplate.convertAndSend(CONTROL_EXCHANGE_NAME, SHIFT_CONTROL_ROUTING_KEY, message, correlationData);
+            } else if (pendingMessage.getMessageType() == MessageType.USER) {
+                String messageMetadataWrapper = objectMapper.writeValueAsString(
+                        new MessageMetadataWrapper(pendingMessage.getId(), RabbitMQMessageType.USER)
+                );
+                CorrelationData correlationData = new CorrelationData(messageMetadataWrapper);
+
+                MessageProperties messageProperties = new MessageProperties();
+                messageProperties.setHeader("uuid", pendingMessage.getId().toString());
+                messageProperties.setHeader("routingType", RabbitMQMessageType.USER.name());
+                Message message = new Message(pendingMessage.getMessage().getBytes(StandardCharsets.UTF_8), messageProperties);
+
+                String CONTROL_EXCHANGE_NAME = "control.exchange";
+                String USER_CONTROL_ROUTING_KEY = "user." + pendingMessage.getOrganizationId() + ".user.key";
+                rabbitTemplate.convertAndSend(CONTROL_EXCHANGE_NAME, USER_CONTROL_ROUTING_KEY, message, correlationData);
+            }
         }
     }
 
