@@ -95,7 +95,6 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<ShiftAllocationDTO>> getUserShiftAllocations(
             @RequestParam(required = false) String fullName,
-            @RequestParam(required = false) String designation,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Long shiftId,
             @RequestParam int page,
@@ -104,7 +103,7 @@ public class UserController {
     ) throws UserDoesntExistException {
         Long organizationId = userServices.getUserOrganizationId(authentication.getName());
         PageRequest pageRequest = PageRequest.of(page, size);
-        Page<ShiftAllocationDTO> shiftAllocationDTOPage = userServices.getUserShiftAllocations(organizationId, fullName, designation, departmentId, shiftId, pageRequest);
+        Page<ShiftAllocationDTO> shiftAllocationDTOPage = userServices.getUserShiftAllocations(organizationId, fullName, departmentId, shiftId, pageRequest);
         return new ResponseEntity<>(shiftAllocationDTOPage, HttpStatus.OK);
     }
 
