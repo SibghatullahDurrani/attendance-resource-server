@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
@@ -371,7 +372,8 @@ public class UserServicesImpl implements UserServices {
     }
 
     @Override
-    public Page<ShiftAllocationDTO> getUserShiftAllocations(Long organizationId, String fullName, String designation, Long departmentId, Long shiftId, PageRequest pageRequest) {
+    public Page<ShiftAllocationDTO> getUserShiftAllocations(Long organizationId, String fullName, Long departmentId, Long shiftId, PageRequest pageRequest) {
+        AtomicBoolean isFilterApplied = new AtomicBoolean(false);
         Specification<User> specification = (root, _, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -397,19 +399,17 @@ public class UserServicesImpl implements UserServices {
                         ), "%" + fullNameLower + "%")
                 ));
             }
-            if (designation != null && !designation.isEmpty()) {
-                String designationLower = designation.toLowerCase();
-                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("designation")), "%" + designationLower + "%"));
-            }
             if (departmentId != null) {
                 predicates.add(criteriaBuilder.equal(userDepartmentJoin.get("id"), departmentId));
+                isFilterApplied.set(true);
             }
             if (shiftId != null) {
                 predicates.add(criteriaBuilder.equal(userShiftJoin.get("id"), shiftId));
+                isFilterApplied.set(true);
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
-        return userRepository.getUserShiftAllocations(specification, pageRequest);
+        return userRepository.getUserShiftAllocations(specification, pageRequest, isFilterApplied.get());
     }
 
     @Override

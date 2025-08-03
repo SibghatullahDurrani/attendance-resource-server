@@ -7,5 +7,5 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 public interface UserCriteriaRepository {
-    Page<ShiftAllocationDTO> getUserShiftAllocations(Specification<User> specification, Pageable pageable);
+    Page<ShiftAllocationDTO> getUserShiftAllocations(Specification<User> specification, Pageable pageable, boolean isFilterApplied);
 }

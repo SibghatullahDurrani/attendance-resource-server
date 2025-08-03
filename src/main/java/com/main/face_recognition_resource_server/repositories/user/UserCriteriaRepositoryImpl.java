@@ -11,6 +11,7 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -22,7 +23,7 @@ public class UserCriteriaRepositoryImpl implements UserCriteriaRepository {
     private EntityManager entityManager;
 
     @Override
-    public Page<ShiftAllocationDTO> getUserShiftAllocations(Specification<User> specification, Pageable pageable) {
+    public Page<ShiftAllocationDTO> getUserShiftAllocations(Specification<User> specification, Pageable pageable, boolean isFilterApplied) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 
         CriteriaQuery<ShiftAllocationDTO> criteriaQuery = criteriaBuilder.createQuery(ShiftAllocationDTO.class);
@@ -49,9 +50,15 @@ public class UserCriteriaRepositoryImpl implements UserCriteriaRepository {
                 userShiftSettingJoin.get("endDate")
         ));
 
-        TypedQuery<ShiftAllocationDTO> typedQuery = entityManager.createQuery(criteriaQuery)
-                .setFirstResult((int) pageable.getOffset())
-                .setMaxResults(pageable.getPageSize());
+        TypedQuery<ShiftAllocationDTO> typedQuery;
+
+        if (isFilterApplied) {
+            typedQuery = entityManager.createQuery(criteriaQuery);
+        } else {
+            typedQuery = entityManager.createQuery(criteriaQuery)
+                    .setFirstResult((int) pageable.getOffset())
+                    .setMaxResults(pageable.getPageSize());
+        }
 
         List<ShiftAllocationDTO> data = typedQuery.getResultList();
 
@@ -66,6 +73,10 @@ public class UserCriteriaRepositoryImpl implements UserCriteriaRepository {
         countQuery.select(criteriaBuilder.count(countRoot));
         Long total = entityManager.createQuery(countQuery).getSingleResult();
 
-        return new PageImpl<>(data, pageable, total);
+        if (isFilterApplied) {
+            return new PageImpl<>(data, PageRequest.of(0, !data.isEmpty() ? data.size() : 1), total);
+        } else {
+            return new PageImpl<>(data, pageable, total);
+        }
     }
 }
