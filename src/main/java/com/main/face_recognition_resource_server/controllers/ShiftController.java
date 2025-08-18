@@ -4,8 +4,8 @@ import com.main.face_recognition_resource_server.DTOS.shift.RegisterShiftDTO;
 import com.main.face_recognition_resource_server.DTOS.shift.ShiftOptionDTO;
 import com.main.face_recognition_resource_server.DTOS.shift.ShiftTableRowDTO;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
-import com.main.face_recognition_resource_server.services.shift.ShiftServices;
-import com.main.face_recognition_resource_server.services.user.UserServices;
+import com.main.face_recognition_resource_server.services.shift.ShiftService;
+import com.main.face_recognition_resource_server.services.user.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -21,27 +21,27 @@ import java.util.List;
 @RequestMapping("shifts")
 public class ShiftController {
 
-    private final UserServices userServices;
-    private final ShiftServices shiftServices;
+    private final UserService userService;
+    private final ShiftService shiftService;
 
-    public ShiftController(UserServices userServices, ShiftServices shiftServices) {
-        this.userServices = userServices;
-        this.shiftServices = shiftServices;
+    public ShiftController(UserService userService, ShiftService shiftService) {
+        this.userService = userService;
+        this.shiftService = shiftService;
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<HttpStatus> registerShift(@RequestBody RegisterShiftDTO registerShiftDTO, Authentication authentication) throws UserDoesntExistException, SQLException {
-        Long organizationId = userServices.getUserOrganizationId(authentication.getName());
-        shiftServices.registerShift(registerShiftDTO, organizationId);
+        Long organizationId = userService.getUserOrganizationId(authentication.getName());
+        shiftService.registerShift(registerShiftDTO, organizationId);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ShiftOptionDTO>> getShiftOptions(Authentication authentication) throws UserDoesntExistException {
-        Long organizationId = userServices.getUserOrganizationId(authentication.getName());
-        List<ShiftOptionDTO> shiftOptions = shiftServices.getShiftOptions(organizationId);
+        Long organizationId = userService.getUserOrganizationId(authentication.getName());
+        List<ShiftOptionDTO> shiftOptions = shiftService.getShiftOptions(organizationId);
         return new ResponseEntity<>(shiftOptions, HttpStatus.OK);
     }
 
@@ -55,9 +55,9 @@ public class ShiftController {
             @RequestParam int size,
             Authentication authentication
     ) throws UserDoesntExistException {
-        Long organizationId = userServices.getUserOrganizationId(authentication.getName());
+        Long organizationId = userService.getUserOrganizationId(authentication.getName());
         PageRequest pageRequest = PageRequest.of(page, size);
-        Page<ShiftTableRowDTO> shiftTablePage = shiftServices.getShiftsPage(organizationId, name, checkInTime, checkOutTime, pageRequest);
+        Page<ShiftTableRowDTO> shiftTablePage = shiftService.getShiftsPage(organizationId, name, checkInTime, checkOutTime, pageRequest);
         return new ResponseEntity<>(shiftTablePage, HttpStatus.OK);
     }
 

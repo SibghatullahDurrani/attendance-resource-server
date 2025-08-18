@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.repositories.user;
 
+import com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO;
 import com.main.face_recognition_resource_server.DTOS.user.ShiftAllocationDTO;
 import com.main.face_recognition_resource_server.domains.Department;
 import com.main.face_recognition_resource_server.domains.Shift;
@@ -74,9 +75,53 @@ public class UserCriteriaRepositoryImpl implements UserCriteriaRepository {
         Long total = entityManager.createQuery(countQuery).getSingleResult();
 
         if (isFilterApplied) {
-            return new PageImpl<>(data, PageRequest.of(0, !data.isEmpty() ? data.size() : 1), total);
-        } else {
             return new PageImpl<>(data, pageable, total);
+        } else {
+            return new PageImpl<>(data, PageRequest.of(0, !data.isEmpty() ? data.size() : 0), total);
         }
+    }
+
+    @Override
+    public Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Specification<User> specification, Pageable pageable) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+
+        CriteriaQuery<AdminUsersTableRecordDTO> criteriaQuery = criteriaBuilder.createQuery(AdminUsersTableRecordDTO.class);
+        Root<User> userRoot = criteriaQuery.from(User.class);
+        Join<User, Department> userDepartmentJoin = userRoot.join("department", JoinType.INNER);
+
+        Predicate predicate = specification.toPredicate(userRoot, criteriaQuery, criteriaBuilder);
+        if (predicate != null) {
+            criteriaQuery.where(predicate);
+        }
+        criteriaQuery.orderBy(criteriaBuilder.asc(userRoot.get("firstName")));
+        criteriaQuery.select(criteriaBuilder.construct(
+                AdminUsersTableRecordDTO.class,
+                userRoot.get("id"),
+                userRoot.get("firstName"),
+                userRoot.get("secondName"),
+                userDepartmentJoin.get("departmentName"),
+                userRoot.get("designation"),
+                userRoot.get("identificationNumber"),
+                userRoot.get("email"),
+                userRoot.get("phoneNumber")
+        ));
+
+        TypedQuery<AdminUsersTableRecordDTO> typedQuery = entityManager.createQuery(criteriaQuery)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize());
+
+        List<AdminUsersTableRecordDTO> data = typedQuery.getResultList();
+
+        CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
+        Root<User> countRoot = countQuery.from(User.class);
+
+        Predicate countPredicate = specification.toPredicate(countRoot, countQuery, criteriaBuilder);
+        if (countPredicate != null) {
+            countQuery.where(countPredicate);
+        }
+
+        countQuery.select(criteriaBuilder.count(countRoot));
+        Long total = entityManager.createQuery(countQuery).getSingleResult();
+        return new PageImpl<>(data, pageable, total);
     }
 }

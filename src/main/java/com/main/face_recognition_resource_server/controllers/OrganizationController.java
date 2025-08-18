@@ -1,14 +1,13 @@
 package com.main.face_recognition_resource_server.controllers;
 
-import com.main.face_recognition_resource_server.DTOS.department.OrganizationDepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.DepartmentOfOrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
-import com.main.face_recognition_resource_server.services.department.DepartmentServices;
-import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
-import com.main.face_recognition_resource_server.services.user.UserServices;
+import com.main.face_recognition_resource_server.services.department.DepartmentService;
+import com.main.face_recognition_resource_server.services.organization.OrganizationService;
+import com.main.face_recognition_resource_server.services.user.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -22,44 +21,44 @@ import java.util.List;
 @RestController
 @RequestMapping("organizations")
 public class OrganizationController {
-  private final OrganizationServices organizationServices;
-  private final UserServices userServices;
-  private final DepartmentServices departmentServices;
+    private final OrganizationService organizationService;
+    private final UserService userService;
+    private final DepartmentService departmentService;
 
-  public OrganizationController(OrganizationServices organizationServices, UserServices userServices, DepartmentServices departmentServices) {
-    this.organizationServices = organizationServices;
-    this.userServices = userServices;
-    this.departmentServices = departmentServices;
-  }
+    public OrganizationController(OrganizationService organizationService, UserService userService, DepartmentService departmentService) {
+        this.organizationService = organizationService;
+        this.userService = userService;
+        this.departmentService = departmentService;
+    }
 
-  @PostMapping()
-  @PreAuthorize("hasRole('SUPER_ADMIN')")
-  public ResponseEntity<HttpStatus> registerOrganization(@RequestBody RegisterOrganizationDTO organizationToRegister) {
-    organizationServices.registerOrganization(organizationToRegister);
-    return new ResponseEntity<>(HttpStatus.CREATED);
-  }
+    @PostMapping()
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<HttpStatus> registerOrganization(@RequestBody RegisterOrganizationDTO organizationToRegister) {
+        organizationService.registerOrganization(organizationToRegister);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
 
-  @GetMapping
-  @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<OrganizationDTO> getOwnOrganization(Authentication authentication) throws UserDoesntExistException {
-    OrganizationDTO organization = userServices.getOrganizationByUsername(authentication.getName());
-    return new ResponseEntity<>(organization, HttpStatus.OK);
-  }
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<OrganizationDTO> getOwnOrganization(Authentication authentication) throws UserDoesntExistException {
+        OrganizationDTO organization = userService.getOrganizationByUsername(authentication.getName());
+        return new ResponseEntity<>(organization, HttpStatus.OK);
+    }
 
-  @GetMapping("all")
-  @PreAuthorize("hasRole('SUPER_ADMIN')")
-  public ResponseEntity<Page<OrganizationDTO>> getAllOrganizations(@RequestParam int page, @RequestParam int size) {
-    PageRequest pageRequest = PageRequest.of(page, size);
-    Page<OrganizationDTO> organizationPage = organizationServices.getAllOrganizations(pageRequest);
-    return new ResponseEntity<>(organizationPage, HttpStatus.OK);
-  }
+    @GetMapping("all")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Page<OrganizationDTO>> getAllOrganizations(@RequestParam int page, @RequestParam int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<OrganizationDTO> organizationPage = organizationService.getAllOrganizations(pageRequest);
+        return new ResponseEntity<>(organizationPage, HttpStatus.OK);
+    }
 
-  @GetMapping("{id}")
-  @PreAuthorize("hasRole('SUPER_ADMIN')")
-  public ResponseEntity<OrganizationDTO> getOrganizationById(@PathVariable Long id) throws OrganizationDoesntExistException {
-    OrganizationDTO organization = organizationServices.getOrganizationDTO(id);
-    return new ResponseEntity<>(organization, HttpStatus.OK);
-  }
+    @GetMapping("{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<OrganizationDTO> getOrganizationById(@PathVariable Long id) throws OrganizationDoesntExistException {
+        OrganizationDTO organization = organizationService.getOrganizationDTO(id);
+        return new ResponseEntity<>(organization, HttpStatus.OK);
+    }
 
 //  @GetMapping("departments")
 //  @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -69,11 +68,11 @@ public class OrganizationController {
 //    return new ResponseEntity<>(allOrganizationsWithItsDepartments, HttpStatus.OK);
 //  }
 
-  @GetMapping("/departments")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<List<DepartmentOfOrganizationDTO>> getAllDepartmentsOfOrganization(Authentication authentication) throws UserDoesntExistException {
-    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
-    List<DepartmentOfOrganizationDTO> departmentNamesOfOrganization = departmentServices.getDepartmentNamesOfOrganization(organizationId);
-    return new ResponseEntity<>(departmentNamesOfOrganization, HttpStatus.OK);
-  }
+    @GetMapping("/departments")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<DepartmentOfOrganizationDTO>> getAllDepartmentsOfOrganization(Authentication authentication) throws UserDoesntExistException {
+        Long organizationId = userService.getUserOrganizationId(authentication.getName());
+        List<DepartmentOfOrganizationDTO> departmentNamesOfOrganization = departmentService.getDepartmentNamesOfOrganization(organizationId);
+        return new ResponseEntity<>(departmentNamesOfOrganization, HttpStatus.OK);
+    }
 }

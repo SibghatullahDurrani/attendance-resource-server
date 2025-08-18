@@ -2,10 +2,10 @@ package com.main.face_recognition_resource_server.controllers;
 
 import com.main.face_recognition_resource_server.DTOS.notification.*;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
-import com.main.face_recognition_resource_server.services.attachment.AttachmentServices;
-import com.main.face_recognition_resource_server.services.notification.NotificationServices;
-import com.main.face_recognition_resource_server.services.user.UserServices;
-import com.main.face_recognition_resource_server.services.usernotification.UserNotificationServices;
+import com.main.face_recognition_resource_server.services.attachment.AttachmentService;
+import com.main.face_recognition_resource_server.services.notification.NotificationService;
+import com.main.face_recognition_resource_server.services.user.UserService;
+import com.main.face_recognition_resource_server.services.usernotification.UserNotificationService;
 import com.nimbusds.jose.shaded.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.Modifying;
@@ -24,85 +24,85 @@ import java.util.List;
 @RestController
 @RequestMapping("notifications")
 public class NotificationController {
-  private final NotificationServices notificationServices;
-  private final UserServices userServices;
-  private final Gson gson;
-  private final AttachmentServices attachmentServices;
-  private final UserNotificationServices userNotificationServices;
+    private final NotificationService notificationService;
+    private final UserService userService;
+    private final Gson gson;
+    private final AttachmentService attachmentService;
+    private final UserNotificationService userNotificationService;
 
-  public NotificationController(NotificationServices notificationServices, UserServices userServices, AttachmentServices attachmentServices, UserNotificationServices userNotificationServices) {
-    this.notificationServices = notificationServices;
-    this.userServices = userServices;
-    this.attachmentServices = attachmentServices;
-    this.userNotificationServices = userNotificationServices;
-    gson = new Gson();
-  }
-
-  @PostMapping("/users")
-  @PreAuthorize("hasRole('ADMIN')")
-  @Transactional
-  @Modifying
-  public ResponseEntity<HttpStatus> sendNotificationToUsers(@RequestParam(required = false) MultipartFile file, @RequestParam String data) throws IOException {
-    SendNotificationToUsersDTO notification = gson.fromJson(data, SendNotificationToUsersDTO.class);
-    if (file != null) {
-      if (!file.isEmpty()) {
-        Long attachmentId = attachmentServices.saveAttachment(file);
-        notificationServices.sendNotification(notification, attachmentId);
-        return new ResponseEntity<>(HttpStatus.CREATED);
-      }
+    public NotificationController(NotificationService notificationService, UserService userService, AttachmentService attachmentService, UserNotificationService userNotificationService) {
+        this.notificationService = notificationService;
+        this.userService = userService;
+        this.attachmentService = attachmentService;
+        this.userNotificationService = userNotificationService;
+        gson = new Gson();
     }
-    notificationServices.sendNotification(notification, null);
-    return new ResponseEntity<>(HttpStatus.CREATED);
-  }
 
-  @PostMapping("/departments")
-  @PreAuthorize("hasRole('ADMIN')")
-  @Transactional
-  @Modifying
-  public ResponseEntity<HttpStatus> sendNotificationToUsersOfDepartments(@RequestParam(required = false) MultipartFile file, @RequestParam String data) throws IOException {
-    SendNotificationToUsersOfDepartmentsDTO notification = gson.fromJson(data, SendNotificationToUsersOfDepartmentsDTO.class);
-    if (file != null) {
-      if (!file.isEmpty()) {
-        Long attachmentId = attachmentServices.saveAttachment(file);
-        notificationServices.sendNotification(notification, attachmentId);
+    @PostMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Modifying
+    public ResponseEntity<HttpStatus> sendNotificationToUsers(@RequestParam(required = false) MultipartFile file, @RequestParam String data) throws IOException {
+        SendNotificationToUsersDTO notification = gson.fromJson(data, SendNotificationToUsersDTO.class);
+        if (file != null) {
+            if (!file.isEmpty()) {
+                Long attachmentId = attachmentService.saveAttachment(file);
+                notificationService.sendNotification(notification, attachmentId);
+                return new ResponseEntity<>(HttpStatus.CREATED);
+            }
+        }
+        notificationService.sendNotification(notification, null);
         return new ResponseEntity<>(HttpStatus.CREATED);
-      }
     }
-    notificationServices.sendNotification(notification, null);
-    return new ResponseEntity<>(HttpStatus.CREATED);
-  }
 
-  @PostMapping("/organization")
-  @PreAuthorize("hasRole('ADMIN')")
-  @Transactional
-  @Modifying
-  public ResponseEntity<HttpStatus> sendNotificationToUsersOfOrganization(@RequestParam(required = false) MultipartFile file, @RequestParam String data, Authentication authentication) throws UserDoesntExistException, IOException {
-    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
-    SendNotificationToUsersOfOrganizationDTO notification = gson.fromJson(data, SendNotificationToUsersOfOrganizationDTO.class);
-    if (file != null) {
-      if (!file.isEmpty()) {
-        Long attachmentId = attachmentServices.saveAttachment(file);
-        notificationServices.sendNotification(notification, organizationId, attachmentId);
+    @PostMapping("/departments")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Modifying
+    public ResponseEntity<HttpStatus> sendNotificationToUsersOfDepartments(@RequestParam(required = false) MultipartFile file, @RequestParam String data) throws IOException {
+        SendNotificationToUsersOfDepartmentsDTO notification = gson.fromJson(data, SendNotificationToUsersOfDepartmentsDTO.class);
+        if (file != null) {
+            if (!file.isEmpty()) {
+                Long attachmentId = attachmentService.saveAttachment(file);
+                notificationService.sendNotification(notification, attachmentId);
+                return new ResponseEntity<>(HttpStatus.CREATED);
+            }
+        }
+        notificationService.sendNotification(notification, null);
         return new ResponseEntity<>(HttpStatus.CREATED);
-      }
     }
-    notificationServices.sendNotification(notification, organizationId, null);
-    return new ResponseEntity<>(HttpStatus.CREATED);
-  }
 
-  @GetMapping("")
-  @PreAuthorize("hasAnyRole('ADMIN','USER')")
-  public ResponseEntity<List<NotificationDTO>> getOwnNotifications(Authentication authentication) throws UserDoesntExistException {
-    Long userId = userServices.getUserIdByUsername(authentication.getName());
-    List<NotificationDTO> notifications = userNotificationServices.getNotificationsOfUser(userId);
-    return new ResponseEntity<>(notifications, HttpStatus.OK);
-  }
+    @PostMapping("/organization")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    @Modifying
+    public ResponseEntity<HttpStatus> sendNotificationToUsersOfOrganization(@RequestParam(required = false) MultipartFile file, @RequestParam String data, Authentication authentication) throws UserDoesntExistException, IOException {
+        Long organizationId = userService.getUserOrganizationId(authentication.getName());
+        SendNotificationToUsersOfOrganizationDTO notification = gson.fromJson(data, SendNotificationToUsersOfOrganizationDTO.class);
+        if (file != null) {
+            if (!file.isEmpty()) {
+                Long attachmentId = attachmentService.saveAttachment(file);
+                notificationService.sendNotification(notification, organizationId, attachmentId);
+                return new ResponseEntity<>(HttpStatus.CREATED);
+            }
+        }
+        notificationService.sendNotification(notification, organizationId, null);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
 
-  @GetMapping("/count")
-  @PreAuthorize("hasAnyRole('ADMIN','USER')")
-  public ResponseEntity<NotificationCountDTO> getOwnNonReadNotificationsCount(Authentication authentication) throws UserDoesntExistException {
-    Long userId = userServices.getUserIdByUsername(authentication.getName());
-    NotificationCountDTO count = userNotificationServices.getNonReadNotificationsCountOfUserNotification(userId);
-    return new ResponseEntity<>(count, HttpStatus.OK);
-  }
+    @GetMapping("")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ResponseEntity<List<NotificationDTO>> getOwnNotifications(Authentication authentication) throws UserDoesntExistException {
+        Long userId = userService.getUserIdByUsername(authentication.getName());
+        List<NotificationDTO> notifications = userNotificationService.getNotificationsOfUser(userId);
+        return new ResponseEntity<>(notifications, HttpStatus.OK);
+    }
+
+    @GetMapping("/count")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    public ResponseEntity<NotificationCountDTO> getOwnNonReadNotificationsCount(Authentication authentication) throws UserDoesntExistException {
+        Long userId = userService.getUserIdByUsername(authentication.getName());
+        NotificationCountDTO count = userNotificationService.getNonReadNotificationsCountOfUserNotification(userId);
+        return new ResponseEntity<>(count, HttpStatus.OK);
+    }
 }

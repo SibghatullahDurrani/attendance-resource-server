@@ -5,9 +5,8 @@ import com.main.face_recognition_resource_server.DTOS.department.DepartmentsTabl
 import com.main.face_recognition_resource_server.DTOS.department.RegisterDepartmentDTO;
 import com.main.face_recognition_resource_server.exceptions.DepartmentAlreadyExistsException;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
-import com.main.face_recognition_resource_server.services.department.DepartmentServices;
-import com.main.face_recognition_resource_server.services.organization.OrganizationServices;
-import com.main.face_recognition_resource_server.services.user.UserServices;
+import com.main.face_recognition_resource_server.services.department.DepartmentService;
+import com.main.face_recognition_resource_server.services.user.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -21,20 +20,20 @@ import java.util.List;
 @RestController
 @RequestMapping("departments")
 public class DepartmentController {
-  private final DepartmentServices departmentServices;
-  private final UserServices userServices;
+    private final DepartmentService departmentService;
+    private final UserService userService;
 
-  public DepartmentController(DepartmentServices departmentServices, UserServices userServices) {
-    this.departmentServices = departmentServices;
-    this.userServices = userServices;
-  }
+    public DepartmentController(DepartmentService departmentService, UserService userService) {
+        this.departmentService = departmentService;
+        this.userService = userService;
+    }
 
-  @GetMapping()
-  @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<DepartmentDTO> getOwnDepartment(Authentication authentication) throws UserDoesntExistException {
-    DepartmentDTO department = userServices.getDepartmentByUsername(authentication.getName());
-    return new ResponseEntity<>(department, HttpStatus.OK);
-  }
+    @GetMapping()
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<DepartmentDTO> getOwnDepartment(Authentication authentication) throws UserDoesntExistException {
+        DepartmentDTO department = userService.getDepartmentByUsername(authentication.getName());
+        return new ResponseEntity<>(department, HttpStatus.OK);
+    }
 
 //  @PostMapping()
 //  @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
@@ -61,20 +60,20 @@ public class DepartmentController {
 //    return null;
 //  }
 
-  @GetMapping("/departments-table")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Page<DepartmentsTableRecordDTO>> getDepartmentsTableData(@RequestParam int page, @RequestParam int size, Authentication authentication) throws UserDoesntExistException {
-    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
-    PageRequest pageRequest = PageRequest.of(page, size);
-    Page<DepartmentsTableRecordDTO> departmentsTable = departmentServices.getDepartmentsTableData(organizationId, pageRequest);
-    return new ResponseEntity<>(departmentsTable, HttpStatus.OK);
-  }
+    @GetMapping("/departments-table")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<DepartmentsTableRecordDTO>> getDepartmentsTableData(@RequestParam int page, @RequestParam int size, Authentication authentication) throws UserDoesntExistException {
+        Long organizationId = userService.getUserOrganizationId(authentication.getName());
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<DepartmentsTableRecordDTO> departmentsTable = departmentService.getDepartmentsTableData(organizationId, pageRequest);
+        return new ResponseEntity<>(departmentsTable, HttpStatus.OK);
+    }
 
-  @PostMapping()
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<HttpStatus> registerDepartments(@RequestBody List<RegisterDepartmentDTO> departmentsToRegister, Authentication authentication) throws UserDoesntExistException, DepartmentAlreadyExistsException {
-    Long organizationId = userServices.getUserOrganizationId(authentication.getName());
-    departmentServices.registerDepartments(departmentsToRegister, organizationId);
-    return new ResponseEntity<>(HttpStatus.CREATED);
-  }
+    @PostMapping()
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<HttpStatus> registerDepartments(@RequestBody List<RegisterDepartmentDTO> departmentsToRegister, Authentication authentication) throws UserDoesntExistException, DepartmentAlreadyExistsException {
+        Long organizationId = userService.getUserOrganizationId(authentication.getName());
+        departmentService.registerDepartments(departmentsToRegister, organizationId);
+        return new ResponseEntity<>(HttpStatus.CREATED);
+    }
 }

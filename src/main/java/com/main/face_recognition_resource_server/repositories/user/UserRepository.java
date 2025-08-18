@@ -183,4 +183,9 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
             ) FROM User u WHERE u.id = ?1
             """)
     UserLiveFeedMetaData getUserLiveFeedMetaData(Long userId);
+
+    @Query("""
+            SELECT u.userShift.checkInTime FROM User u WHERE u.id=?1
+            """)
+    String getUserCheckInTime(Long userId);
 }

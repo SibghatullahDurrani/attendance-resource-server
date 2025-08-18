@@ -10,17 +10,20 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 public class DepartmentAttendanceDTO {
-  private String departmentName;
-  private Long present;
-  private Long late;
-  private Long absent;
-  private Long onLeave;
-  private Long total;
+    private Long id;
+    private String departmentName;
+    private Long present;
+    private Long late;
+    private Long absent;
+    private Long onLeave;
+    private Long onTime;
+    private Long total;
 
-  public DepartmentAttendanceDTO(Long present, Long late, Long absent, Long onLeave) {
-    this.present = present;
-    this.late = late;
-    this.absent = absent;
-    this.onLeave = onLeave;
-  }
+    public DepartmentAttendanceDTO(Long present, Long late, Long absent, Long onLeave, Long onTime) {
+        this.present = present;
+        this.late = late;
+        this.absent = absent;
+        this.onLeave = onLeave;
+        this.onTime = onTime;
+    }
 }

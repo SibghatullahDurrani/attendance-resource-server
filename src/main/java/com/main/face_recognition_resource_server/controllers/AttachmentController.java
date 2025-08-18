@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.controllers;
 
 import com.main.face_recognition_resource_server.DTOS.attachment.AttachmentNameDTO;
-import com.main.face_recognition_resource_server.services.attachment.AttachmentServices;
+import com.main.face_recognition_resource_server.services.attachment.AttachmentService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -19,23 +19,23 @@ import java.nio.file.Files;
 @RestController
 @RequestMapping("attachments")
 public class AttachmentController {
-    private final AttachmentServices attachmentServices;
+    private final AttachmentService attachmentService;
 
-    public AttachmentController(AttachmentServices attachmentServices) {
-        this.attachmentServices = attachmentServices;
+    public AttachmentController(AttachmentService attachmentService) {
+        this.attachmentService = attachmentService;
     }
 
     @PostMapping("")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AttachmentNameDTO> addAttachment(@RequestParam("file") MultipartFile file) throws IOException {
-        Long attachmentId = attachmentServices.saveAttachment(file);
+        Long attachmentId = attachmentService.saveAttachment(file);
         return new ResponseEntity<>(AttachmentNameDTO.builder().id(attachmentId).build(), HttpStatus.CREATED);
     }
 
     @GetMapping("")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<Resource> downloadAttachment(@RequestParam("file") String fileName) throws IOException {
-        File file = attachmentServices.getFile(fileName);
+        File file = attachmentService.getFile(fileName);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                 .contentLength(file.length())

@@ -2,7 +2,7 @@ package com.main.face_recognition_resource_server.configurations.rabbitmq;
 
 import com.main.face_recognition_resource_server.constants.MessageStatus;
 import com.main.face_recognition_resource_server.domains.RabbitMQMessageBackup;
-import com.main.face_recognition_resource_server.services.rabbitmqmessagebackup.RabbitMQMessageBackupServices;
+import com.main.face_recognition_resource_server.services.rabbitmqmessagebackup.RabbitMQMessageBackupService;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.core.ReturnedMessage;
@@ -13,10 +13,10 @@ import java.util.UUID;
 
 @Component
 public class RabbitMQReturnsCallback implements RabbitTemplate.ReturnsCallback {
-    private final RabbitMQMessageBackupServices rabbitMQMessageBackupServices;
+    private final RabbitMQMessageBackupService rabbitMQMessageBackupService;
 
-    public RabbitMQReturnsCallback(RabbitMQMessageBackupServices rabbitMQMessageBackupServices) {
-        this.rabbitMQMessageBackupServices = rabbitMQMessageBackupServices;
+    public RabbitMQReturnsCallback(RabbitMQMessageBackupService rabbitMQMessageBackupService) {
+        this.rabbitMQMessageBackupService = rabbitMQMessageBackupService;
     }
 
 
@@ -25,10 +25,10 @@ public class RabbitMQReturnsCallback implements RabbitTemplate.ReturnsCallback {
         Message message = returned.getMessage();
         MessageProperties messageProperties = message.getMessageProperties();
         UUID backupMessageId = UUID.fromString(messageProperties.getHeader("uuid"));
-        RabbitMQMessageBackup messageBackup = rabbitMQMessageBackupServices.getBackupMessage(backupMessageId);
+        RabbitMQMessageBackup messageBackup = rabbitMQMessageBackupService.getBackupMessage(backupMessageId);
 
         messageBackup.setMessageStatus(MessageStatus.PENDING);
 
-        rabbitMQMessageBackupServices.backupMessage(messageBackup);
+        rabbitMQMessageBackupService.backupMessage(messageBackup);
     }
 }

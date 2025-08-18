@@ -67,4 +67,10 @@ public class DateUtils {
         Date endDate = endCalendar.getTime();
         return new Date[]{startDate, endDate};
     }
+
+    public static Date[] getStartAndEndDateOfRange(int fromYear, int fromMonth, int fromDay, int toYear, int toMonth, int toDay) {
+        Date startDate = new GregorianCalendar(fromYear, fromMonth, fromDay, 0, 0).getTime();
+        Date endDate = new GregorianCalendar(toYear, toMonth, toDay, 0, 0).getTime();
+        return new Date[]{startDate, endDate};
+    }
 }
