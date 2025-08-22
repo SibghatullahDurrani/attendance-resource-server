@@ -13,12 +13,8 @@ import java.util.List;
 @Data
 @Builder
 public class ExportAttendanceExcelDataPropsDTO {
-    private int fromYear;
-    private int fromMonth;
-    private int fromDay;
-    private int toYear;
-    private int toMonth;
-    private int toDay;
+    private Long fromDate;
+    private Long toDate;
     private ExportMode exportMode;
     private List<Long> userIds;
     private List<Long> departmentIds;

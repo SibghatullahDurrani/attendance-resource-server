@@ -30,17 +30,6 @@
         <java.version>23</java.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
     </properties>
-    <!--    <dependencyManagement>-->
-    <!--        <dependencies>-->
-    <!--            <dependency>-->
-    <!--                <groupId>org.springframework.cloud</groupId>-->
-    <!--                <artifactId>spring-cloud-dependencies</artifactId>-->
-    <!--                <version>${spring-cloud.version}</version>-->
-    <!--                <type>pom</type>-->
-    <!--                <scope>import</scope>-->
-    <!--            </dependency>-->
-    <!--        </dependencies>-->
-    <!--    </dependencyManagement>-->
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -171,6 +160,28 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.4.6</version>
+                <configuration>
+                    <from>
+                        <image>eclipse-temurin:23-jdk</image> <!-- Use Java 23 image -->
+                    </from>
+                    <container>
+                        <mainClass>com.main.face_recognition_resource_server.FaceRecognitionResourceServerApplication
+                        </mainClass>
+                    </container>
+                    <extraDirectories>
+                        <paths>
+                            <path>
+                                <from>/home/dev/personal/attendance-resource-server/emptyDirs</from>
+                                <into>/app</into>
+                            </path>
+                        </paths>
+                    </extraDirectories>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

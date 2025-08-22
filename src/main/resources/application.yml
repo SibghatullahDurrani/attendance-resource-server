@@ -35,7 +35,8 @@ spring:
         acknowledge-mode: manual
 server:
   port: 8282
-keySetURI: http://localhost:8080/oauth2/jwks
+#keySetURI: http://localhost:8080/oauth2/jwks
+keySetURI: ${KEY_SET_URI}
 
 front-end-url: ${FRONT_END_URL_PREFIX}
 shift-control-acknowledgement-queue-name: ${SHIFT_CONTROL_ACKNOWLEDGEMENT_QUEUE_NAME}

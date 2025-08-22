@@ -73,4 +73,20 @@ public class DateUtils {
         Date endDate = new GregorianCalendar(toYear, toMonth, toDay, 0, 0).getTime();
         return new Date[]{startDate, endDate};
     }
+
+    public static Date[] getStartAndEndDateOfRange(Long fromDate, Long toDate) {
+        Date startDate = getTruncatedDate(fromDate);
+        Date endDate = getTruncatedDate(toDate);
+        return new Date[]{startDate, endDate};
+    }
+
+    private static Date getTruncatedDate(Long timeStamp) {
+        Date date = new Date(timeStamp);
+        Calendar dateCalendar = GregorianCalendar.getInstance();
+        dateCalendar.setTime(date);
+        dateCalendar.set(Calendar.HOUR_OF_DAY, 0);
+        dateCalendar.set(Calendar.MINUTE, 0);
+        dateCalendar.set(Calendar.SECOND, 0);
+        return dateCalendar.getTime();
+    }
 }

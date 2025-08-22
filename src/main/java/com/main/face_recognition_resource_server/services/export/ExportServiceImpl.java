@@ -34,7 +34,7 @@ public class ExportServiceImpl implements ExportService {
 
     @Override
     public List<AttendanceExcelDataDTO> getAttendanceExcelData(ExportAttendanceExcelDataPropsDTO exportExcelProps) {
-        Date[] startAndEndDate = DateUtils.getStartAndEndDateOfRange(exportExcelProps.getFromYear(), exportExcelProps.getFromMonth(), exportExcelProps.getFromDay(), exportExcelProps.getToYear(), exportExcelProps.getToMonth(), exportExcelProps.getToDay());
+        Date[] startAndEndDate = DateUtils.getStartAndEndDateOfRange(exportExcelProps.getFromDate(), exportExcelProps.getToDate());
         List<AttendanceExcelDataDTO> attendanceData;
         if (exportExcelProps.getExportMode() == ExportMode.USER) {
             attendanceData = attendanceRepository.getUsersAttendanceExcelData(startAndEndDate[0], startAndEndDate[1], exportExcelProps.getUserIds());
