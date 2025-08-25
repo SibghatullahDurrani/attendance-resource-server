@@ -156,8 +156,8 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     @Query("""
             SELECT new com.main.face_recognition_resource_server.DTOS.user.SearchUserDTO(
             u.id, CONCAT(u.firstName, ' ', u.secondName), u.department.departmentName
-            ) FROM User u WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', ?1, '%'))
-            OR LOWER(u.secondName) LIKE LOWER(CONCAT('%', ?1, '%')) AND u.department.organization.id = ?2
+            ) FROM User u WHERE ( LOWER(u.firstName) LIKE LOWER(CONCAT('%', ?1, '%'))
+            OR LOWER(u.secondName) LIKE LOWER(CONCAT('%', ?1, '%'))) AND u.department.organization.id = ?2
             """)
     List<SearchUserDTO> searchUserByNameOfOrganization(String name, Long organizationId);
 

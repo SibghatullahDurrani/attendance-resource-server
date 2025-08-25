@@ -8,6 +8,7 @@ import com.main.face_recognition_resource_server.repositories.CheckInRepository;
 import com.main.face_recognition_resource_server.repositories.CheckOutRepository;
 import com.main.face_recognition_resource_server.repositories.attendance.AttendanceRepository;
 import com.main.face_recognition_resource_server.utilities.DateUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -19,6 +20,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
+@Slf4j
 @Service
 public class ExportServiceImpl implements ExportService {
     private final AttendanceRepository attendanceRepository;
@@ -36,10 +38,10 @@ public class ExportServiceImpl implements ExportService {
     public List<AttendanceExcelDataDTO> getAttendanceExcelData(ExportAttendanceExcelDataPropsDTO exportExcelProps) {
         Date[] startAndEndDate = DateUtils.getStartAndEndDateOfRange(exportExcelProps.getFromDate(), exportExcelProps.getToDate());
         List<AttendanceExcelDataDTO> attendanceData;
-        if (exportExcelProps.getExportMode() == ExportMode.USER) {
+        if (exportExcelProps.getExportMode() == ExportMode.MEMBERS) {
             attendanceData = attendanceRepository.getUsersAttendanceExcelData(startAndEndDate[0], startAndEndDate[1], exportExcelProps.getUserIds());
         } else {
-            attendanceData = attendanceRepository.getDepartmentsAttendanceExcelData(startAndEndDate[0], startAndEndDate[1], exportExcelProps.getUserIds());
+            attendanceData = attendanceRepository.getDepartmentsAttendanceExcelData(startAndEndDate[0], startAndEndDate[1], exportExcelProps.getDepartmentIds());
         }
         for (AttendanceExcelDataDTO attendance : attendanceData) {
             attendance.setCheckIn(checkInRepository.getFirstCheckInDateOfAttendanceId(attendance.getAttendanceId()));
@@ -89,8 +91,8 @@ public class ExportServiceImpl implements ExportService {
             checkOutCell.setCellStyle(timeCellStyle);
             if (attendance.getAttendanceStatus() == AttendanceStatus.LATE) {
                 row.createCell(7).setCellValue("Yes");
-            } else {
-                row.createCell(8).setCellValue("No");
+            } else if (attendance.getAttendanceStatus() == AttendanceStatus.ON_TIME) {
+                row.createCell(7).setCellValue("No");
             }
         }
 

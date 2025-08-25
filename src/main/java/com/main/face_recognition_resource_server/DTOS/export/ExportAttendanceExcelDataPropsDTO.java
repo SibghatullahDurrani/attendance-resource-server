@@ -1,10 +1,7 @@
 package com.main.face_recognition_resource_server.DTOS.export;
 
 import com.main.face_recognition_resource_server.constants.ExportMode;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -12,6 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @Builder
+@ToString
 public class ExportAttendanceExcelDataPropsDTO {
     private Long fromDate;
     private Long toDate;
