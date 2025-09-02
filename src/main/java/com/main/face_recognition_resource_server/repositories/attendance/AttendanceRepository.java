@@ -190,15 +190,32 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
 
     @Query("""
             SELECT new com.main.face_recognition_resource_server.DTOS.export.AttendanceExcelDataDTO(
-                        a.user.firstName, a.user.secondName, a.user.department.departmentName,a.user.designation, a.date, a.status, a.id
-            ) FROM Attendance a WHERE a.date BETWEEN ?1 AND ?2 AND a.user.id IN ?3
+                        u.id,u.firstName, u.secondName, u.department.departmentName,u.designation
+            ) FROM User u WHERE u.id IN ?3
+            AND EXISTS (
+                SELECT 1 FROM Attendance a
+                WHERE a.user.id = u.id
+                AND a.date BETWEEN ?1 AND ?2
+            )
             """)
-    List<AttendanceExcelDataDTO> getUsersAttendanceExcelData(Date date, Date date1, List<Long> userIds);
+    List<AttendanceExcelDataDTO> getUsersAttendanceExcelData(Date startDate, Date endDate, List<Long> userIds);
 
     @Query("""
             SELECT new com.main.face_recognition_resource_server.DTOS.export.AttendanceExcelDataDTO(
-                        a.user.firstName, a.user.secondName, a.user.department.departmentName,a.user.designation, a.date, a.status, a.id
-            ) FROM Attendance a WHERE a.date BETWEEN ?1 AND ?2 AND a.user.department.id IN ?3
+                        u.id,u.firstName, u.secondName, u.department.departmentName,u.designation
+            ) FROM User u WHERE u.department.id IN ?3
+            AND EXISTS (
+                SELECT 1 FROM Attendance a
+                WHERE a.user.id = u.id
+                AND a.date BETWEEN ?1 AND ?2
+            )
             """)
-    List<AttendanceExcelDataDTO> getDepartmentsAttendanceExcelData(Date date, Date date1, List<Long> departmentIds);
+    List<AttendanceExcelDataDTO> getDepartmentsAttendanceExcelData(Date startDate, Date endDate, List<Long> departmentIds);
+
+    @Query("""
+            SELECT new com.main.face_recognition_resource_server.DTOS.attendance.ExcelAttendanceDTO(
+                        a.date, a.status, a.id
+            ) FROM Attendance a WHERE a.date BETWEEN ?1 AND ?2 AND a.user.id = ?3
+            """)
+    List<ExcelAttendanceDTO> getUserExcelAttendance(Date startDate, Date endDate, Long userId);
 }

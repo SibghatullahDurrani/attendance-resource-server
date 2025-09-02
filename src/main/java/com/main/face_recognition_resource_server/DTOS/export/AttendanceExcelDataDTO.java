@@ -1,9 +1,9 @@
 package com.main.face_recognition_resource_server.DTOS.export;
 
-import com.main.face_recognition_resource_server.constants.AttendanceStatus;
+import com.main.face_recognition_resource_server.DTOS.attendance.ExcelAttendanceDTO;
 import lombok.*;
 
-import java.util.Date;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -11,23 +11,18 @@ import java.util.Date;
 @Builder
 @ToString
 public class AttendanceExcelDataDTO {
+    private Long userId;
     private String firstName;
     private String secondName;
     private String division;
     private String designation;
-    private Date date;
-    private Date checkIn;
-    private Date checkOut;
-    private AttendanceStatus attendanceStatus;
-    private Long attendanceId;
+    private List<ExcelAttendanceDTO> attendances;
 
-    AttendanceExcelDataDTO(String firstName, String secondName, String division, String designation, Date date, AttendanceStatus attendanceStatus, Long attendanceId) {
+    AttendanceExcelDataDTO(Long userId, String firstName, String secondName, String division, String designation) {
+        this.userId = userId;
         this.firstName = firstName;
         this.secondName = secondName;
         this.division = division;
         this.designation = designation;
-        this.date = date;
-        this.attendanceStatus = attendanceStatus;
-        this.attendanceId = attendanceId;
     }
 }
