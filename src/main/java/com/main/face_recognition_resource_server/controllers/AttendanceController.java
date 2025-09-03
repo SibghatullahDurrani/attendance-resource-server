@@ -1,8 +1,8 @@
 package com.main.face_recognition_resource_server.controllers;
 
 import com.main.face_recognition_resource_server.DTOS.attendance.*;
-import com.main.face_recognition_resource_server.constants.AttendanceStatusFilter;
-import com.main.face_recognition_resource_server.constants.AttendanceType;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatusFilter;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceType;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntBelongToYouException;

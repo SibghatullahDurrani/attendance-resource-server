@@ -2,7 +2,7 @@ package com.main.face_recognition_resource_server.services.amqp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceMessage;
-import com.main.face_recognition_resource_server.constants.AttendanceType;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceType;
 import com.main.face_recognition_resource_server.services.attendance.AttendanceService;
 import com.main.face_recognition_resource_server.services.organization.OrganizationService;
 import org.springframework.amqp.core.*;

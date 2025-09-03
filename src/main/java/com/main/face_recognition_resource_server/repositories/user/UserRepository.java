@@ -4,7 +4,7 @@ import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.user.*;
-import com.main.face_recognition_resource_server.constants.UserRole;
+import com.main.face_recognition_resource_server.constants.user.UserRole;
 import com.main.face_recognition_resource_server.domains.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

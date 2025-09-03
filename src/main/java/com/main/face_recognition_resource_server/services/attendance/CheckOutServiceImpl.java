@@ -2,7 +2,7 @@ package com.main.face_recognition_resource_server.services.attendance;
 
 import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceSnapshotDTO;
 import com.main.face_recognition_resource_server.DTOS.attendance.GetAttendanceSnapPathDTO;
-import com.main.face_recognition_resource_server.constants.AttendanceType;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceType;
 import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.domains.CheckOut;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;

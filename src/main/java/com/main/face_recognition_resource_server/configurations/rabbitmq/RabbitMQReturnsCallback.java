@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.configurations.rabbitmq;
 
-import com.main.face_recognition_resource_server.constants.MessageStatus;
+import com.main.face_recognition_resource_server.constants.rabbitmq.MessageStatus;
 import com.main.face_recognition_resource_server.domains.RabbitMQMessageBackup;
 import com.main.face_recognition_resource_server.services.rabbitmqmessagebackup.RabbitMQMessageBackupService;
 import org.springframework.amqp.core.Message;

@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.DTOS.user;
 
-import com.main.face_recognition_resource_server.constants.UserRole;
-import com.main.face_recognition_resource_server.constants.UsernameType;
+import com.main.face_recognition_resource_server.constants.user.UserRole;
+import com.main.face_recognition_resource_server.constants.user.UsernameType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

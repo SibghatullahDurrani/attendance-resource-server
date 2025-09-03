@@ -1,13 +1,10 @@
 package com.main.face_recognition_resource_server.configurations;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceCacheDTO;
 import com.main.face_recognition_resource_server.auth.JwtAuthenticationConverter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -25,9 +22,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
 
 @Configuration
 @EnableMethodSecurity()
@@ -83,11 +77,5 @@ public class ProjectConfigurations {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
-    }
-
-    @Bean
-    @Scope(value = BeanDefinition.SCOPE_PROTOTYPE)
-    public BlockingQueue<AttendanceCacheDTO> attendanceCacheQueue() {
-        return new LinkedBlockingQueue<>();
     }
 }

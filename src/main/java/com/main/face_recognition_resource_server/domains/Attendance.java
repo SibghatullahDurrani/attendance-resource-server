@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.domains;
 
-import com.main.face_recognition_resource_server.constants.AttendanceStatus;
-import com.main.face_recognition_resource_server.constants.AttendanceType;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatus;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,28 +18,28 @@ import java.util.List;
 @Entity
 @Table(name = "attendances")
 public class Attendance {
-  @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "attendance_id_generator")
-  @SequenceGenerator(name = "attendance_id_generator", sequenceName = "attendance_id_sequence", allocationSize = 1)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "attendance_id_generator")
+    @SequenceGenerator(name = "attendance_id_generator", sequenceName = "attendance_id_sequence", allocationSize = 1)
+    private Long id;
 
-  @ManyToOne
-  @JoinColumn(name = "user_id", nullable = false)
-  private User user;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-  @Column(nullable = false)
-  private Date date;
+    @Column(nullable = false)
+    private Date date;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  private AttendanceStatus status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AttendanceStatus status;
 
-  @OneToMany(mappedBy = "attendance")
-  private List<CheckIn> checkIns;
+    @OneToMany(mappedBy = "attendance")
+    private List<CheckIn> checkIns;
 
-  @OneToMany(mappedBy = "attendance")
-  private List<CheckOut> checkOuts;
+    @OneToMany(mappedBy = "attendance")
+    private List<CheckOut> checkOuts;
 
-  @Enumerated(EnumType.STRING)
-  private AttendanceType currentAttendanceStatus;
+    @Enumerated(EnumType.STRING)
+    private AttendanceType currentAttendanceStatus;
 }

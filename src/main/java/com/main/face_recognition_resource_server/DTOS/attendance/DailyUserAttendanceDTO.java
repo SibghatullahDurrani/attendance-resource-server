@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.DTOS.attendance;
 
-import com.main.face_recognition_resource_server.constants.AttendanceStatus;
-import com.main.face_recognition_resource_server.constants.AttendanceType;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatus;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

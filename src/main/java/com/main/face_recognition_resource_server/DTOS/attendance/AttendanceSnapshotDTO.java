@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.DTOS.attendance;
 
-import com.main.face_recognition_resource_server.constants.AttendanceStatus;
-import com.main.face_recognition_resource_server.constants.AttendanceType;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatus;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,21 +14,21 @@ import java.util.List;
 @Data
 @Builder
 public class AttendanceSnapshotDTO {
-  private AttendanceStatus attendanceStatus;
-  private List<AttendanceSnapShotDTOData> data;
-  private Long dayTime;
+    private AttendanceStatus attendanceStatus;
+    private List<AttendanceSnapShotDTOData> data;
+    private Long dayTime;
 
-  public void addAttendanceSnapshotDTOData(List<AttendanceSnapShotDTOData> data) {
-    this.data.addAll(data);
-  }
+    public void addAttendanceSnapshotDTOData(List<AttendanceSnapShotDTOData> data) {
+        this.data.addAll(data);
+    }
 
-  @AllArgsConstructor
-  @Builder
-  @Data
-  @NoArgsConstructor
-  public static class AttendanceSnapShotDTOData {
-    private String snapName;
-    private AttendanceType attendanceType;
-    private Long attendanceTime;
-  }
+    @AllArgsConstructor
+    @Builder
+    @Data
+    @NoArgsConstructor
+    public static class AttendanceSnapShotDTOData {
+        private String snapName;
+        private AttendanceType attendanceType;
+        private Long attendanceTime;
+    }
 }

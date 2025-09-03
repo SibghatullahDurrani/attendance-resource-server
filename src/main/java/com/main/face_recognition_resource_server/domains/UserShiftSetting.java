@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.domains;
 
-import com.main.face_recognition_resource_server.constants.ShiftMode;
+import com.main.face_recognition_resource_server.constants.shift.ShiftMode;
 import jakarta.persistence.*;
 import lombok.*;
 

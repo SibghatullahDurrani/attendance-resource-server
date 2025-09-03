@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.domains;
 
-import com.main.face_recognition_resource_server.constants.NotificationStatus;
+import com.main.face_recognition_resource_server.constants.notification.NotificationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

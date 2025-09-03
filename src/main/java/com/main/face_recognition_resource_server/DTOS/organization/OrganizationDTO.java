@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.DTOS.organization;
 
-import com.main.face_recognition_resource_server.constants.OrganizationType;
+import com.main.face_recognition_resource_server.constants.organization.OrganizationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class OrganizationDTO {
-  private Long id;
-  private String organizationName;
-  private OrganizationType organizationType;
+    private Long id;
+    private String organizationName;
+    private OrganizationType organizationType;
 }

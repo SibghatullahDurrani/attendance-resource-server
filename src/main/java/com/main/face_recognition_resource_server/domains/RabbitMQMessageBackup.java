@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.domains;
 
-import com.main.face_recognition_resource_server.constants.MessageStatus;
-import com.main.face_recognition_resource_server.constants.MessageType;
+import com.main.face_recognition_resource_server.constants.rabbitmq.MessageStatus;
+import com.main.face_recognition_resource_server.constants.rabbitmq.MessageType;
 import jakarta.persistence.*;
 import lombok.*;
 

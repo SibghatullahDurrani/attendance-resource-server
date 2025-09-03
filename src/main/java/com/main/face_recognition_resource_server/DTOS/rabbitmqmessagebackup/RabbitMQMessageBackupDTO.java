@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.DTOS.rabbitmqmessagebackup;
 
-import com.main.face_recognition_resource_server.constants.MessageStatus;
+import com.main.face_recognition_resource_server.constants.rabbitmq.MessageStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

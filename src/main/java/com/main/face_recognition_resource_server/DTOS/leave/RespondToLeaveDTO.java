@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.DTOS.leave;
 
-import com.main.face_recognition_resource_server.constants.LeaveStatus;
+import com.main.face_recognition_resource_server.constants.leave.LeaveStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class RespondToLeaveDTO {
-  private Long leaveId;
-  private LeaveStatus leaveStatus;
-  private Long date;
+    private Long leaveId;
+    private LeaveStatus leaveStatus;
+    private Long date;
 }

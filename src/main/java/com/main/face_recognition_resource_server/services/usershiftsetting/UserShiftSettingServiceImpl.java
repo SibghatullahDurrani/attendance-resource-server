@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.services.usershiftsetting;
 
-import com.main.face_recognition_resource_server.constants.ShiftMode;
+import com.main.face_recognition_resource_server.constants.shift.ShiftMode;
 import com.main.face_recognition_resource_server.domains.UserShiftSetting;
 import com.main.face_recognition_resource_server.repositories.UserShiftRepository;
 import org.springframework.stereotype.Service;

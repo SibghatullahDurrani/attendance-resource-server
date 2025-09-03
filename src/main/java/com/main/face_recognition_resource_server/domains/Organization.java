@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.domains;
 
-import com.main.face_recognition_resource_server.constants.OrganizationType;
+import com.main.face_recognition_resource_server.constants.organization.OrganizationType;
 import jakarta.persistence.*;
 import lombok.*;
 

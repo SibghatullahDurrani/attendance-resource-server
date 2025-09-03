@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.DTOS.user;
 
-import com.main.face_recognition_resource_server.constants.ShiftMode;
+import com.main.face_recognition_resource_server.constants.shift.ShiftMode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

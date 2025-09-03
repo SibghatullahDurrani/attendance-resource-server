@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.DTOS.shift;
 
-import com.main.face_recognition_resource_server.constants.ShiftMessageType;
+import com.main.face_recognition_resource_server.constants.rabbitmq.ShiftMessageType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

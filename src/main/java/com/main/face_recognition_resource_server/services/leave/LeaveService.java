@@ -1,8 +1,8 @@
 package com.main.face_recognition_resource_server.services.leave;
 
 import com.main.face_recognition_resource_server.DTOS.leave.*;
-import com.main.face_recognition_resource_server.constants.LeaveStatus;
-import com.main.face_recognition_resource_server.constants.LeaveType;
+import com.main.face_recognition_resource_server.constants.leave.LeaveStatus;
+import com.main.face_recognition_resource_server.constants.leave.LeaveType;
 import com.main.face_recognition_resource_server.exceptions.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

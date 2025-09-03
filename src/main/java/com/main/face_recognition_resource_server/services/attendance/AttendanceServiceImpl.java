@@ -2,10 +2,9 @@ package com.main.face_recognition_resource_server.services.attendance;
 
 import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.DTOS.user.UserLiveFeedMetaData;
-import com.main.face_recognition_resource_server.constants.AttendanceStatus;
-import com.main.face_recognition_resource_server.constants.AttendanceStatusFilter;
-import com.main.face_recognition_resource_server.constants.AttendanceType;
-import com.main.face_recognition_resource_server.constants.CameraType;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatus;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatusFilter;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceType;
 import com.main.face_recognition_resource_server.domains.*;
 import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
 import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
@@ -152,28 +151,6 @@ public class AttendanceServiceImpl implements AttendanceService {
             byte[] sourceImage = Files.readAllBytes(sourceImagePath);
             Date firstCheckIn = checkInServices.getFirstCheckInOfAttendanceId(attendance.get().getId());
             sendLiveAttendanceFeed(userService.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder().userId(userId).fullName(userLiveFeedMetaData.getFullName()).designation(userLiveFeedMetaData.getDesignation()).departmentName(userLiveFeedMetaData.getDepartmentName()).attendanceType(AttendanceType.CHECK_OUT).attendanceStatus(attendance.get().getStatus()).checkOutTime(endDate.getTime()).checkInTime(firstCheckIn.getTime()).sourceImage(sourceImage).build());
-        }
-    }
-
-    @Override
-    public void markAbsentOfAllUsersInOrganizationForCurrentDay(Long organizationId) {
-        Calendar calendar = GregorianCalendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-
-        boolean exists = this.attendanceRepository.existsByDateAndOrganizationId(calendar.getTime(), organizationId);
-        if (!exists) {
-            List<User> users = userService.getUsersByOrganizationId(organizationId);
-            List<Long> userIdsOfLeave = attendanceRepository.getUserIdsOfLeaveOfDate(calendar.getTime());
-            List<Attendance> attendances = new ArrayList<>();
-            for (User user : users) {
-                if (!userIdsOfLeave.contains(user.getId())) {
-                    attendances.add(Attendance.builder().user(user).date(calendar.getTime()).status(AttendanceStatus.ABSENT).build());
-                }
-            }
-            attendanceRepository.saveAllAndFlush(attendances);
         }
     }
 
@@ -572,22 +549,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         return attendanceRepository.getOrganizationMonthlyUserAttendances(specification, pageRequest);
     }
 
-    @Override
-    public void markAbsentOfUserOnToday(User user) {
-//    Calendar calendar = GregorianCalendar.getInstance();
-//    calendar.set(Calendar.HOUR_OF_DAY, 0);
-//    calendar.set(Calendar.MINUTE, 0);
-//    calendar.set(Calendar.SECOND, 0);
-//    calendar.set(Calendar.MILLISECOND, 0);
-//    Attendance attendance = Attendance.builder()
-//            .user(user)
-//            .date(calendar.getTime())
-//            .status(AttendanceStatus.ABSENT)
-//            .build();
-//
-//    attendanceRepository.saveAndFlush(attendance);
-    }
-
     private AttendanceStatsDTO generateAttendanceStatsDTO(Date startDate, Date endDate, Long userId) throws NoStatsAvailableException {
         AttendanceCountDTO attendanceCount = attendanceRepository.getAttendanceCountOfUserBetweenDates(startDate, endDate, userId);
         List<Long> attendanceIds = attendanceRepository.getAttendanceIdsOfUserBetweenDates(startDate, endDate, userId);
@@ -611,40 +572,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         calendar.setTime(endDate);
         Date startDate = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).getTime();
         return attendanceRepository.getAttendanceByUserIdAndDate(userId, startDate, endDate);
-    }
-
-    @Override
-    public Set<Long> getCache(Long organizationId, CameraType type) {
-        Date endDate = new Date();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(endDate);
-        Date startDate = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).getTime();
-        List<Attendance> attendances = attendanceRepository.getPresentAttendanceOfOrganizationBetweenTime(startDate, endDate, organizationId, AttendanceStatus.ON_TIME, AttendanceStatus.LATE);
-        Set<Long> userSet = new TreeSet<>();
-        if (type == CameraType.IN) {
-            for (Attendance attendance : attendances) {
-                if (!attendance.getCheckOuts().isEmpty()) {
-                    Date maxCheckOut = maxCheckOut(attendance.getCheckOuts());
-                    Date maxCheckIn = maxCheckIn(attendance.getCheckIns());
-                    if (maxCheckIn.after(maxCheckOut)) {
-                        userSet.add(attendance.getUser().getId());
-                    }
-                } else {
-                    userSet.add(attendance.getUser().getId());
-                }
-            }
-        } else {
-            for (Attendance attendance : attendances) {
-                if (!attendance.getCheckOuts().isEmpty()) {
-                    Date maxCheckOut = maxCheckOut(attendance.getCheckOuts());
-                    Date maxCheckIn = maxCheckIn(attendance.getCheckIns());
-                    if (maxCheckOut.after(maxCheckIn)) {
-                        userSet.add(attendance.getUser().getId());
-                    }
-                }
-            }
-        }
-        return userSet;
     }
 
     private Date maxCheckOut(List<CheckOut> checkOuts) {

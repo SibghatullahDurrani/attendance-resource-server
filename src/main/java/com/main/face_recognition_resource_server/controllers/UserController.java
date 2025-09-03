@@ -2,7 +2,7 @@ package com.main.face_recognition_resource_server.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.main.face_recognition_resource_server.DTOS.user.*;
-import com.main.face_recognition_resource_server.constants.UserRole;
+import com.main.face_recognition_resource_server.constants.user.UserRole;
 import com.main.face_recognition_resource_server.exceptions.*;
 import com.main.face_recognition_resource_server.services.department.DepartmentService;
 import com.main.face_recognition_resource_server.services.user.UserService;

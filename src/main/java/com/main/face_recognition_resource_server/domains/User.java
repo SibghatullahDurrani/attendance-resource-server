@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.domains;
 
-import com.main.face_recognition_resource_server.constants.UserRole;
+import com.main.face_recognition_resource_server.constants.user.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 

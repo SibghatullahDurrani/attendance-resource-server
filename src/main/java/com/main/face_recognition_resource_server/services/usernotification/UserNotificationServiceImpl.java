@@ -2,7 +2,7 @@ package com.main.face_recognition_resource_server.services.usernotification;
 
 import com.main.face_recognition_resource_server.DTOS.notification.NotificationCountDTO;
 import com.main.face_recognition_resource_server.DTOS.notification.NotificationDTO;
-import com.main.face_recognition_resource_server.constants.NotificationStatus;
+import com.main.face_recognition_resource_server.constants.notification.NotificationStatus;
 import com.main.face_recognition_resource_server.domains.Notification;
 import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.domains.UserNotification;

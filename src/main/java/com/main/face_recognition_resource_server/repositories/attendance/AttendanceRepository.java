@@ -2,7 +2,8 @@ package com.main.face_recognition_resource_server.repositories.attendance;
 
 import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.DTOS.export.AttendanceExcelDataDTO;
-import com.main.face_recognition_resource_server.constants.AttendanceStatus;
+import com.main.face_recognition_resource_server.DTOS.export.FlatAttendanceExcelChartDTO;
+import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatus;
 import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.domains.User;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Date;
 import java.util.List;
@@ -218,4 +220,25 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
             ) FROM Attendance a WHERE a.date BETWEEN ?1 AND ?2 AND a.user.id = ?3
             """)
     List<ExcelAttendanceDTO> getUserExcelAttendance(Date startDate, Date endDate, Long userId);
+
+    @Query("""
+            SELECT new  com.main.face_recognition_resource_server.DTOS.export.FlatAttendanceExcelChartDTO(
+                a.user.department.id,
+                a.user.department.departmentName,
+                a.date,
+                SUM(CASE WHEN a.status = 'ON_TIME' OR a.status = 'LATE' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'LATE' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'ON_LEAVE' THEN 1 ELSE 0 END)
+            ) FROM Attendance a
+            WHERE a.user.department.id IN :departmentIds
+                AND a.date BETWEEN :fromDate AND :toDate
+            GROUP BY a.date, a.user.department.id, a.user.department.departmentName
+            ORDER BY a.user.department.id, a.date
+            """)
+    List<FlatAttendanceExcelChartDTO> getExcelAttendanceChartData(
+            @Param("departmentIds") List<Long> departmentIds,
+            @Param("fromDate") Date fromDate,
+            @Param("toDate") Date toDate
+    );
 }

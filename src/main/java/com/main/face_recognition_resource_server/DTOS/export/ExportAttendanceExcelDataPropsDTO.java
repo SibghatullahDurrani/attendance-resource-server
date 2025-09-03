@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.DTOS.export;
 
-import com.main.face_recognition_resource_server.constants.ExportMode;
+import com.main.face_recognition_resource_server.constants.export.ExportMode;
 import lombok.*;
 
 import java.util.List;
