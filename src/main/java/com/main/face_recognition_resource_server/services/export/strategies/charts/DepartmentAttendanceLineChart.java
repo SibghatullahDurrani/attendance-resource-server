@@ -1,6 +1,6 @@
 package com.main.face_recognition_resource_server.services.export.strategies.charts;
 
-import com.main.face_recognition_resource_server.DTOS.export.ExcelAttendanceChartDTO;
+import com.main.face_recognition_resource_server.DTOS.export.DepartmentAttendanceLineChartDTO;
 import com.main.face_recognition_resource_server.DTOS.export.ExcelDepartmentAttendanceCountDTO;
 import com.main.face_recognition_resource_server.constants.export.ExcelChartStrategyType;
 import org.apache.poi.ss.usermodel.Row;
@@ -17,17 +17,22 @@ import java.util.Map;
 import java.util.TreeMap;
 
 @Service
-@ExcelChartStrategyKey(ExcelChartStrategyType.LINE)
-public class LineChart implements ExcelChartStrategy {
+@ExcelChartStrategyKey(ExcelChartStrategyType.DEPARTMENT_ATTENDANCE_LINE_CHART)
+public class DepartmentAttendanceLineChart implements ExcelChartStrategy<DepartmentAttendanceLineChartDTO> {
     @Override
-    public void create(XSSFWorkbook workbook, List<ExcelAttendanceChartDTO> excelAttendanceChartData) {
+    public void create(XSSFWorkbook workbook, List<DepartmentAttendanceLineChartDTO> excelAttendanceChartData) {
         createAllDepartmentsChart(workbook, excelAttendanceChartData);
-        for (ExcelAttendanceChartDTO department : excelAttendanceChartData) {
+        for (DepartmentAttendanceLineChartDTO department : excelAttendanceChartData) {
             createSeparateDepartmentChart(workbook, department);
         }
     }
 
-    private void createSeparateDepartmentChart(XSSFWorkbook workbook, ExcelAttendanceChartDTO excelAttendanceChartData) {
+    @Override
+    public Class<DepartmentAttendanceLineChartDTO> getExcelChartDTOClass() {
+        return DepartmentAttendanceLineChartDTO.class;
+    }
+
+    private void createSeparateDepartmentChart(XSSFWorkbook workbook, DepartmentAttendanceLineChartDTO excelAttendanceChartData) {
         XSSFSheet sheet = workbook.createSheet(excelAttendanceChartData.getDepartmentName());
         createHeaderRow(sheet);
 
@@ -101,7 +106,7 @@ public class LineChart implements ExcelChartStrategy {
         headerRow.createCell(4).setCellValue("On Leave");
     }
 
-    private void createAllDepartmentsChart(XSSFWorkbook workbook, List<ExcelAttendanceChartDTO> excelAttendanceChartData) {
+    private void createAllDepartmentsChart(XSSFWorkbook workbook, List<DepartmentAttendanceLineChartDTO> excelAttendanceChartData) {
         XSSFSheet allDeptSheet = workbook.createSheet("All Departments Trend");
 
         createHeaderRow(allDeptSheet);
@@ -109,7 +114,7 @@ public class LineChart implements ExcelChartStrategy {
         Map<Date, long[]> totalsByDate = new TreeMap<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yy");
 
-        for (ExcelAttendanceChartDTO dept : excelAttendanceChartData) {
+        for (DepartmentAttendanceLineChartDTO dept : excelAttendanceChartData) {
             for (ExcelDepartmentAttendanceCountDTO count : dept.getExcelDepartmentAttendances()) {
                 Date dateKey = count.getDate();
                 totalsByDate.putIfAbsent(dateKey, new long[4]);

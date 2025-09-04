@@ -3,6 +3,7 @@ package com.main.face_recognition_resource_server.repositories.attendance;
 import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.DTOS.export.AttendanceExcelDataDTO;
 import com.main.face_recognition_resource_server.DTOS.export.FlatAttendanceExcelChartDTO;
+import com.main.face_recognition_resource_server.DTOS.export.UserAttendancePieChartDTO;
 import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatus;
 import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.domains.User;
@@ -241,4 +242,24 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
             @Param("fromDate") Date fromDate,
             @Param("toDate") Date toDate
     );
+
+    @Query("""
+            SELECT new com.main.face_recognition_resource_server.DTOS.export.UserAttendancePieChartDTO(
+                a.user.id,
+                a.user.firstName,
+                a.user.secondName,
+                SUM(CASE WHEN a.status = 'ON_TIME' OR a.status = 'LATE' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'LATE' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'ON_LEAVE' THEN 1 ELSE 0 END)
+            )
+            FROM Attendance a
+                WHERE a.date BETWEEN :startDate AND :endDate
+                AND a.user.id IN :userIds
+            GROUP BY a.user.id, a.user.firstName, a.user.secondName
+            """)
+    List<UserAttendancePieChartDTO> getUsersAttendancePieChartData(
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
+            @Param("userIds") List<Long> userIds);
 }

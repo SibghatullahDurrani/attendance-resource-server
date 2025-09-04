@@ -16,4 +16,5 @@ public class ExportAttendanceExcelDataPropsDTO {
     private ExportMode exportMode;
     private List<Long> userIds;
     private List<Long> departmentIds;
+    private Long date;
 }

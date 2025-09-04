@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @Builder
-public class ExcelAttendanceChartDTO {
+public class DepartmentAttendanceLineChartDTO implements ExcelChartDTO {
     private Long departmentId;
     private String departmentName;
     private List<ExcelDepartmentAttendanceCountDTO> excelDepartmentAttendances;

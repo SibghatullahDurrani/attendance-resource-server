@@ -1,17 +1,17 @@
 package com.main.face_recognition_resource_server.services.export;
 
 import com.main.face_recognition_resource_server.DTOS.export.AttendanceExcelDataDTO;
-import com.main.face_recognition_resource_server.DTOS.export.ExcelAttendanceChartDTO;
-import com.main.face_recognition_resource_server.DTOS.export.ExportAttendanceExcelDataPropsDTO;
-import org.springframework.core.io.ByteArrayResource;
+import com.main.face_recognition_resource_server.DTOS.export.DepartmentAttendanceLineChartDTO;
+import com.main.face_recognition_resource_server.DTOS.export.UserAttendancePieChartDTO;
 
-import java.io.IOException;
 import java.util.List;
 
 public interface ExportService {
-    List<AttendanceExcelDataDTO> getAttendanceExcelData(ExportAttendanceExcelDataPropsDTO exportExcelProps);
+    List<AttendanceExcelDataDTO> getDepartmentAttendanceExcelData(List<Long> userIds, Long fromDate, Long toDate);
 
-    ByteArrayResource getAttendanceWorkBook(List<AttendanceExcelDataDTO> attendanceExcelDataDTO) throws IOException;
+    List<AttendanceExcelDataDTO> getUserAttendanceExcelData(List<Long> userIds, Long fromDate, Long toDate);
 
-    List<ExcelAttendanceChartDTO> getDivisionsExcelChartData(List<Long> departmentIds, Long toDate, Long fromDate);
+    List<DepartmentAttendanceLineChartDTO> getDepartmentsAttendanceLineChartData(List<Long> departmentIds, Long toDate, Long fromDate);
+
+    List<UserAttendancePieChartDTO> getUserAttendancePieChartData(List<Long> userIds, Long fromDate, Long toDate);
 }

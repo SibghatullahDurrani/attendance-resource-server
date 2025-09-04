@@ -2,19 +2,13 @@ package com.main.face_recognition_resource_server.services.export;
 
 import com.main.face_recognition_resource_server.DTOS.attendance.ExcelAttendanceDTO;
 import com.main.face_recognition_resource_server.DTOS.export.*;
-import com.main.face_recognition_resource_server.constants.export.ExportMode;
 import com.main.face_recognition_resource_server.repositories.CheckInRepository;
 import com.main.face_recognition_resource_server.repositories.CheckOutRepository;
 import com.main.face_recognition_resource_server.repositories.attendance.AttendanceRepository;
 import com.main.face_recognition_resource_server.utilities.DateUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,38 +28,23 @@ public class ExportServiceImpl implements ExportService {
     }
 
     @Override
-    public List<AttendanceExcelDataDTO> getAttendanceExcelData(ExportAttendanceExcelDataPropsDTO exportExcelProps) {
-        Date[] startAndEndDate = DateUtils.getStartAndEndDateOfRange(exportExcelProps.getFromDate(), exportExcelProps.getToDate());
-        List<AttendanceExcelDataDTO> attendanceData;
-        if (exportExcelProps.getExportMode() == ExportMode.MEMBERS) {
-            attendanceData = attendanceRepository.getUsersAttendanceExcelData(startAndEndDate[0], startAndEndDate[1], exportExcelProps.getUserIds());
-        } else {
-            attendanceData = attendanceRepository.getDepartmentsAttendanceExcelData(startAndEndDate[0], startAndEndDate[1], exportExcelProps.getDepartmentIds());
-        }
-        for (AttendanceExcelDataDTO attendance : attendanceData) {
-            List<ExcelAttendanceDTO> excelAttendances = attendanceRepository.getUserExcelAttendance(startAndEndDate[0], startAndEndDate[1], attendance.getUserId());
-            for (ExcelAttendanceDTO excelAttendance : excelAttendances) {
-                excelAttendance.setCheckIn(checkInRepository.getFirstCheckInDateOfAttendanceId(excelAttendance.getAttendanceId()));
-                excelAttendance.setCheckOut(checkOutRepository.getLastCheckOutDateOfAttendanceId(excelAttendance.getAttendanceId()));
-            }
-            attendance.setAttendances(excelAttendances);
-        }
+    public List<AttendanceExcelDataDTO> getDepartmentAttendanceExcelData(List<Long> userIds, Long fromDate, Long toDate) {
+        Date[] startAndEndDate = DateUtils.getStartAndEndDateOfRange(fromDate, toDate);
+        List<AttendanceExcelDataDTO> attendanceData = attendanceRepository.getDepartmentsAttendanceExcelData(startAndEndDate[0], startAndEndDate[1], userIds);
+        addExcelAttendances(attendanceData, startAndEndDate);
         return attendanceData;
     }
 
     @Override
-    public ByteArrayResource getAttendanceWorkBook(List<AttendanceExcelDataDTO> attendanceExcelDataDTO) throws IOException {
-        Workbook workbook = new XSSFWorkbook();
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        workbook.write(outputStream);
-        workbook.close();
-
-        return new ByteArrayResource(outputStream.toByteArray());
+    public List<AttendanceExcelDataDTO> getUserAttendanceExcelData(List<Long> userIds, Long fromDate, Long toDate) {
+        Date[] startAndEndDate = DateUtils.getStartAndEndDateOfRange(fromDate, toDate);
+        List<AttendanceExcelDataDTO> attendanceData = attendanceRepository.getUsersAttendanceExcelData(startAndEndDate[0], startAndEndDate[1], userIds);
+        addExcelAttendances(attendanceData, startAndEndDate);
+        return attendanceData;
     }
 
     @Override
-    public List<ExcelAttendanceChartDTO> getDivisionsExcelChartData(List<Long> departmentIds, Long fromDate, Long toDate) {
+    public List<DepartmentAttendanceLineChartDTO> getDepartmentsAttendanceLineChartData(List<Long> departmentIds, Long fromDate, Long toDate) {
         Date[] startAndEndDate = DateUtils.getStartAndEndDateOfRange(fromDate, toDate);
         List<FlatAttendanceExcelChartDTO> flatAttendanceExcelChartData = attendanceRepository.getExcelAttendanceChartData(departmentIds, startAndEndDate[0], startAndEndDate[1]);
         return flatAttendanceExcelChartData.stream()
@@ -83,7 +62,7 @@ public class ExportServiceImpl implements ExportService {
                                             .onLeave(row.getOnLeave())
                                             .build()
                                     ).toList();
-                            return ExcelAttendanceChartDTO
+                            return DepartmentAttendanceLineChartDTO
                                     .builder()
                                     .departmentId(first.getDepartmentId())
                                     .departmentName(first.getDepartmentName())
@@ -94,5 +73,22 @@ public class ExportServiceImpl implements ExportService {
                 .values()
                 .stream()
                 .toList();
+    }
+
+    @Override
+    public List<UserAttendancePieChartDTO> getUserAttendancePieChartData(List<Long> userIds, Long fromDate, Long toDate) {
+        Date[] startAndEndDate = DateUtils.getStartAndEndDateOfRange(fromDate, toDate);
+        return attendanceRepository.getUsersAttendancePieChartData(startAndEndDate[0], startAndEndDate[1], userIds);
+    }
+
+    private void addExcelAttendances(List<AttendanceExcelDataDTO> attendanceData, Date[] startAndEndDate) {
+        for (AttendanceExcelDataDTO attendance : attendanceData) {
+            List<ExcelAttendanceDTO> excelAttendances = attendanceRepository.getUserExcelAttendance(startAndEndDate[0], startAndEndDate[1], attendance.getUserId());
+            for (ExcelAttendanceDTO excelAttendance : excelAttendances) {
+                excelAttendance.setCheckIn(checkInRepository.getFirstCheckInDateOfAttendanceId(excelAttendance.getAttendanceId()));
+                excelAttendance.setCheckOut(checkOutRepository.getLastCheckOutDateOfAttendanceId(excelAttendance.getAttendanceId()));
+            }
+            attendance.setAttendances(excelAttendances);
+        }
     }
 }
