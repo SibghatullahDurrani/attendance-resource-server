@@ -31,6 +31,16 @@ public class DateUtils {
         return new Date[]{startDate, endDate};
     }
 
+    public static Date[] getStartAndEndDateOfDate(Long date) {
+        Date startDate = getTruncatedDate(date);
+
+        Calendar endCalendar = GregorianCalendar.getInstance();
+        endCalendar.setTime(startDate);
+        endCalendar.set(Calendar.DAY_OF_MONTH, endCalendar.get(Calendar.DAY_OF_MONTH) + 1);
+        Date endDate = endCalendar.getTime();
+        return new Date[]{startDate, endDate};
+    }
+
     public static Date[] getStartAndEndDateOfToday() {
         Calendar calendarStart = GregorianCalendar.getInstance();
         Calendar calendarEnd = GregorianCalendar.getInstance();

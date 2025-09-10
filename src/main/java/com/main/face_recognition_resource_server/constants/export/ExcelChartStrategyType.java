@@ -2,6 +2,7 @@ package com.main.face_recognition_resource_server.constants.export;
 
 
 import com.main.face_recognition_resource_server.DTOS.export.DepartmentAttendanceLineChartDTO;
+import com.main.face_recognition_resource_server.DTOS.export.DepartmentAttendancePieChartDTO;
 import com.main.face_recognition_resource_server.DTOS.export.ExcelChartDTO;
 import com.main.face_recognition_resource_server.DTOS.export.UserAttendancePieChartDTO;
 import lombok.Getter;
@@ -9,7 +10,8 @@ import lombok.Getter;
 @Getter
 public enum ExcelChartStrategyType {
     DEPARTMENT_ATTENDANCE_LINE_CHART(DepartmentAttendanceLineChartDTO.class),
-    USER_ATTENDANCE_PIE_CHART(UserAttendancePieChartDTO.class);
+    USER_ATTENDANCE_PIE_CHART(UserAttendancePieChartDTO.class),
+    DEPARTMENT_ATTENDANCE_PIE_CHART(DepartmentAttendancePieChartDTO.class);
 
     private final Class<? extends ExcelChartDTO> excelChartDtoType;
 

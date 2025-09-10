@@ -2,6 +2,7 @@ package com.main.face_recognition_resource_server.repositories.attendance;
 
 import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.DTOS.export.AttendanceExcelDataDTO;
+import com.main.face_recognition_resource_server.DTOS.export.DepartmentAttendancePieChartDTO;
 import com.main.face_recognition_resource_server.DTOS.export.FlatAttendanceExcelChartDTO;
 import com.main.face_recognition_resource_server.DTOS.export.UserAttendancePieChartDTO;
 import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatus;
@@ -237,7 +238,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
             GROUP BY a.date, a.user.department.id, a.user.department.departmentName
             ORDER BY a.user.department.id, a.date
             """)
-    List<FlatAttendanceExcelChartDTO> getExcelAttendanceChartData(
+    List<FlatAttendanceExcelChartDTO> getDepartmentLineChartData(
             @Param("departmentIds") List<Long> departmentIds,
             @Param("fromDate") Date fromDate,
             @Param("toDate") Date toDate
@@ -262,4 +263,77 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
             @Param("startDate") Date startDate,
             @Param("endDate") Date endDate,
             @Param("userIds") List<Long> userIds);
+
+    @Query("""
+            SELECT new com.main.face_recognition_resource_server.DTOS.export.AttendanceExcelDataDTO(
+                        u.id,u.firstName, u.secondName, u.department.departmentName,u.designation
+            ) FROM User u WHERE u.department.organization.id = :organizationId
+            AND EXISTS (
+                SELECT 1 FROM Attendance a
+                WHERE a.user.id = u.id
+                AND a.date >= :startDate AND a.date < :endDate
+            )
+            """)
+    List<AttendanceExcelDataDTO> getOrganizationAttendanceData(
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
+            @Param("organizationId") Long organizationId);
+
+    @Query("""
+            SELECT new com.main.face_recognition_resource_server.DTOS.export.DepartmentAttendancePieChartDTO(
+                a.user.department.id,
+                a.user.department.departmentName,
+                SUM(CASE WHEN a.status = 'ON_TIME' OR a.status = 'LATE' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'LATE' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'ON_LEAVE' THEN 1 ELSE 0 END)
+            )
+            FROM Attendance a
+                WHERE a.date BETWEEN :startDate AND :endDate
+                AND a.user.department.organization.id = :organizationId
+            GROUP BY a.user.department.id, a.user.department.departmentName
+            """)
+    List<DepartmentAttendancePieChartDTO> getOrganizationPieChartData(
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
+            @Param("organizationId") Long organizationId);
+
+    @Query("""
+            SELECT new com.main.face_recognition_resource_server.DTOS.export.DepartmentAttendancePieChartDTO(
+                a.user.department.id,
+                a.user.department.departmentName,
+                SUM(CASE WHEN a.status = 'ON_TIME' OR a.status = 'LATE' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'LATE' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'ON_LEAVE' THEN 1 ELSE 0 END)
+            )
+            FROM Attendance a
+                WHERE a.date BETWEEN :startDate AND :endDate
+                AND a.user.department.id IN :departmentIds
+            GROUP BY a.user.department.id, a.user.department.departmentName
+            """)
+    List<DepartmentAttendancePieChartDTO> getDepartmentsAttendancePieChartData(
+            @Param("departmentIds") List<Long> departmentIds,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate);
+
+    @Query("""
+            SELECT new  com.main.face_recognition_resource_server.DTOS.export.FlatAttendanceExcelChartDTO(
+                a.user.department.id,
+                a.user.department.departmentName,
+                a.date,
+                SUM(CASE WHEN a.status = 'ON_TIME' OR a.status = 'LATE' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'LATE' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN a.status = 'ON_LEAVE' THEN 1 ELSE 0 END)
+            ) FROM Attendance a
+            WHERE a.user.department.organization.id = :organizationId
+                AND a.date BETWEEN :fromDate AND :toDate
+            GROUP BY a.date, a.user.department.id, a.user.department.departmentName
+            ORDER BY a.user.department.id, a.date
+            """)
+    List<FlatAttendanceExcelChartDTO> getOrganizationLineChartData(
+            @Param("organizationId") Long organizationId,
+            @Param("fromDate") Date fromDate,
+            @Param("toDate") Date toDate);
 }

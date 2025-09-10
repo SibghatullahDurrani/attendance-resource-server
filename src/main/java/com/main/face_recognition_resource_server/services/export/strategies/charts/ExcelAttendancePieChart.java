@@ -1,7 +1,5 @@
 package com.main.face_recognition_resource_server.services.export.strategies.charts;
 
-import com.main.face_recognition_resource_server.DTOS.export.UserAttendancePieChartDTO;
-import com.main.face_recognition_resource_server.constants.export.ExcelChartStrategyType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xddf.usermodel.chart.*;
@@ -9,38 +7,35 @@ import org.apache.poi.xssf.usermodel.*;
 import org.openxmlformats.schemas.drawingml.x2006.chart.*;
 import org.openxmlformats.schemas.drawingml.x2006.main.CTSRgbColor;
 import org.openxmlformats.schemas.drawingml.x2006.main.CTSolidColorFillProperties;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
+@Component
+public class ExcelAttendancePieChart {
 
-@Service
-@ExcelChartStrategyKey(ExcelChartStrategyType.USER_ATTENDANCE_PIE_CHART)
-public class UserAttendancePieChart implements ExcelChartStrategy<UserAttendancePieChartDTO> {
-    @Override
-    public void create(XSSFWorkbook workbook, List<UserAttendancePieChartDTO> excelAttendanceChartData) {
-        for (UserAttendancePieChartDTO userData : excelAttendanceChartData) {
-            createUserPieChart(workbook, userData);
-        }
-    }
-
-    private void createUserPieChart(XSSFWorkbook workbook, UserAttendancePieChartDTO userData) {
-        XSSFSheet sheet = workbook.createSheet(userData.getFullName());
+    public void createPieChart(
+            XSSFWorkbook workbook,
+            String title,
+            Long onTimeCount,
+            Long lateCount,
+            Long absentCount,
+            Long onLeaveCount) {
+        XSSFSheet sheet = workbook.createSheet(title);
 
         Row headerRow = sheet.createRow(0);
         headerRow.createCell(0).setCellValue("Status");
         headerRow.createCell(1).setCellValue("Count");
 
         int rowNum = 1;
-        rowNum = createRow(sheet, rowNum, "On Time", userData.getOnTime());
-        rowNum = createRow(sheet, rowNum, "Late", userData.getLate());
-        rowNum = createRow(sheet, rowNum, "Absent", userData.getAbsent());
-        rowNum = createRow(sheet, rowNum, "On Leave", userData.getOnLeave());
+        rowNum = createRow(sheet, rowNum, "On Time", onTimeCount);
+        rowNum = createRow(sheet, rowNum, "Late", lateCount);
+        rowNum = createRow(sheet, rowNum, "Absent", absentCount);
+        rowNum = createRow(sheet, rowNum, "On Leave", onLeaveCount);
 
         XSSFDrawing drawing = sheet.createDrawingPatriarch();
         XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 3, 1, 12, 20);
 
         XSSFChart chart = drawing.createChart(anchor);
-        chart.setTitleText("Attendance Distribution - " + userData.getFullName());
+        chart.setTitleText("Attendance Distribution - " + title);
         chart.setTitleOverlay(false);
 
         XDDFChartLegend legend = chart.getOrAddLegend();
@@ -93,10 +88,5 @@ public class UserAttendancePieChart implements ExcelChartStrategy<UserAttendance
 
             dPt.addNewSpPr().setSolidFill(fill);
         }
-    }
-
-    @Override
-    public Class<UserAttendancePieChartDTO> getExcelChartDTOClass() {
-        return UserAttendancePieChartDTO.class;
     }
 }

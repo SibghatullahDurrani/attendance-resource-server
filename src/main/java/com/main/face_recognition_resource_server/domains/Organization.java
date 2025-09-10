@@ -35,4 +35,7 @@ public class Organization {
 
     @OneToMany(mappedBy = "organization")
     private List<Shift> organizationShifts;
+
+    @Column(nullable = false)
+    private String timeZone;
 }
