@@ -4,7 +4,7 @@ import com.main.face_recognition_resource_server.constants.attendance.Attendance
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -16,9 +16,9 @@ public class UserAttendanceDTO {
     private List<Long> checkIns;
     private List<Long> checkOuts;
 
-    public UserAttendanceDTO(Long id, Date date, AttendanceStatus status) {
+    public UserAttendanceDTO(Long id, Instant date, AttendanceStatus status) {
         this.id = id;
-        this.date = date.getTime();
+        this.date = date.toEpochMilli();
         this.status = status;
     }
 }

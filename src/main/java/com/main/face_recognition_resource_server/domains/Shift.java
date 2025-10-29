@@ -1,10 +1,12 @@
 package com.main.face_recognition_resource_server.domains;
 
+import com.main.face_recognition_resource_server.constants.shift.WorkingDays;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Builder
 @Getter
@@ -49,4 +51,11 @@ public class Shift {
     private boolean isSavedInProducer;
 
     private Date lastSavedInProducerDate;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "shift_working_days", joinColumns = @JoinColumn(name = "shift_id"))
+    @Column(name = "day", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Set<WorkingDays> workingDays;
+
 }

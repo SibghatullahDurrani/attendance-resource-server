@@ -20,7 +20,7 @@ public class UserAttendancePieChart implements ExcelChartStrategy<UserAttendance
     }
 
     @Override
-    public void create(XSSFWorkbook workbook, List<UserAttendancePieChartDTO> excelAttendanceChartData) {
+    public void create(XSSFWorkbook workbook, List<UserAttendancePieChartDTO> excelAttendanceChartData, String timeZone) {
         Long totalOnTime = 0L;
         Long totalLate = 0L;
         Long totalAbsent = 0L;

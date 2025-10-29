@@ -9,6 +9,7 @@ import com.main.face_recognition_resource_server.converters.OrganizationToRegist
 import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.domains.OrganizationPolicies;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
+import com.main.face_recognition_resource_server.projections.organization.OrganizationTimeZone;
 import com.main.face_recognition_resource_server.repositories.OrganizationRepository;
 import com.main.face_recognition_resource_server.services.organizationpolicies.OrganizationPoliciesService;
 import lombok.extern.slf4j.Slf4j;
@@ -96,5 +97,25 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Override
     public List<Long> getAllOrganizationIds() {
         return organizationRepository.getAllOrganizationIds();
+    }
+
+    @Override
+    public List<String> getAllOrganizationTimeZones() {
+        return organizationRepository.getAllOrganizationTimeZones();
+    }
+
+    @Override
+    public List<OrganizationTimeZone> getAllOrganizationTimeZonesWithIds() {
+        return organizationRepository.getAllOrganizationTimeZonesWithIds();
+    }
+
+    @Override
+    public List<Long> getOrganizationIdsRelatedToTimeZone(String timeZone) {
+        return organizationRepository.getOrganizationIdsRelatedToTimeZone(timeZone);
+    }
+
+    @Override
+    public String getOrganizationTimeZone(Long organizationId) {
+        return organizationRepository.getOrganizationTimeZone(organizationId);
     }
 }

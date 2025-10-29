@@ -20,7 +20,7 @@ public class DepartmentAttendancePieChart implements ExcelChartStrategy<Departme
     }
 
     @Override
-    public void create(XSSFWorkbook workbook, List<DepartmentAttendancePieChartDTO> excelAttendanceChartData) {
+    public void create(XSSFWorkbook workbook, List<DepartmentAttendancePieChartDTO> excelAttendanceChartData, String timeZone) {
         Long totalOnTime = 0L;
         Long totalLate = 0L;
         Long totalAbsent = 0L;

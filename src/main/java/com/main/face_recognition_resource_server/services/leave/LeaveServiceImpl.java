@@ -10,7 +10,9 @@ import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.*;
 import com.main.face_recognition_resource_server.repositories.leave.LeaveRepository;
 import com.main.face_recognition_resource_server.services.attendance.AttendanceService;
+import com.main.face_recognition_resource_server.services.organization.OrganizationService;
 import com.main.face_recognition_resource_server.services.user.UserService;
+import com.main.face_recognition_resource_server.utilities.DateUtils;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -21,6 +23,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.*;
 
 import static com.main.face_recognition_resource_server.utilities.DateUtils.getStartAndEndDateOfMonthOfYear;
@@ -31,12 +34,14 @@ public class LeaveServiceImpl implements LeaveService {
     private final LeaveRepository leaveRepository;
     private final UserService userService;
     private final AttendanceService attendanceService;
+    private final OrganizationService organizationService;
 
 
-    public LeaveServiceImpl(LeaveRepository leaveRepository, UserService userService, AttendanceService attendanceService) {
+    public LeaveServiceImpl(LeaveRepository leaveRepository, UserService userService, AttendanceService attendanceService, OrganizationService organizationService) {
         this.leaveRepository = leaveRepository;
         this.userService = userService;
         this.attendanceService = attendanceService;
+        this.organizationService = organizationService;
     }
 
     @Override
@@ -67,9 +72,9 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
-    public List<LeaveDTO> getUserLeaves(String username, int year, int month) throws NoLeaveAvailableException {
+    public List<UserLeaveDTO> getUserLeaves(String username, int year, int month) throws NoLeaveAvailableException {
         Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
-        List<LeaveDTO> userLeaves = leaveRepository.getUserLeavesBetweenDates(startAndEndDate[0], startAndEndDate[1], username);
+        List<UserLeaveDTO> userLeaves = leaveRepository.getUserLeavesBetweenDates(startAndEndDate[0], startAndEndDate[1], username);
         if (userLeaves.isEmpty()) {
             throw new NoLeaveAvailableException();
         } else {
@@ -78,7 +83,7 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
-    public Page<OrganizationLeaveRecordDTO> getOrganizationLeavesPage(Long organizationId, int year, Integer month, String userName, Long departmentId, LeaveType leaveType, LeaveStatus leaveStatus, PageRequest pageRequest) {
+    public Page<OrganizationUserLeaveRecordDTO> getOrganizationUserLeaves(Long organizationId, int year, Integer month, String userName, Long departmentId, LeaveType leaveType, LeaveStatus leaveStatus, PageRequest pageRequest) {
         Specification<Leave> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             Join<Leave, User> leaveUserJoin = root.join("user", JoinType.INNER);
@@ -123,7 +128,7 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
-    public String getLeaveApplication(Long leaveId) throws LeaveDoesntExistException {
+    public String getUserLeaveApplication(Long leaveId) throws LeaveDoesntExistException {
         Optional<String> leaveApplication = leaveRepository.getLeaveApplication(leaveId);
         if (leaveApplication.isEmpty()) {
             throw new LeaveDoesntExistException();
@@ -133,8 +138,8 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
-    public LeaveDataWithApplicationDTO getLeaveDataWithApplication(Long leaveId) throws LeaveDoesntExistException {
-        Optional<LeaveDataWithApplicationDTO> leave = leaveRepository.getLeaveDataWithApplication(leaveId);
+    public LeaveApplicationWithUserDataDTO getLeaveApplicationWithUserData(Long leaveId) throws LeaveDoesntExistException {
+        Optional<LeaveApplicationWithUserDataDTO> leave = leaveRepository.getLeaveDataWithApplication(leaveId);
         if (leave.isEmpty()) {
             throw new LeaveDoesntExistException();
         }
@@ -144,11 +149,11 @@ public class LeaveServiceImpl implements LeaveService {
     @Override
     @Modifying
     @Transactional
-    public void respondToLeave(RespondToLeaveDTO respondToLeaveDTO) {
+    public void respondToLeave(RespondToLeaveDTO respondToLeaveDTO, Long organizationId) {
         Optional<Long> userId = leaveRepository.getUserIdOfLeave(respondToLeaveDTO.getLeaveId());
         leaveRepository.changeLeaveStatus(respondToLeaveDTO.getLeaveStatus(), respondToLeaveDTO.getLeaveId());
         if (respondToLeaveDTO.getLeaveStatus() == LeaveStatus.APPROVED && userId.isPresent()) {
-            Date date = new Date(respondToLeaveDTO.getDate());
+            Instant date = DateUtils.getInstantOfTimestampInTimeZone(respondToLeaveDTO.getDate());
             attendanceService.markLeaveOfUserOnDate(userId.get(), date);
         }
     }

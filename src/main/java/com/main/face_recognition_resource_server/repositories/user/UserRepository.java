@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.repositories.user;
 
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
-import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
+import com.main.face_recognition_resource_server.DTOS.leave.RemainingUserLeavesCountDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.user.*;
 import com.main.face_recognition_resource_server.constants.user.UserRole;
@@ -98,11 +98,11 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Optional<Long> getUserIdByUsername(String username);
 
     @Query("""
-            SELECT new com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO(
+            SELECT new com.main.face_recognition_resource_server.DTOS.leave.RemainingUserLeavesCountDTO(
                       u.remainingSickLeaves, u.remainingAnnualLeaves
             ) FROM User u WHERE u.username = ?1
             """)
-    RemainingLeavesDTO getRemainingLeavesByUsername(String username);
+    RemainingUserLeavesCountDTO getRemainingLeavesByUsername(String username);
 
     @Query("""
             SELECT CONCAT(u.firstName, ' ',u.secondName) FROM User u WHERE  u.id = ?1
@@ -120,12 +120,12 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Long getTotalUsersOfDepartment(Long departmentId);
 
     @Query("""
-            SELECT new com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO(
+            SELECT new com.main.face_recognition_resource_server.DTOS.user.UsersOfOwnOrganizationRecordDTO(
                       u.id, u.firstName, u.secondName, u.department.departmentName, u.designation,
                       u.identificationNumber, u.email, u.phoneNumber
             )FROM User u WHERE u.department.organization.id = ?1
             """)
-    Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest);
+    Page<UsersOfOwnOrganizationRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest);
 
     @Query(value = """
             SELECT COALESCE(MAX(CAST(SUBSTRING(username FROM '#([0-9]+)$')AS INTEGER ) ),0) FROM users
@@ -188,4 +188,9 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
             SELECT u.userShift.checkInTime FROM User u WHERE u.id=?1
             """)
     String getUserCheckInTime(Long userId);
+
+    @Query("""
+            SELECT u.department.organization.timeZone FROM User u WHERE u.id = :userId
+            """)
+    String getUserTimeZone(@Param("userId") Long userId);
 }

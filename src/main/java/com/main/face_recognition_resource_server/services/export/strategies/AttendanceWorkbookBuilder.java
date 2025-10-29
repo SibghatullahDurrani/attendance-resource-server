@@ -29,14 +29,14 @@ public class AttendanceWorkbookBuilder {
         return new AttendanceWorkbookBuilder(sheetFactory, chartFactory);
     }
 
-    public AttendanceWorkbookBuilder addSheet(ExcelSheetCreationStrategyType sheetType, List<AttendanceExcelDataDTO> attendanceExcelData) {
-        sheetFactory.getStrategy(sheetType).create(workbook, attendanceExcelData);
+    public AttendanceWorkbookBuilder addSheet(ExcelSheetCreationStrategyType sheetType, List<AttendanceExcelDataDTO> attendanceExcelData, String timeZone) {
+        sheetFactory.getStrategy(sheetType).create(workbook, attendanceExcelData, timeZone);
         return this;
     }
 
-    public <T extends ExcelChartDTO> AttendanceWorkbookBuilder addChart(ExcelChartStrategyType chartType, List<T> chartData) {
+    public <T extends ExcelChartDTO> AttendanceWorkbookBuilder addChart(ExcelChartStrategyType chartType, List<T> chartData, String timeZone) {
         ExcelChartStrategy<T> chartStrategy = chartFactory.getExcelChartStrategy(chartType);
-        chartStrategy.create(workbook, chartData);
+        chartStrategy.create(workbook, chartData, timeZone);
         return this;
     }
 

@@ -84,7 +84,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    public Page<DepartmentsTableRecordDTO> getDepartmentsTableData(Long organizationId, Pageable pageable) {
+    public Page<DepartmentsTableRecordDTO> getOrganizationDepartments(Long organizationId, Pageable pageable) {
         return departmentRepository.getDepartmentsTableData(organizationId, pageable);
     }
 

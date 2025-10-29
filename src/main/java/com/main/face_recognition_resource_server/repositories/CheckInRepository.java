@@ -2,13 +2,12 @@ package com.main.face_recognition_resource_server.repositories;
 
 import com.main.face_recognition_resource_server.DTOS.attendance.GetAttendanceSnapPathDTO;
 import com.main.face_recognition_resource_server.DTOS.attendance.RecentAttendanceDTO;
-import com.main.face_recognition_resource_server.domains.Attendance;
 import com.main.face_recognition_resource_server.domains.CheckIn;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
@@ -16,7 +15,7 @@ public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
             SELECT ci.date FROM CheckIn ci
             WHERE ci.attendance.id IN ?1
             """)
-    List<Date> getCheckInDatesOfAttendanceIds(List<Long> attendanceIds);
+    List<Instant> getCheckInDatesOfAttendanceIds(List<Long> attendanceIds);
 
     @Query("""
             SELECT new com.main.face_recognition_resource_server.DTOS.attendance.GetAttendanceSnapPathDTO(
@@ -30,16 +29,8 @@ public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
             SELECT ci.date FROM CheckIn ci
             WHERE ci.attendance.id = ?1
             """)
-    List<Date> getCheckInDatesOfAttendanceId(Long attendanceId);
+    List<Instant> getCheckInDatesOfAttendanceId(Long attendanceId);
 
-    List<CheckIn> attendance(Attendance attendance);
-
-    //  @Query("""
-//          SELECT new com.main.face_recognition_resource_server.DTOS.attendance.RecentAttendanceDTO(
-//          c.attendance.user.id, MIN(c.date), c.fullImageName, c.faceImageName
-//          ) FROM CheckIn c WHERE c.attendance.id IN ?1 GROUP BY c.attendance.user.id,
-//          c.fullImageName, c.faceImageName
-//          """)
     @Query(value = """
             SELECT
             sub.user_id AS userId,
@@ -65,5 +56,5 @@ public interface CheckInRepository extends JpaRepository<CheckIn, Long> {
     @Query("""
             SELECT MIN(ci.date) FROM CheckIn ci WHERE ci.attendance.id = ?1
             """)
-    Date getFirstCheckInDateOfAttendanceId(Long attendanceId);
+    Instant getFirstCheckInDateOfAttendanceId(Long attendanceId);
 }

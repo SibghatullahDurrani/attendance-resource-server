@@ -1,7 +1,7 @@
 package com.main.face_recognition_resource_server.repositories.user;
 
-import com.main.face_recognition_resource_server.DTOS.user.AdminUsersTableRecordDTO;
 import com.main.face_recognition_resource_server.DTOS.user.ShiftAllocationDTO;
+import com.main.face_recognition_resource_server.DTOS.user.UsersOfOwnOrganizationRecordDTO;
 import com.main.face_recognition_resource_server.domains.Department;
 import com.main.face_recognition_resource_server.domains.Shift;
 import com.main.face_recognition_resource_server.domains.User;
@@ -82,10 +82,10 @@ public class UserCriteriaRepositoryImpl implements UserCriteriaRepository {
     }
 
     @Override
-    public Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Specification<User> specification, Pageable pageable) {
+    public Page<UsersOfOwnOrganizationRecordDTO> getUsersPageOfOrganization(Specification<User> specification, Pageable pageable) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 
-        CriteriaQuery<AdminUsersTableRecordDTO> criteriaQuery = criteriaBuilder.createQuery(AdminUsersTableRecordDTO.class);
+        CriteriaQuery<UsersOfOwnOrganizationRecordDTO> criteriaQuery = criteriaBuilder.createQuery(UsersOfOwnOrganizationRecordDTO.class);
         Root<User> userRoot = criteriaQuery.from(User.class);
         Join<User, Department> userDepartmentJoin = userRoot.join("department", JoinType.INNER);
 
@@ -95,7 +95,7 @@ public class UserCriteriaRepositoryImpl implements UserCriteriaRepository {
         }
         criteriaQuery.orderBy(criteriaBuilder.asc(userRoot.get("firstName")));
         criteriaQuery.select(criteriaBuilder.construct(
-                AdminUsersTableRecordDTO.class,
+                UsersOfOwnOrganizationRecordDTO.class,
                 userRoot.get("id"),
                 userRoot.get("firstName"),
                 userRoot.get("secondName"),
@@ -106,11 +106,11 @@ public class UserCriteriaRepositoryImpl implements UserCriteriaRepository {
                 userRoot.get("phoneNumber")
         ));
 
-        TypedQuery<AdminUsersTableRecordDTO> typedQuery = entityManager.createQuery(criteriaQuery)
+        TypedQuery<UsersOfOwnOrganizationRecordDTO> typedQuery = entityManager.createQuery(criteriaQuery)
                 .setFirstResult((int) pageable.getOffset())
                 .setMaxResults(pageable.getPageSize());
 
-        List<AdminUsersTableRecordDTO> data = typedQuery.getResultList();
+        List<UsersOfOwnOrganizationRecordDTO> data = typedQuery.getResultList();
 
         CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
         Root<User> countRoot = countQuery.from(User.class);

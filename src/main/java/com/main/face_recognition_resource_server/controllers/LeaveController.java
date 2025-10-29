@@ -36,42 +36,42 @@ public class LeaveController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<LeaveDTO>> getLeavesOfUser(@RequestParam int year, @RequestParam int month, Authentication authentication) throws NoLeaveAvailableException {
+    public ResponseEntity<List<UserLeaveDTO>> userLeaves(@RequestParam int year, @RequestParam int month, Authentication authentication) throws NoLeaveAvailableException {
         return new ResponseEntity<>(leaveService.getUserLeaves(authentication.getName(), year, month), HttpStatus.OK);
     }
 
     @GetMapping("remaining-leaves")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<RemainingLeavesDTO> getRemainingLeavesOfUser(Authentication authentication) {
+    public ResponseEntity<RemainingUserLeavesCountDTO> remainingUserLeavesCount(Authentication authentication) {
         String username = authentication.getName();
-        RemainingLeavesDTO remainingLeavesDTO = userService.getRemainingLeavesOfUser(username);
-        return new ResponseEntity<>(remainingLeavesDTO, HttpStatus.OK);
+        RemainingUserLeavesCountDTO remainingUserLeavesCountDTO = userService.getRemainingUserLeavesCount(username);
+        return new ResponseEntity<>(remainingUserLeavesCountDTO, HttpStatus.OK);
     }
 
     @GetMapping("/organization")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<OrganizationLeaveRecordDTO>> getOrganizationLeaves(@RequestParam int page, @RequestParam int size, @RequestParam int year, @RequestParam(required = false) Integer month, @RequestParam(required = false) String userName, @RequestParam(required = false) Long departmentId, @RequestParam(required = false) LeaveType leaveType, @RequestParam(required = false) LeaveStatus leaveStatus, Authentication authentication) throws UserDoesntExistException {
+    public ResponseEntity<Page<OrganizationUserLeaveRecordDTO>> organizationUserLeaves(@RequestParam int page, @RequestParam int size, @RequestParam int year, @RequestParam(required = false) Integer month, @RequestParam(required = false) String userName, @RequestParam(required = false) Long departmentId, @RequestParam(required = false) LeaveType leaveType, @RequestParam(required = false) LeaveStatus leaveStatus, Authentication authentication) throws UserDoesntExistException {
         Long organizationId = userService.getUserOrganizationId(authentication.getName());
         PageRequest pageRequest = PageRequest.of(page, size);
-        Page<OrganizationLeaveRecordDTO> leaveRecordPage = leaveService.getOrganizationLeavesPage(organizationId, year, month, userName, departmentId, leaveType, leaveStatus, pageRequest);
+        Page<OrganizationUserLeaveRecordDTO> leaveRecordPage = leaveService.getOrganizationUserLeaves(organizationId, year, month, userName, departmentId, leaveType, leaveStatus, pageRequest);
         return new ResponseEntity<>(leaveRecordPage, HttpStatus.OK);
     }
 
     @GetMapping("/application/{leaveId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<LeaveApplicationDTO> getLeaveApplication(@PathVariable Long leaveId, Authentication authentication) throws UserDoesntExistException, LeaveDoesntBelongToTheOrganizationException, LeaveDoesntExistException {
+    public ResponseEntity<UserLeaveApplicationDTO> userLeaveApplication(@PathVariable Long leaveId, Authentication authentication) throws UserDoesntExistException, LeaveDoesntBelongToTheOrganizationException, LeaveDoesntExistException {
         Long organizationId = userService.getUserOrganizationId(authentication.getName());
         leaveService.doesLeaveBelongToOrganization(organizationId, leaveId);
-        String leaveApplication = leaveService.getLeaveApplication(leaveId);
-        return new ResponseEntity<>(new LeaveApplicationDTO(leaveApplication), HttpStatus.OK);
+        String leaveApplication = leaveService.getUserLeaveApplication(leaveId);
+        return new ResponseEntity<>(new UserLeaveApplicationDTO(leaveApplication), HttpStatus.OK);
     }
 
     @GetMapping("/data/application/{leaveId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<LeaveDataWithApplicationDTO> getLeaveDataWithApplication(@PathVariable Long leaveId, Authentication authentication) throws UserDoesntExistException, LeaveDoesntBelongToTheOrganizationException, LeaveDoesntExistException {
+    public ResponseEntity<LeaveApplicationWithUserDataDTO> leaveApplicationWithUserData(@PathVariable Long leaveId, Authentication authentication) throws UserDoesntExistException, LeaveDoesntBelongToTheOrganizationException, LeaveDoesntExistException {
         Long organizationId = userService.getUserOrganizationId(authentication.getName());
         leaveService.doesLeaveBelongToOrganization(organizationId, leaveId);
-        LeaveDataWithApplicationDTO leave = leaveService.getLeaveDataWithApplication(leaveId);
+        LeaveApplicationWithUserDataDTO leave = leaveService.getLeaveApplicationWithUserData(leaveId);
         return new ResponseEntity<>(leave, HttpStatus.OK);
     }
 
@@ -80,7 +80,7 @@ public class LeaveController {
     public ResponseEntity<HttpStatus> respondToLeave(@RequestBody RespondToLeaveDTO respondToLeaveDTO, Authentication authentication) throws UserDoesntExistException, LeaveDoesntBelongToTheOrganizationException {
         Long organizationId = userService.getUserOrganizationId(authentication.getName());
         leaveService.doesLeaveBelongToOrganization(organizationId, respondToLeaveDTO.getLeaveId());
-        leaveService.respondToLeave(respondToLeaveDTO);
+        leaveService.respondToLeave(respondToLeaveDTO, organizationId);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 

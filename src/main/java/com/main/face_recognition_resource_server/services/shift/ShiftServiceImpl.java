@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.main.face_recognition_resource_server.DTOS.shift.*;
 import com.main.face_recognition_resource_server.constants.rabbitmq.RabbitMQMessageType;
 import com.main.face_recognition_resource_server.constants.rabbitmq.ShiftMessageType;
+import com.main.face_recognition_resource_server.constants.shift.WorkingDays;
 import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.domains.Shift;
 import com.main.face_recognition_resource_server.repositories.shift.ShiftRepository;
@@ -31,10 +32,8 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.time.DayOfWeek;
+import java.util.*;
 
 @Service
 public class ShiftServiceImpl implements ShiftService {
@@ -100,7 +99,7 @@ public class ShiftServiceImpl implements ShiftService {
     }
 
     @Override
-    public Page<ShiftTableRowDTO> getShiftsPage(Long organizationId, String name, String checkInTime, String checkOutTime, PageRequest pageRequest) {
+    public Page<ShiftTableRowDTO> getShiftsPageOfOrganization(Long organizationId, String name, String checkInTime, String checkOutTime, PageRequest pageRequest) {
         Specification<Shift> specification = (root, _, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             Join<Shift, Organization> shiftOrganizationJoin = root.join("organization", JoinType.INNER);
@@ -145,7 +144,7 @@ public class ShiftServiceImpl implements ShiftService {
     }
 
     @Override
-    public List<ShiftOptionDTO> getShiftOptions(Long organizationId) {
+    public List<ShiftOptionDTO> getShiftOptionsOfOrganization(Long organizationId) {
         return shiftRepository.getShiftOptionsByOrganizationId(organizationId);
     }
 
@@ -153,5 +152,11 @@ public class ShiftServiceImpl implements ShiftService {
     public Shift getShiftById(Long shiftId) {
         return shiftRepository.findById(shiftId)
                 .orElseThrow(() -> new EntityNotFoundException("Shift with id: " + shiftId + " not found"));
+    }
+
+    @Override
+    public boolean isUserWorkingDay(DayOfWeek dayOfWeek, Long userId) {
+        Set<WorkingDays> getWorkingDaysOfUser = shiftRepository.getWorkingDaysOfUser(userId);
+        return getWorkingDaysOfUser.stream().anyMatch(wd -> wd.name().equals(dayOfWeek.name()));
     }
 }

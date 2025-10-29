@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
 import com.main.face_recognition_resource_server.DTOS.leave.LeavesAllowedPolicyDTO;
-import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
+import com.main.face_recognition_resource_server.DTOS.leave.RemainingUserLeavesCountDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.shift.ControlAcknowledgementDTO;
 import com.main.face_recognition_resource_server.DTOS.user.*;
@@ -23,6 +23,7 @@ import com.main.face_recognition_resource_server.services.organization.Organizat
 import com.main.face_recognition_resource_server.services.rabbitmqmessagebackup.RabbitMQMessageBackupService;
 import com.main.face_recognition_resource_server.services.shift.ShiftService;
 import com.main.face_recognition_resource_server.services.usershiftsetting.UserShiftSettingService;
+import com.main.face_recognition_resource_server.utilities.DateUtils;
 import com.main.face_recognition_resource_server.utilities.MessageMetadataWrapper;
 import com.rabbitmq.client.Channel;
 import jakarta.persistence.EntityNotFoundException;
@@ -58,6 +59,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.*;
 
 @Slf4j
@@ -104,7 +106,6 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Retryable(retryFor = SQLException.class)
     public void registerUser(RegisterUserDTO userToRegister, Long organizationId) throws UserAlreadyExistsException, SQLException, IOException, UserAlreadyExistsWithIdentificationNumberException {
-//    boolean userExistsWithEmailAndRole = userExistsWithEmailAndRole(userToRegister.getEmail(), userToRegister.getRole());
         boolean userExistsWithIdentificationNumber = userExistsWithIdentificationNumber(userToRegister.getFirstName(), userToRegister.getSecondName(), userToRegister.getIdentificationNumber());
         if (!userExistsWithIdentificationNumber) {
             String hashedPassword = passwordEncoder.encode(userToRegister.getPassword());
@@ -178,9 +179,11 @@ public class UserServiceImpl implements UserService {
             calendar.set(Calendar.MINUTE, 0);
             calendar.set(Calendar.SECOND, 0);
             calendar.set(Calendar.MILLISECOND, 0);
+            String timeZone = organizationService.getOrganizationTimeZone(organizationId);
+            Instant date = DateUtils.getInstantOfStartOfTodayOfTimeZone(timeZone);
             Attendance attendance = Attendance.builder()
                     .user(user)
-                    .date(calendar.getTime())
+                    .date(date)
                     .status(AttendanceStatus.ABSENT)
                     .build();
 
@@ -316,7 +319,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public RemainingLeavesDTO getRemainingLeavesOfUser(String username) {
+    public RemainingUserLeavesCountDTO getRemainingUserLeavesCount(String username) {
         return userRepository.getRemainingLeavesByUsername(username);
     }
 
@@ -360,12 +363,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest) {
+    public Page<UsersOfOwnOrganizationRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest) {
         return userRepository.getUsersPageOfOrganization(organizationId, pageRequest);
     }
 
     @Override
-    public Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest, String fullName, Long departmentId, String designation, Boolean isSourceFaceRegistered, String identificationNumber) {
+    public Page<UsersOfOwnOrganizationRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest, String fullName, Long departmentId, String designation, Boolean isSourceFaceRegistered, String identificationNumber) {
         Specification<User> specification = (root, _, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -602,5 +605,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public String getUserCheckInTime(Long userId) {
         return userRepository.getUserCheckInTime(userId);
+    }
+
+    @Override
+    public String getUserTimeZone(Long userId) {
+        return userRepository.getUserTimeZone(userId);
     }
 }

@@ -39,15 +39,15 @@ public class ShiftController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ShiftOptionDTO>> getShiftOptions(Authentication authentication) throws UserDoesntExistException {
+    public ResponseEntity<List<ShiftOptionDTO>> shiftOptionsOfOrganization(Authentication authentication) throws UserDoesntExistException {
         Long organizationId = userService.getUserOrganizationId(authentication.getName());
-        List<ShiftOptionDTO> shiftOptions = shiftService.getShiftOptions(organizationId);
+        List<ShiftOptionDTO> shiftOptions = shiftService.getShiftOptionsOfOrganization(organizationId);
         return new ResponseEntity<>(shiftOptions, HttpStatus.OK);
     }
 
     @GetMapping("shifts-table")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<ShiftTableRowDTO>> getShiftTable(
+    public ResponseEntity<Page<ShiftTableRowDTO>> shiftsOfOrganization(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String checkInTime,
             @RequestParam(required = false) String checkOutTime,
@@ -57,7 +57,7 @@ public class ShiftController {
     ) throws UserDoesntExistException {
         Long organizationId = userService.getUserOrganizationId(authentication.getName());
         PageRequest pageRequest = PageRequest.of(page, size);
-        Page<ShiftTableRowDTO> shiftTablePage = shiftService.getShiftsPage(organizationId, name, checkInTime, checkOutTime, pageRequest);
+        Page<ShiftTableRowDTO> shiftTablePage = shiftService.getShiftsPageOfOrganization(organizationId, name, checkInTime, checkOutTime, pageRequest);
         return new ResponseEntity<>(shiftTablePage, HttpStatus.OK);
     }
 

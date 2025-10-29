@@ -5,6 +5,7 @@ import com.main.face_recognition_resource_server.DTOS.export.ExcelDepartmentAtte
 import com.main.face_recognition_resource_server.constants.export.ExcelChartStrategyType;
 import com.main.face_recognition_resource_server.services.export.strategies.charts.ExcelChartStrategy;
 import com.main.face_recognition_resource_server.services.export.strategies.charts.ExcelChartStrategyKey;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xddf.usermodel.*;
@@ -12,8 +13,10 @@ import org.apache.poi.xddf.usermodel.chart.*;
 import org.apache.poi.xssf.usermodel.*;
 import org.springframework.stereotype.Service;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -22,10 +25,10 @@ import java.util.TreeMap;
 @ExcelChartStrategyKey(ExcelChartStrategyType.DEPARTMENT_ATTENDANCE_LINE_CHART)
 public class DepartmentAttendanceLineChart implements ExcelChartStrategy<DepartmentAttendanceLineChartDTO> {
     @Override
-    public void create(XSSFWorkbook workbook, List<DepartmentAttendanceLineChartDTO> excelAttendanceChartData) {
-        createAllDepartmentsChart(workbook, excelAttendanceChartData);
+    public void create(XSSFWorkbook workbook, List<DepartmentAttendanceLineChartDTO> excelAttendanceChartData, String timeZone) {
+        createAllDepartmentsChart(workbook, excelAttendanceChartData, timeZone);
         for (DepartmentAttendanceLineChartDTO department : excelAttendanceChartData) {
-            createSeparateDepartmentChart(workbook, department);
+            createSeparateDepartmentChart(workbook, department, timeZone);
         }
     }
 
@@ -34,16 +37,18 @@ public class DepartmentAttendanceLineChart implements ExcelChartStrategy<Departm
         return DepartmentAttendanceLineChartDTO.class;
     }
 
-    private void createSeparateDepartmentChart(XSSFWorkbook workbook, DepartmentAttendanceLineChartDTO excelAttendanceChartData) {
+    private void createSeparateDepartmentChart(XSSFWorkbook workbook, DepartmentAttendanceLineChartDTO excelAttendanceChartData, String timeZone) {
         XSSFSheet sheet = workbook.createSheet(excelAttendanceChartData.getDepartmentName());
         createHeaderRow(sheet);
 
         int rowNum = 1;
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yy");
 
         for (ExcelDepartmentAttendanceCountDTO count : excelAttendanceChartData.getExcelDepartmentAttendances()) {
             Row row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(dateFormat.format(count.getDate()));
+            Cell dateCell = row.createCell(0);
+            ZoneId zone = ZoneId.of(timeZone);
+            ZonedDateTime zonedDate = ZonedDateTime.ofInstant(count.getDate(), zone);
+            dateCell.setCellValue(zonedDate.format(DateTimeFormatter.ofPattern("dd-MMM-yy")));
             row.createCell(1).setCellValue(count.getOnTime());
             row.createCell(2).setCellValue(count.getLate());
             row.createCell(3).setCellValue(count.getAbsent());
@@ -108,17 +113,18 @@ public class DepartmentAttendanceLineChart implements ExcelChartStrategy<Departm
         headerRow.createCell(4).setCellValue("On Leave");
     }
 
-    private void createAllDepartmentsChart(XSSFWorkbook workbook, List<DepartmentAttendanceLineChartDTO> excelAttendanceChartData) {
+    private void createAllDepartmentsChart(XSSFWorkbook workbook, List<DepartmentAttendanceLineChartDTO> excelAttendanceChartData, String timeZone) {
         XSSFSheet allDeptSheet = workbook.createSheet("All Departments Trend");
 
         createHeaderRow(allDeptSheet);
 
-        Map<Date, long[]> totalsByDate = new TreeMap<>();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yy");
+        //TODO DATE CONVERSION CHECK
+        Map<Instant, long[]> totalsByDate = new TreeMap<>();
 
         for (DepartmentAttendanceLineChartDTO dept : excelAttendanceChartData) {
             for (ExcelDepartmentAttendanceCountDTO count : dept.getExcelDepartmentAttendances()) {
-                Date dateKey = count.getDate();
+                //TODO DATE CONVERSION CHECK
+                Instant dateKey = count.getDate();
                 totalsByDate.putIfAbsent(dateKey, new long[4]);
                 long[] totals = totalsByDate.get(dateKey);
                 totals[0] += count.getOnTime();
@@ -129,9 +135,13 @@ public class DepartmentAttendanceLineChart implements ExcelChartStrategy<Departm
         }
 
         int rowNum = 1;
-        for (Map.Entry<Date, long[]> entry : totalsByDate.entrySet()) {
+        //TODO DATE CONVERSION CHECK
+        for (Map.Entry<Instant, long[]> entry : totalsByDate.entrySet()) {
             Row row = allDeptSheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(dateFormat.format(entry.getKey()));
+            Cell dateCell = row.createCell(0);
+            ZoneId zone = ZoneId.of(timeZone);
+            ZonedDateTime date = ZonedDateTime.ofInstant(entry.getKey(), zone);
+            dateCell.setCellValue(date.format(DateTimeFormatter.ofPattern("dd-MMM-yy")));
             row.createCell(1).setCellValue(entry.getValue()[0]);
             row.createCell(2).setCellValue(entry.getValue()[1]);
             row.createCell(3).setCellValue(entry.getValue()[2]);

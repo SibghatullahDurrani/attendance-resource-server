@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.Instant;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,9 +22,8 @@ public class DailyUserAttendanceDTO {
     private String departmentName;
     private Long firstCheckInTime;
     private Long lastCheckOutTime;
-    private byte[] sourceImage;
 
-    public DailyUserAttendanceDTO(Long userId, String firstName, String secondName, AttendanceStatus status, AttendanceType attendanceType, String designation, String departmentName, Date latestCheckInDate, Date latestCheckOutDate) {
+    public DailyUserAttendanceDTO(Long userId, String firstName, String secondName, AttendanceStatus status, AttendanceType attendanceType, String designation, String departmentName, Instant latestCheckInDate, Instant latestCheckOutDate) {
         this.userId = userId;
         this.fullName = firstName + " " + secondName;
         this.status = status;
@@ -32,12 +31,12 @@ public class DailyUserAttendanceDTO {
         this.designation = designation;
         this.departmentName = departmentName;
         if (latestCheckInDate != null) {
-            this.firstCheckInTime = latestCheckInDate.getTime();
+            this.firstCheckInTime = latestCheckInDate.toEpochMilli();
         } else {
             this.firstCheckInTime = 0L;
         }
         if (latestCheckOutDate != null) {
-            this.lastCheckOutTime = latestCheckOutDate.getTime();
+            this.lastCheckOutTime = latestCheckOutDate.toEpochMilli();
         } else {
             this.lastCheckOutTime = 0L;
         }

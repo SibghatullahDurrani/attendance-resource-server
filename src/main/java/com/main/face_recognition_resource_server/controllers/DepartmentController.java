@@ -35,37 +35,12 @@ public class DepartmentController {
         return new ResponseEntity<>(department, HttpStatus.OK);
     }
 
-//  @PostMapping()
-//  @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-//  public ResponseEntity<HttpStatus> registerDepartment(@RequestBody RegisterDepartmentDTO departmentToRegister, Authentication authentication) throws
-//          OrganizationDoesntExistException,
-//          UserDoesntExistException,
-//          OrganizationDoesntBelongToYouException {
-//    boolean isSuperAdmin = authentication.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals(UserRole.ROLE_SUPER_ADMIN.toString()));
-//    boolean organizationExists = organizationServices.organizationExists(departmentToRegister.getOrganizationId());
-//    if (organizationExists) {
-//      if (isSuperAdmin) {
-//        departmentServices.registerDepartment(departmentToRegister);
-//        return new ResponseEntity<>(HttpStatus.CREATED);
-//      } else {
-//        Long userOrganizationId = userServices.getUserOrganizationId(authentication.getName());
-//        if (!userOrganizationId.equals(departmentToRegister.getOrganizationId())) {
-//          throw new OrganizationDoesntBelongToYouException();
-//        } else {
-//          departmentServices.registerDepartment(departmentToRegister);
-//          return new ResponseEntity<>(HttpStatus.CREATED);
-//        }
-//      }
-//    }
-//    return null;
-//  }
-
-    @GetMapping("/departments-table")
+    @GetMapping("/organization")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<DepartmentsTableRecordDTO>> getDepartmentsTableData(@RequestParam int page, @RequestParam int size, Authentication authentication) throws UserDoesntExistException {
+    public ResponseEntity<Page<DepartmentsTableRecordDTO>> organizationDepartments(@RequestParam int page, @RequestParam int size, Authentication authentication) throws UserDoesntExistException {
         Long organizationId = userService.getUserOrganizationId(authentication.getName());
         PageRequest pageRequest = PageRequest.of(page, size);
-        Page<DepartmentsTableRecordDTO> departmentsTable = departmentService.getDepartmentsTableData(organizationId, pageRequest);
+        Page<DepartmentsTableRecordDTO> departmentsTable = departmentService.getOrganizationDepartments(organizationId, pageRequest);
         return new ResponseEntity<>(departmentsTable, HttpStatus.OK);
     }
 

@@ -28,7 +28,7 @@ public interface DepartmentService {
 
     List<DepartmentOfOrganizationDTO> getDepartmentNamesOfOrganization(Long organizationId);
 
-    Page<DepartmentsTableRecordDTO> getDepartmentsTableData(Long organizationId, Pageable pageable);
+    Page<DepartmentsTableRecordDTO> getOrganizationDepartments(Long organizationId, Pageable pageable);
 
     void registerDepartments(List<RegisterDepartmentDTO> departmentsToRegister, Long organizationId) throws DepartmentAlreadyExistsException;
 }

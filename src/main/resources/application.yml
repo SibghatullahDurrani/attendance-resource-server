@@ -12,13 +12,6 @@ spring:
     show-sql: false
   application:
     name: face_recognition_resource_server
-  #  cloud:
-  #    config:
-  #      uri: http://localhost:8181
-  #      username: config
-  #      password: configserver123
-  #  config:
-  #    import: configserver:http://localhost:8181
   servlet:
     multipart:
       max-file-size: 2MB
@@ -35,7 +28,6 @@ spring:
         acknowledge-mode: manual
 server:
   port: 8282
-#keySetURI: http://localhost:8080/oauth2/jwks
 keySetURI: ${KEY_SET_URI}
 
 front-end-url: ${FRONT_END_URL_PREFIX}

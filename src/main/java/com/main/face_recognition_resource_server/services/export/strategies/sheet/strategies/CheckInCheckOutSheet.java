@@ -5,19 +5,23 @@ import com.main.face_recognition_resource_server.DTOS.export.AttendanceExcelData
 import com.main.face_recognition_resource_server.constants.export.ExcelSheetCreationStrategyType;
 import com.main.face_recognition_resource_server.services.export.strategies.sheet.ExcelSheetStrategy;
 import com.main.face_recognition_resource_server.services.export.strategies.sheet.ExcelSheetStrategyKey;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 @ExcelSheetStrategyKey(ExcelSheetCreationStrategyType.CHECK_IN_CHECK_OUT_SHEET)
 public class CheckInCheckOutSheet implements ExcelSheetStrategy {
     @Override
-    public void create(XSSFWorkbook workbook, List<AttendanceExcelDataDTO> attendanceExcelData) {
+    public void create(XSSFWorkbook workbook, List<AttendanceExcelDataDTO> attendanceExcelData, String timeZone) {
         XSSFSheet checkInCheckOutSheet = workbook.createSheet("Check Ins And Check Outs");
 
         Row headerRow = checkInCheckOutSheet.createRow(0);
@@ -30,14 +34,12 @@ public class CheckInCheckOutSheet implements ExcelSheetStrategy {
         headerRow.createCell(6).setCellValue("Check Out");
         headerRow.createCell(7).setCellValue("Status");
 
-        CreationHelper creationHelper = workbook.getCreationHelper();
-
-        CellStyle timeCellStyle = workbook.createCellStyle();
-        timeCellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("HH:mm"));
-        timeCellStyle.setAlignment(HorizontalAlignment.LEFT);
-        CellStyle dateCellStyle = workbook.createCellStyle();
-        dateCellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd-MMM-yy"));
-        dateCellStyle.setAlignment(HorizontalAlignment.LEFT);
+//        CellStyle timeCellStyle = workbook.createCellStyle();
+//        timeCellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("HH:mm"));
+//        timeCellStyle.setAlignment(HorizontalAlignment.LEFT);
+//        CellStyle dateCellStyle = workbook.createCellStyle();
+//        dateCellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd-MMM-yy"));
+//        dateCellStyle.setAlignment(HorizontalAlignment.LEFT);
 
         int rowNum = 1;
         for (AttendanceExcelDataDTO attendance : attendanceExcelData) {
@@ -49,14 +51,27 @@ public class CheckInCheckOutSheet implements ExcelSheetStrategy {
                 row.createCell(2).setCellValue(attendance.getDivision());
                 row.createCell(3).setCellValue(attendance.getDesignation());
                 Cell dateCell = row.createCell(4);
-                dateCell.setCellValue(excelAttendance.getDate());
-                dateCell.setCellStyle(dateCellStyle);
+
+                ZoneId zone = ZoneId.of(timeZone);
+                ZonedDateTime zonedDate = ZonedDateTime.ofInstant(excelAttendance.getDate(), zone);
+                //TODO: Date conversion check
+                dateCell.setCellValue(zonedDate.format(DateTimeFormatter.ofPattern("dd-MMM-yy")));
                 Cell checkInCell = row.createCell(5);
-                checkInCell.setCellValue(excelAttendance.getCheckIn());
-                checkInCell.setCellStyle(timeCellStyle);
+                //TODO: Date conversion check
+                if (excelAttendance.getCheckIn() != null) {
+                    ZonedDateTime zonedCheckIn = ZonedDateTime.ofInstant(excelAttendance.getCheckIn(), zone);
+                    checkInCell.setCellValue(zonedCheckIn.format(DateTimeFormatter.ofPattern("HH:mm")));
+                } else {
+                    checkInCell.setCellValue("-");
+                }
                 Cell checkOutCell = row.createCell(6);
-                checkOutCell.setCellValue(excelAttendance.getCheckOut());
-                checkOutCell.setCellStyle(timeCellStyle);
+                //TODO: Date conversion check
+                if (excelAttendance.getCheckOut() != null) {
+                    ZonedDateTime zonedCheckOut = ZonedDateTime.ofInstant(excelAttendance.getCheckOut(), zone);
+                    checkInCell.setCellValue(zonedCheckOut.format(DateTimeFormatter.ofPattern("HH:mm")));
+                } else {
+                    checkOutCell.setCellValue("-");
+                }
                 switch (excelAttendance.getAttendanceStatus()) {
                     case ON_TIME -> row.createCell(7).setCellValue("Present");
                     case LATE -> row.createCell(7).setCellValue("Present (Late)");

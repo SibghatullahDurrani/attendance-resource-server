@@ -9,7 +9,7 @@ import java.util.List;
 public interface UserNotificationService {
     void saveUsersNotification(List<Long> userIds, Notification notification);
 
-    NotificationCountDTO getNonReadNotificationsCountOfUserNotification(Long userId);
+    NotificationCountDTO getNonReadNotificationCountOfUser(Long userId);
 
     List<NotificationDTO> getNotificationsOfUser(Long userId);
 }

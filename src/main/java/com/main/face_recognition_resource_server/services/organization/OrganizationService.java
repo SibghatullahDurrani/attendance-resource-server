@@ -6,6 +6,7 @@ import com.main.face_recognition_resource_server.DTOS.organization.OrganizationD
 import com.main.face_recognition_resource_server.DTOS.organization.RegisterOrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Organization;
 import com.main.face_recognition_resource_server.exceptions.OrganizationDoesntExistException;
+import com.main.face_recognition_resource_server.projections.organization.OrganizationTimeZone;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -29,4 +30,12 @@ public interface OrganizationService {
     LeavesAllowedPolicyDTO getOrganizationLeavesPolicy(Long organizationId);
 
     List<Long> getAllOrganizationIds();
+
+    List<String> getAllOrganizationTimeZones();
+
+    List<OrganizationTimeZone> getAllOrganizationTimeZonesWithIds();
+
+    List<Long> getOrganizationIdsRelatedToTimeZone(String timeZone);
+
+    String getOrganizationTimeZone(Long organizationId);
 }

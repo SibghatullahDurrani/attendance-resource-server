@@ -70,7 +70,7 @@ public class OrganizationController {
 
     @GetMapping("/departments")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<DepartmentOfOrganizationDTO>> getAllDepartmentsOfOrganization(Authentication authentication) throws UserDoesntExistException {
+    public ResponseEntity<List<DepartmentOfOrganizationDTO>> departmentsOfOrganization(Authentication authentication) throws UserDoesntExistException {
         Long organizationId = userService.getUserOrganizationId(authentication.getName());
         List<DepartmentOfOrganizationDTO> departmentNamesOfOrganization = departmentService.getDepartmentNamesOfOrganization(organizationId);
         return new ResponseEntity<>(departmentNamesOfOrganization, HttpStatus.OK);

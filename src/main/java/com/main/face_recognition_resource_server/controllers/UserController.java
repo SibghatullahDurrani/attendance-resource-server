@@ -35,7 +35,7 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<UserDTO> getOwnUserData(Authentication authentication) throws UserDoesntExistException {
+    public ResponseEntity<UserDTO> ownUserData(Authentication authentication) throws UserDoesntExistException {
         UserDTO user = userService.getUserDataByUsername(authentication.getName());
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
@@ -50,7 +50,7 @@ public class UserController {
 
     @GetMapping("organization")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<AdminUsersTableRecordDTO>> getUsersPageOfOrganization(
+    public ResponseEntity<Page<UsersOfOwnOrganizationRecordDTO>> usersOfOwnOrganization(
             @RequestParam(required = false) String fullName,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) String designation,
@@ -62,7 +62,7 @@ public class UserController {
     ) throws UserDoesntExistException {
         Long organizationId = userService.getUserOrganizationId(authentication.getName());
         PageRequest pageRequest = PageRequest.of(page, size);
-        Page<AdminUsersTableRecordDTO> adminUsersTableRecordDTOPage = userService.getUsersPageOfOrganization(organizationId, pageRequest, fullName, departmentId, designation, isSourceFacePictureRegistered, identificationNumber);
+        Page<UsersOfOwnOrganizationRecordDTO> adminUsersTableRecordDTOPage = userService.getUsersPageOfOrganization(organizationId, pageRequest, fullName, departmentId, designation, isSourceFacePictureRegistered, identificationNumber);
         return new ResponseEntity<>(adminUsersTableRecordDTOPage, HttpStatus.OK);
     }
 
@@ -88,7 +88,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDataDTO> getUserData(@PathVariable Long userId, Authentication authentication) throws UserDoesntExistException, OrganizationDoesntBelongToYouException {
+    public ResponseEntity<UserDataDTO> userDataOfId(@PathVariable Long userId, Authentication authentication) throws UserDoesntExistException, OrganizationDoesntBelongToYouException {
         Long organizationId = userService.getUserOrganizationId(authentication.getName());
         userService.checkIfOrganizationBelongsToUser(userId, organizationId);
         UserDataDTO userData = userService.getUserData(userId);
@@ -105,7 +105,7 @@ public class UserController {
 
     @GetMapping("/shifts")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<ShiftAllocationDTO>> getUserShiftAllocations(
+    public ResponseEntity<Page<ShiftAllocationDTO>> userShiftAllocationsOfOwnOrganization(
             @RequestParam(required = false) String fullName,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Long shiftId,

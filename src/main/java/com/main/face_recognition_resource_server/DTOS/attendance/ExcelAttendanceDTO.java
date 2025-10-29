@@ -6,20 +6,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.Instant;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
 public class ExcelAttendanceDTO {
-    private Date date;
-    private Date checkIn;
-    private Date checkOut;
+    private Instant date;
+    private Instant checkIn;
+    private Instant checkOut;
     private AttendanceStatus attendanceStatus;
     private Long attendanceId;
 
-    ExcelAttendanceDTO(Date date, AttendanceStatus attendanceStatus, Long attendanceId) {
+    ExcelAttendanceDTO(Instant date, AttendanceStatus attendanceStatus, Long attendanceId) {
         this.date = date;
         this.attendanceStatus = attendanceStatus;
         this.attendanceId = attendanceId;

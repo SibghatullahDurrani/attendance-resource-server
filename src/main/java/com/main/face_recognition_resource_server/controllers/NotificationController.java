@@ -92,7 +92,7 @@ public class NotificationController {
 
     @GetMapping("")
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public ResponseEntity<List<NotificationDTO>> getOwnNotifications(Authentication authentication) throws UserDoesntExistException {
+    public ResponseEntity<List<NotificationDTO>> ownNotifications(Authentication authentication) throws UserDoesntExistException {
         Long userId = userService.getUserIdByUsername(authentication.getName());
         List<NotificationDTO> notifications = userNotificationService.getNotificationsOfUser(userId);
         return new ResponseEntity<>(notifications, HttpStatus.OK);
@@ -100,9 +100,9 @@ public class NotificationController {
 
     @GetMapping("/count")
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public ResponseEntity<NotificationCountDTO> getOwnNonReadNotificationsCount(Authentication authentication) throws UserDoesntExistException {
+    public ResponseEntity<NotificationCountDTO> ownNonReadNotificationCount(Authentication authentication) throws UserDoesntExistException {
         Long userId = userService.getUserIdByUsername(authentication.getName());
-        NotificationCountDTO count = userNotificationService.getNonReadNotificationsCountOfUserNotification(userId);
+        NotificationCountDTO count = userNotificationService.getNonReadNotificationCountOfUser(userId);
         return new ResponseEntity<>(count, HttpStatus.OK);
     }
 }

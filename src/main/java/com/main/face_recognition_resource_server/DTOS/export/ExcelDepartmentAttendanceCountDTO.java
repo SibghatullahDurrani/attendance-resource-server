@@ -5,14 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.Instant;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
 public class ExcelDepartmentAttendanceCountDTO {
-    private Date date;
+    private Instant date;
     private Long onTime;
     private Long late;
     private Long absent;

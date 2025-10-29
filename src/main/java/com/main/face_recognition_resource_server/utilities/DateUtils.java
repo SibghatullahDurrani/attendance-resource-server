@@ -1,9 +1,13 @@
 package com.main.face_recognition_resource_server.utilities;
 
+import lombok.extern.slf4j.Slf4j;
+
+import java.time.*;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+@Slf4j
 public class DateUtils {
     public static Date[] getStartAndEndDateOfMonthOfYear(int year, int month) {
         Date startDate = new GregorianCalendar(year, month, 1, 0, 0).getTime();
@@ -18,53 +22,12 @@ public class DateUtils {
         return new Date[]{startDate, endDate};
     }
 
-    public static Date[] getStartAndEndDateOfDate(int year, int month, int day) {
-        Date startDate = new GregorianCalendar(year, month, day, 0, 0).getTime();
-        Calendar endCalendar = GregorianCalendar.getInstance();
-        endCalendar.set(Calendar.YEAR, year);
-        endCalendar.set(Calendar.MONTH, month);
-        endCalendar.set(Calendar.DAY_OF_MONTH, day);
-        endCalendar.set(Calendar.HOUR_OF_DAY, endCalendar.getActualMaximum(Calendar.HOUR_OF_DAY));
-        endCalendar.set(Calendar.MINUTE, endCalendar.getActualMaximum(Calendar.MINUTE));
-        endCalendar.set(Calendar.SECOND, endCalendar.getActualMaximum(Calendar.SECOND));
-        Date endDate = endCalendar.getTime();
-        return new Date[]{startDate, endDate};
-    }
-
-    public static Date[] getStartAndEndDateOfDate(Long date) {
-        Date startDate = getTruncatedDate(date);
-
-        Calendar endCalendar = GregorianCalendar.getInstance();
-        endCalendar.setTime(startDate);
-        endCalendar.set(Calendar.DAY_OF_MONTH, endCalendar.get(Calendar.DAY_OF_MONTH) + 1);
-        Date endDate = endCalendar.getTime();
-        return new Date[]{startDate, endDate};
-    }
-
-    public static Date[] getStartAndEndDateOfToday() {
-        Calendar calendarStart = GregorianCalendar.getInstance();
-        Calendar calendarEnd = GregorianCalendar.getInstance();
-        calendarStart.set(Calendar.HOUR_OF_DAY, 0);
-        calendarStart.set(Calendar.MINUTE, 0);
-        calendarStart.set(Calendar.SECOND, 0);
-        calendarStart.set(Calendar.MILLISECOND, 0);
-
-        calendarEnd.set(Calendar.HOUR_OF_DAY, 23);
-        calendarEnd.set(Calendar.MINUTE, 59);
-        calendarEnd.set(Calendar.SECOND, 59);
-        calendarEnd.set(Calendar.MILLISECOND, 59);
-        Date dateStart = calendarStart.getTime();
-        Date dateEnd = calendarEnd.getTime();
-        return new Date[]{dateStart, dateEnd};
-    }
-
-    public static Date getDateOfToday() {
-        Calendar calendar = GregorianCalendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        return calendar.getTime();
+    public static Instant[] getStartAndEndDateOfTimestampInTimeZone(Long timestamp, String timeZone) {
+        ZoneId zone = ZoneId.of(timeZone);
+        LocalDate localDate = Instant.ofEpochMilli(timestamp).atZone(zone).toLocalDate();
+        ZonedDateTime startOfDay = localDate.atStartOfDay(zone);
+        ZonedDateTime endOfDay = localDate.plusDays(1).atStartOfDay(zone);
+        return new Instant[]{startOfDay.toInstant(), endOfDay.toInstant()};
     }
 
     public static Date[] getStartAndEndDateOfYear(int year) {
@@ -78,25 +41,72 @@ public class DateUtils {
         return new Date[]{startDate, endDate};
     }
 
-    public static Date[] getStartAndEndDateOfRange(int fromYear, int fromMonth, int fromDay, int toYear, int toMonth, int toDay) {
-        Date startDate = new GregorianCalendar(fromYear, fromMonth, fromDay, 0, 0).getTime();
-        Date endDate = new GregorianCalendar(toYear, toMonth, toDay, 0, 0).getTime();
-        return new Date[]{startDate, endDate};
+    public static Instant getInstantOfTimestampInTimeZone(Long timestamp) {
+        return Instant.ofEpochMilli(timestamp);
     }
 
-    public static Date[] getStartAndEndDateOfRange(Long fromDate, Long toDate) {
-        Date startDate = getTruncatedDate(fromDate);
-        Date endDate = getTruncatedDate(toDate);
-        return new Date[]{startDate, endDate};
+    public static Instant getInstantOfStartOfTodayOfTimeZone(String timeZone) {
+        ZoneId zone = ZoneId.of(timeZone);
+        ZonedDateTime zonedDateTime = ZonedDateTime.now(zone).toLocalDate().atStartOfDay().atZone(zone);
+        return zonedDateTime.toInstant();
     }
 
-    private static Date getTruncatedDate(Long timeStamp) {
-        Date date = new Date(timeStamp);
-        Calendar dateCalendar = GregorianCalendar.getInstance();
-        dateCalendar.setTime(date);
-        dateCalendar.set(Calendar.HOUR_OF_DAY, 0);
-        dateCalendar.set(Calendar.MINUTE, 0);
-        dateCalendar.set(Calendar.SECOND, 0);
-        return dateCalendar.getTime();
+    public static Instant[] getStartAndEndDateOfYearInTimeZone(int year, String timeZone) {
+        ZoneId zone = ZoneId.of(timeZone);
+
+        ZonedDateTime startOfYear = ZonedDateTime.of(LocalDate.of(year, 1, 1), LocalTime.MIDNIGHT, zone);
+
+        ZonedDateTime endOfYear = ZonedDateTime.of(LocalDate.of(year, 12, 31), LocalTime.MAX, zone);
+
+        return new Instant[]{startOfYear.toInstant(), endOfYear.toInstant()};
+    }
+
+    public static Instant[] getStartAndEndDateOfMonthOfYearInTimeZone(int month, int year, String timeZone) {
+        ZoneId zone = ZoneId.of(timeZone);
+
+        ZonedDateTime startOfMonth = ZonedDateTime.of(LocalDate.of(year, month, 1), LocalTime.MIDNIGHT, zone);
+
+        LocalDate lastDayOfMonth = LocalDate.of(year, month, 1).withDayOfMonth(YearMonth.of(year, month).lengthOfMonth());
+        ZonedDateTime endOfMonth = ZonedDateTime.of(lastDayOfMonth, LocalTime.MAX, zone);
+
+        return new Instant[]{startOfMonth.toInstant(), endOfMonth.toInstant()};
+    }
+
+    public static Instant getStartDateOfToday(String timeZone) {
+        ZoneId zone = ZoneId.of(timeZone);
+        LocalDate today = LocalDate.now(zone);
+        return today.atStartOfDay(zone).toInstant();
+    }
+
+    public static Instant[] getStartAndEndDateOfDayOfMonthOfYearInTimeZone(int day, int month, int year, String timeZone) {
+        ZoneId zone = ZoneId.of(timeZone);
+        LocalDate date = LocalDate.of(year, month, day);
+
+        Instant start = date.atStartOfDay(zone).toInstant();
+
+        Instant end = date.atTime(LocalTime.MIDNIGHT).atZone(zone).toInstant();
+
+        return new Instant[]{start, end};
+    }
+
+    public static Instant[] getStartAndEndDateOfRangeOfTimestampInTimeZone(Long fromDate, Long toDate, String timeZone) {
+        ZoneId zone = ZoneId.of(timeZone);
+
+        ZonedDateTime fromZonedDateTime = Instant.ofEpochMilli(fromDate).atZone(zone);
+        ZonedDateTime toZonedDateTime = Instant.ofEpochMilli(toDate).atZone(zone);
+
+        Instant start = fromZonedDateTime.toLocalDate().atStartOfDay(zone).toInstant();
+        Instant end = toZonedDateTime.toLocalDate().atTime(LocalTime.MIDNIGHT).atZone(zone).toInstant();
+
+        log.info("start Date: {}", start.toEpochMilli());
+        log.info("end Date: {}", end.toEpochMilli());
+
+        return new Instant[]{start, end};
+    }
+
+    public static Instant getStartDateOfTimestampInTimeZone(Long date, String timeZone) {
+        ZoneId zone = ZoneId.of(timeZone);
+        ZonedDateTime zonedDate = Instant.ofEpochMilli(date).atZone(zone);
+        return zonedDate.toLocalDate().atStartOfDay(zone).toInstant();
     }
 }

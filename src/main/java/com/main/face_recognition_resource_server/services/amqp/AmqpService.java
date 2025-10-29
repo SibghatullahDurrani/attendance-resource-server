@@ -12,7 +12,6 @@ import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.List;
 
 @Service
@@ -76,11 +75,17 @@ public class AmqpService {
             long tag = message.getMessageProperties().getDeliveryTag();
             try {
                 String json = new String(message.getBody(), StandardCharsets.UTF_8);
+                if (json.isEmpty()) {
+                    if (channel != null) {
+                        channel.basicAck(tag, false);
+                    }
+                    return;
+                }
                 AttendanceMessage attendance = objectMapper.readValue(json, AttendanceMessage.class);
                 if (attendance.getAttendanceType() == AttendanceType.CHECK_IN) {
-                    attendanceService.markCheckIn(attendance.getUserId(), new Date(attendance.getDate()), null, null);
+                    attendanceService.markCheckIn(attendance.getUserId(), attendance.getDate(), null, null);
                 } else {
-                    attendanceService.markCheckOut(attendance.getUserId(), new Date(attendance.getDate()), null, null);
+                    attendanceService.markCheckOut(attendance.getUserId(), attendance.getDate(), null, null);
                 }
                 System.out.println("✅ " + attendance);
 

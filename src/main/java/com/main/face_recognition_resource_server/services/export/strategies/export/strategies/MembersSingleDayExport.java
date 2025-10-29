@@ -29,14 +29,14 @@ public class MembersSingleDayExport implements AttendanceExportStrategy<UserAtte
     }
 
     @Override
-    public ByteArrayResource attendanceWorkbook(List<AttendanceExcelDataDTO> attendanceExcelData, List<UserAttendancePieChartDTO> attendanceChartData, ExportAttendanceOptions exportAttendanceOptions) throws IOException {
+    public ByteArrayResource attendanceWorkbook(List<AttendanceExcelDataDTO> attendanceExcelData, List<UserAttendancePieChartDTO> attendanceChartData, ExportAttendanceOptions exportAttendanceOptions, String timeZone) throws IOException {
         AttendanceWorkbookBuilder attendanceWorkbookBuilder = AttendanceWorkbookBuilder.newWorkbook(excelSheetStrategyFactory, excelChartStrategyFactory);
         if (exportAttendanceOptions.isIncludeCheckInCheckOutSheet())
-            attendanceWorkbookBuilder = attendanceWorkbookBuilder.addSheet(ExcelSheetCreationStrategyType.CHECK_IN_CHECK_OUT_SHEET, attendanceExcelData);
+            attendanceWorkbookBuilder = attendanceWorkbookBuilder.addSheet(ExcelSheetCreationStrategyType.CHECK_IN_CHECK_OUT_SHEET, attendanceExcelData, timeZone);
         if (exportAttendanceOptions.isIncludeAttendanceSheet())
-            attendanceWorkbookBuilder = attendanceWorkbookBuilder.addSheet(ExcelSheetCreationStrategyType.ATTENDANCE_ANALYTICS_SHEET, attendanceExcelData);
+            attendanceWorkbookBuilder = attendanceWorkbookBuilder.addSheet(ExcelSheetCreationStrategyType.ATTENDANCE_ANALYTICS_SHEET, attendanceExcelData, timeZone);
         if (exportAttendanceOptions.isIncludeGraphs())
-            attendanceWorkbookBuilder = attendanceWorkbookBuilder.addChart(ExcelChartStrategyType.USER_ATTENDANCE_PIE_CHART, attendanceChartData);
+            attendanceWorkbookBuilder = attendanceWorkbookBuilder.addChart(ExcelChartStrategyType.USER_ATTENDANCE_PIE_CHART, attendanceChartData, timeZone);
 
         return attendanceWorkbookBuilder.build();
     }

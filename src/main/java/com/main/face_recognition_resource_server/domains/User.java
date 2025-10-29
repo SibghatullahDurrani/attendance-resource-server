@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.domains;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.main.face_recognition_resource_server.constants.user.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
@@ -53,7 +54,8 @@ public class User {
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Attendance> attendances;
 
     @Column(nullable = false)
@@ -62,10 +64,12 @@ public class User {
     @Column(nullable = false)
     private int remainingAnnualLeaves;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Leave> leaves;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<UserNotification> userNotifications;
 
     @ManyToOne(optional = false)

@@ -6,7 +6,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.util.List;
 
 public interface ExcelChartStrategy<T extends ExcelChartDTO> {
-    void create(XSSFWorkbook workbook, List<T> excelAttendanceChartData);
+    void create(XSSFWorkbook workbook, List<T> excelAttendanceChartData, String timeZone);
 
     Class<T> getExcelChartDTOClass();
 }

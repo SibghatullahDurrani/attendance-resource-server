@@ -3,10 +3,12 @@ package com.main.face_recognition_resource_server.repositories;
 import com.main.face_recognition_resource_server.DTOS.leave.LeavesAllowedPolicyDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.domains.Organization;
+import com.main.face_recognition_resource_server.projections.organization.OrganizationTimeZone;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -53,4 +55,27 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
             SELECT o.id FROM Organization o
             """)
     List<Long> getAllOrganizationIds();
+
+    @Query("""
+            SELECT DISTINCT o.timeZone
+            FROM Organization o
+            """)
+    List<String> getAllOrganizationTimeZones();
+
+    @Query("""
+            SELECT new com.main.face_recognition_resource_server.projections.organization.OrganizationTimeZone(
+            o.id, o.timeZone
+            ) FROM Organization o
+            """)
+    List<OrganizationTimeZone> getAllOrganizationTimeZonesWithIds();
+
+    @Query("""
+            SELECT o.id FROM Organization o WHERE o.timeZone = :timeZone
+            """)
+    List<Long> getOrganizationIdsRelatedToTimeZone(@Param("timeZone") String timeZone);
+
+    @Query("""
+            SELECT o.timeZone FROM Organization o WHERE o.id = :organizationId
+            """)
+    String getOrganizationTimeZone(@Param("organizationId") Long organizationId);
 }

@@ -5,16 +5,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.Instant;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
 public class RecentAttendanceDTO {
-  private long userId;
-  private Date date;
-  private String fullImageName;
-  private String faceImageName;
+    private long userId;
+    private Instant date;
+    private String fullImageName;
+    private String faceImageName;
 
 }

@@ -5,13 +5,21 @@ import com.main.face_recognition_resource_server.DTOS.export.AttendanceExcelData
 import com.main.face_recognition_resource_server.constants.export.ExcelSheetCreationStrategyType;
 import com.main.face_recognition_resource_server.services.export.strategies.sheet.ExcelSheetStrategy;
 import com.main.face_recognition_resource_server.services.export.strategies.sheet.ExcelSheetStrategyKey;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -19,10 +27,11 @@ import java.util.stream.IntStream;
 @ExcelSheetStrategyKey(ExcelSheetCreationStrategyType.ATTENDANCE_ANALYTICS_SHEET)
 public class AttendanceAnalyticsSheet implements ExcelSheetStrategy {
     @Override
-    public void create(XSSFWorkbook workbook, List<AttendanceExcelDataDTO> attendanceExcelData) {
+    public void create(XSSFWorkbook workbook, List<AttendanceExcelDataDTO> attendanceExcelData, String timeZone) {
         XSSFSheet attendanceAnalyticsSheet = workbook.createSheet("Attendance Analytics");
 
-        List<Date> distinctDates = attendanceExcelData.stream()
+        //TODO DATE CONVERSION CHECK
+        List<Instant> distinctDates = attendanceExcelData.stream()
                 .flatMap(dto -> dto.getAttendances().stream())
                 .map(ExcelAttendanceDTO::getDate)
                 .filter(Objects::nonNull)
@@ -30,7 +39,8 @@ public class AttendanceAnalyticsSheet implements ExcelSheetStrategy {
                 .sorted()
                 .toList();
 
-        HashMap<Date, Integer> dateCellIndexMap = IntStream.range(0, distinctDates.size())
+        //TODO DATE CONVERSION CHECK
+        HashMap<Instant, Integer> dateCellIndexMap = IntStream.range(0, distinctDates.size())
                 .boxed()
                 .collect(Collectors.toMap(
                         distinctDates::get,
@@ -45,15 +55,15 @@ public class AttendanceAnalyticsSheet implements ExcelSheetStrategy {
         headerRow.createCell(2).setCellValue("Division");
 
         int headerIndex = 3;
-        CreationHelper creationHelper = workbook.getCreationHelper();
-        CellStyle dateCellStyle = workbook.createCellStyle();
-        dateCellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd-MMM-yy"));
-        dateCellStyle.setAlignment(HorizontalAlignment.LEFT);
 
-        for (Date date : dateCellIndexMap.keySet()) {
+        //TODO DATE CONVERSION CHECK
+        for (Instant date : dateCellIndexMap.keySet()) {
+            ZoneId zone = ZoneId.of(timeZone);
+            ZonedDateTime zonedDate = ZonedDateTime.ofInstant(date, zone);
             Cell dateColumnCell = headerRow.createCell(headerIndex++);
-            dateColumnCell.setCellValue(date);
-            dateColumnCell.setCellStyle(dateCellStyle);
+            //TODO DATE CONVERSION CHECK
+            String dateCellText = zonedDate.format(DateTimeFormatter.ofPattern("dd-MMM-yy"));
+            dateColumnCell.setCellValue(dateCellText);
         }
 
         int rowNum = 1;

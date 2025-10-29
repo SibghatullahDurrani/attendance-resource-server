@@ -1,28 +1,23 @@
 package com.main.face_recognition_resource_server.services.attendance;
 
-import com.main.face_recognition_resource_server.DTOS.attendance.*;
+import com.main.face_recognition_resource_server.DTOS.attendance.AttendanceLiveFeedDTO;
 import com.main.face_recognition_resource_server.DTOS.user.UserLiveFeedMetaData;
 import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatus;
-import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatusFilter;
 import com.main.face_recognition_resource_server.constants.attendance.AttendanceType;
-import com.main.face_recognition_resource_server.domains.*;
-import com.main.face_recognition_resource_server.exceptions.DepartmentDoesntExistException;
-import com.main.face_recognition_resource_server.exceptions.NoStatsAvailableException;
+import com.main.face_recognition_resource_server.domains.Attendance;
+import com.main.face_recognition_resource_server.domains.User;
 import com.main.face_recognition_resource_server.exceptions.UserDoesntExistException;
 import com.main.face_recognition_resource_server.repositories.attendance.AttendanceRepository;
+import com.main.face_recognition_resource_server.services.checkin.CheckInService;
+import com.main.face_recognition_resource_server.services.checkout.CheckOutService;
 import com.main.face_recognition_resource_server.services.department.DepartmentService;
 import com.main.face_recognition_resource_server.services.organization.OrganizationService;
+import com.main.face_recognition_resource_server.services.shift.ShiftService;
 import com.main.face_recognition_resource_server.services.user.UserService;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
+import com.main.face_recognition_resource_server.utilities.DateUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,11 +28,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormatSymbols;
-import java.util.*;
+import java.time.*;
+import java.util.ArrayList;
 import java.util.List;
-
-import static com.main.face_recognition_resource_server.utilities.DateUtils.*;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -55,9 +49,9 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final SimpMessagingTemplate messagingTemplate;
     private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
     private final DepartmentService departmentService;
+    private final ShiftService shiftService;
 
-
-    public AttendanceServiceImpl(AttendanceRepository attendanceRepository, UserService userService, CheckInService checkInServices, CheckOutService checkOutService, OrganizationService organizationService, SimpMessagingTemplate messagingTemplate, DepartmentService departmentService) {
+    public AttendanceServiceImpl(AttendanceRepository attendanceRepository, UserService userService, CheckInService checkInServices, CheckOutService checkOutService, OrganizationService organizationService, SimpMessagingTemplate messagingTemplate, DepartmentService departmentService, ShiftService shiftService) {
         this.attendanceRepository = attendanceRepository;
         this.userService = userService;
         this.checkInServices = checkInServices;
@@ -65,19 +59,23 @@ public class AttendanceServiceImpl implements AttendanceService {
         this.organizationService = organizationService;
         this.messagingTemplate = messagingTemplate;
         this.departmentService = departmentService;
+        this.shiftService = shiftService;
     }
 
     @Override
     @Transactional
     @Async
-    public void markCheckIn(Long userId, Date checkInDate, BufferedImage fullImage, BufferedImage faceImage) throws UserDoesntExistException, IOException {
-        Optional<Attendance> attendanceOptional = getUserAttendanceFromDayStartTillDate(userId, checkInDate);
-        Long organizationId = userService.getUserOrganizationIdByUserId(userId);
+    public void markCheckIn(Long userId, Long checkInTimestamp, BufferedImage fullImage, BufferedImage faceImage) throws UserDoesntExistException, IOException {
+        String timeZone = userService.getUserTimeZone(userId);
+        Instant[] startAndEndDate = DateUtils.getStartAndEndDateOfTimestampInTimeZone(checkInTimestamp, timeZone);
+        Optional<Attendance> attendanceOptional = getUserAttendanceFromDayStartTillDate(userId, startAndEndDate);
 
         if (attendanceOptional.isPresent()) {
             Attendance attendance = attendanceOptional.get();
             if (attendance.getCheckIns() == null || attendance.getCheckIns().isEmpty()) {
                 String checkInPolicyTime = userService.getUserCheckInTime(userId);
+                Long organizationId = userService.getUserOrganizationIdByUserId(userId);
+
                 int lateAttendanceToleranceTimePolicy = organizationService.getOrganizationLateAttendanceToleranceTimePolicy(organizationId);
 
                 int lateAttendanceToleranceTimeHours = 0;
@@ -90,19 +88,25 @@ public class AttendanceServiceImpl implements AttendanceService {
 
 
                 String[] timeSplit = checkInPolicyTime.split(":");
-                Calendar requiredCheckInTime = GregorianCalendar.getInstance();
-                requiredCheckInTime.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeSplit[0]) + lateAttendanceToleranceTimeHours);
-                requiredCheckInTime.set(Calendar.MINUTE, Integer.parseInt(timeSplit[1]) + lateAttendanceToleranceTimeMinutes);
+                int hour = Integer.parseInt(timeSplit[0]);
+                int minute = Integer.parseInt(timeSplit[1]);
 
-                System.out.println(requiredCheckInTime.getTime());
+                LocalTime baseTime = LocalTime.of(hour, minute);
+                LocalTime adjustedTime = baseTime
+                        .plusHours(lateAttendanceToleranceTimeHours)
+                        .plusMinutes(lateAttendanceToleranceTimeMinutes);
 
-                Calendar checkedInTime = GregorianCalendar.getInstance();
-                checkedInTime.setTime(checkInDate);
+                String userTimeZone = userService.getUserTimeZone(userId);
+                ZoneId zone = ZoneId.of(userTimeZone);
 
-                System.out.println(checkedInTime.getTime());
+                LocalDate todayInTimeZone = LocalDate.now(zone);
+                LocalDateTime localDateTime = todayInTimeZone.atTime(adjustedTime);
+
+                Instant rquiredTimeInstant = localDateTime.atZone(zone).toInstant();
+                long requiredCheckInTimestamp = rquiredTimeInstant.toEpochMilli();
 
                 AttendanceStatus attendanceStatus;
-                if (checkedInTime.after(requiredCheckInTime)) {
+                if (checkInTimestamp > requiredCheckInTimestamp) {
                     attendanceStatus = AttendanceStatus.LATE;
                 } else {
                     attendanceStatus = AttendanceStatus.ON_TIME;
@@ -112,26 +116,32 @@ public class AttendanceServiceImpl implements AttendanceService {
                 attendance.setCurrentAttendanceStatus(AttendanceType.CHECK_IN);
                 attendanceRepository.saveAndFlush(attendance);
 
-                checkInServices.saveCheckIn(checkInDate, attendance, fullImage, faceImage);
-//        if (fullImage != null && faceImage != null) {
-//          ImageIO.write(fullImage, "jpg", baos);
-//          byte[] fullImageBytes = baos.toByteArray();
-//          baos.reset();
-//          ImageIO.write(faceImage, "jpg", baos);
-//          byte[] faceImageBytes = baos.toByteArray();
-//          baos.reset();
-//          sendLiveAttendanceFeed(userServices.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder().userId(userId).fullName(userServices.getUserFullNameByUserId(userId)).attendanceType(AttendanceType.CHECK_IN).date(checkInDate.getTime()).fullImage(fullImageBytes).faceImage(faceImageBytes).build());
-//        }
+                Instant checkInInstant = Instant.ofEpochMilli(checkInTimestamp);
+                checkInServices.saveCheckIn(checkInInstant, attendance, fullImage, faceImage);
+
                 String sourceImageURI = "SourceFaces/%s%s".formatted(userId, ".jpg");
                 Path sourceImagePath = Paths.get(sourceImageURI);
                 byte[] sourceImage = Files.readAllBytes(sourceImagePath);
                 UserLiveFeedMetaData userLiveFeedMetaData = userService.getUserLiveFeedMetaData(userId);
-                sendLiveAttendanceFeed(userService.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder().userId(userId).fullName(userLiveFeedMetaData.getFullName()).designation(userLiveFeedMetaData.getDesignation()).departmentName(userLiveFeedMetaData.getDepartmentName()).attendanceType(AttendanceType.CHECK_IN).attendanceStatus(attendanceStatus).checkInTime(checkInDate.getTime()).checkOutTime(0L).sourceImage(sourceImage).build());
+                sendLiveAttendanceFeed(
+                        userService.getUserOrganizationIdByUserId(userId),
+                        AttendanceLiveFeedDTO.builder()
+                                .userId(userId)
+                                .fullName(userLiveFeedMetaData.getFullName())
+                                .designation(userLiveFeedMetaData.getDesignation())
+                                .departmentName(userLiveFeedMetaData.getDepartmentName())
+                                .attendanceType(AttendanceType.CHECK_IN)
+                                .attendanceStatus(attendanceStatus)
+                                .checkInTime(checkInTimestamp)
+                                .checkOutTime(0L)
+                                .sourceImage(sourceImage)
+                                .build());
 
             } else {
                 attendance.setCurrentAttendanceStatus(AttendanceType.CHECK_IN);
                 attendanceRepository.saveAndFlush(attendance);
-                checkInServices.saveCheckIn(checkInDate, attendance, fullImage, faceImage);
+                Instant checkInInstant = Instant.ofEpochMilli(checkInTimestamp);
+                checkInServices.saveCheckIn(checkInInstant, attendance, fullImage, faceImage);
             }
         }
     }
@@ -139,212 +149,59 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional
     @Async
-    public void markCheckOut(Long userId, Date endDate, BufferedImage fullImage, BufferedImage faceImage) throws IOException, UserDoesntExistException {
-        Optional<Attendance> attendance = getUserAttendanceFromDayStartTillDate(userId, endDate);
+    public void markCheckOut(Long userId, Long checkOutTimestamp, BufferedImage fullImage, BufferedImage faceImage) throws IOException, UserDoesntExistException {
+        String timeZone = userService.getUserTimeZone(userId);
+        Instant[] startAndEndDate = DateUtils.getStartAndEndDateOfTimestampInTimeZone(checkOutTimestamp, timeZone);
+        Optional<Attendance> attendance = getUserAttendanceFromDayStartTillDate(userId, startAndEndDate);
+
         if (attendance.isPresent()) {
-            checkOutService.saveCheckOut(endDate, attendance.get(), fullImage, faceImage);
+            Instant checkOutInstant = Instant.ofEpochMilli(checkOutTimestamp);
+            checkOutService.saveCheckOut(checkOutInstant, attendance.get(), fullImage, faceImage);
             attendance.get().setCurrentAttendanceStatus(AttendanceType.CHECK_OUT);
             attendanceRepository.saveAndFlush(attendance.get());
             UserLiveFeedMetaData userLiveFeedMetaData = userService.getUserLiveFeedMetaData(userId);
             String sourceImageURI = "SourceFaces/%s%s".formatted(userId, ".jpg");
             Path sourceImagePath = Paths.get(sourceImageURI);
             byte[] sourceImage = Files.readAllBytes(sourceImagePath);
-            Date firstCheckIn = checkInServices.getFirstCheckInOfAttendanceId(attendance.get().getId());
-            sendLiveAttendanceFeed(userService.getUserOrganizationIdByUserId(userId), AttendanceLiveFeedDTO.builder().userId(userId).fullName(userLiveFeedMetaData.getFullName()).designation(userLiveFeedMetaData.getDesignation()).departmentName(userLiveFeedMetaData.getDepartmentName()).attendanceType(AttendanceType.CHECK_OUT).attendanceStatus(attendance.get().getStatus()).checkOutTime(endDate.getTime()).checkInTime(firstCheckIn.getTime()).sourceImage(sourceImage).build());
+            Instant firstCheckIn = checkInServices.getFirstCheckInOfAttendanceId(attendance.get().getId());
+            sendLiveAttendanceFeed(
+                    userService.getUserOrganizationIdByUserId(userId),
+                    AttendanceLiveFeedDTO.builder()
+                            .userId(userId)
+                            .fullName(userLiveFeedMetaData.getFullName())
+                            .designation(userLiveFeedMetaData.getDesignation())
+                            .departmentName(userLiveFeedMetaData.getDepartmentName())
+                            .attendanceType(AttendanceType.CHECK_OUT)
+                            .attendanceStatus(attendance.get().getStatus())
+                            .checkOutTime(checkOutTimestamp)
+                            .checkInTime(firstCheckIn.toEpochMilli())
+                            .sourceImage(sourceImage)
+                            .build());
         }
     }
 
     @Override
-    @Scheduled(cron = "0 0 0 * * *")
-    public void markAbsentOfAllUsersForCurrentDay() {
-        Calendar calendar = GregorianCalendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
+    public void markAbsentOfUsersOfOrganizationForDate(Long organizationId, Instant markAbsentTime, DayOfWeek dayOfWeek) {
+        boolean exists = attendanceRepository.attendanceExistsByOrganizationIdAndDate(organizationId, markAbsentTime);
 
-        boolean exists = this.attendanceRepository.existsByDate(calendar.getTime());
         if (!exists) {
-            List<Long> userIds = userService.getAllUserIds();
-            List<Long> userIdsOfLeave = attendanceRepository.getUserIdsOfLeaveOfDate(calendar.getTime());
+            List<Long> userIds = userService.getAllUserIdsOfOrganization(organizationId);
+            List<Long> userIdsOfLeave = attendanceRepository.getUserIdsOfLeaveOfDate(markAbsentTime);
             List<Attendance> attendances = new ArrayList<>();
             for (Long userId : userIds) {
                 if (!userIdsOfLeave.contains(userId)) {
-                    attendances.add(Attendance.builder().user(User.builder().id(userId).build()).date(calendar.getTime()).status(AttendanceStatus.ABSENT).build());
+                    boolean isWorkingDay = shiftService.isUserWorkingDay(dayOfWeek, userId);
+                    if (isWorkingDay) {
+                        attendances.add(Attendance.builder().user(User.builder().id(userId).build()).date(markAbsentTime).status(AttendanceStatus.ABSENT).build());
+                    } else {
+                        attendances.add(Attendance.builder().user(User.builder().id(userId).build()).date(markAbsentTime).status(AttendanceStatus.OFF_DAY).build());
+                    }
                 }
             }
             attendanceRepository.saveAllAndFlush(attendances);
         }
     }
 
-    @Override
-    public AttendanceStatsDTO getUserAttendanceStats(int year, Long userId) throws NoStatsAvailableException {
-        Date[] dates = getStartAndEndDateOfYear(year);
-        return generateAttendanceStatsDTO(dates[0], dates[1], userId);
-    }
-
-    @Override
-    public AttendanceStatsDTO getUserAttendanceStats(int month, int year, Long userId) throws NoStatsAvailableException {
-        Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
-        return generateAttendanceStatsDTO(startAndEndDate[0], startAndEndDate[1], userId);
-    }
-
-    @Override
-    public AttendanceCalendarDTO getUserAttendanceCalendar(int month, int year, Long userId) throws NoStatsAvailableException {
-        Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
-        List<CalendarAttendanceDataDTO> data = attendanceRepository.getAttendanceStatusWithDateOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
-        if (data.isEmpty()) {
-            throw new NoStatsAvailableException();
-        }
-        Calendar calendar = GregorianCalendar.getInstance();
-        calendar.setTime(startAndEndDate[0]);
-        DateFormatSymbols symbols = new DateFormatSymbols(Locale.getDefault());
-        String firstDayOfMonth = symbols.getWeekdays()[calendar.get(Calendar.DAY_OF_WEEK)];
-        int maxDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-        calendar.set(Calendar.DAY_OF_MONTH, maxDays);
-        String lastDayOfMonth = symbols.getWeekdays()[calendar.get(Calendar.DAY_OF_WEEK)];
-        calendar.set(Calendar.DAY_OF_MONTH, 1);
-        int previousMonth = calendar.get(Calendar.MONTH) - 1;
-        calendar.set(Calendar.MONTH, previousMonth);
-        int lastDateOfPreviousMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-        return AttendanceCalendarDTO.builder().data(data).maxDays(maxDays).firstDayOfTheMonth(firstDayOfMonth).lastDayOfTheMonth(lastDayOfMonth).lastDateOfPreviousMonth(lastDateOfPreviousMonth).build();
-    }
-
-    @Override
-    public List<UserAttendanceTableDTO> getMonthlyUserAttendanceTable(int month, int year, Long userId) throws NoStatsAvailableException, UserDoesntExistException, IOException {
-        Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
-        List<UserAttendanceTableDTO> attendanceTableRecords = attendanceRepository.getAttendanceTableRecordsOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
-
-        if (attendanceTableRecords.isEmpty()) {
-            throw new NoStatsAvailableException();
-        }
-
-//        Long organizationId = userServices.getUserOrganizationIdByUserId(userId);
-//        int lateAttendanceToleranceTimeInMillis = organizationServices.getOrganizationLateAttendanceToleranceTimePolicy(organizationId) * 60000;
-//        long organizationRetakeAttendancePolicyInMillis = organizationServices.getAttendanceRetakeAttendanceInHourPolicy(organizationId) * 3600000L;
-//        String organizationCheckInTime = organizationServices.getOrganizationCheckInPolicy(organizationId);
-//        String[] organizationCheckInTimeSplit = organizationCheckInTime.split(":");
-//        int organizationCheckInHour = Integer.parseInt(organizationCheckInTimeSplit[0]);
-//        int organizationCheckInMinutes = Integer.parseInt(organizationCheckInTimeSplit[1]);
-//        String organizationCheckOutTime = organizationServices.getOrganizationCheckOutPolicy(organizationId);
-//        String[] organizationCheckOutTimeSplit = organizationCheckOutTime.split(":");
-//        int organizationCheckOutHour = Integer.parseInt(organizationCheckOutTimeSplit[0]);
-//        int organizationCheckOutMinutes = Integer.parseInt(organizationCheckOutTimeSplit[1]);
-//        int checkOutToleranceTime = organizationServices.getOrganizationCheckOutToleranceTimePolicy(organizationId);
-//
-//        for (UserAttendanceTableDTO attendanceRecord : attendanceTableRecords) {
-//            attendanceRecord.setCheckIns(checkInServices.getCheckInTimesByAttendanceId(attendanceRecord.getId()));
-//            attendanceRecord.setCheckOuts(checkOutServices.getCheckOutTimesByAttendanceId(attendanceRecord.getId()));
-//
-//            BufferedImage scoreImage = new BufferedImage(scoreImageWidth, scoreImageHeight, BufferedImage.TYPE_INT_RGB);
-//            Graphics scoreGraphics = scoreImage.createGraphics();
-//
-//            Calendar policyCheckIn = new GregorianCalendar();
-//            Calendar policyCheckOut = new GregorianCalendar();
-//
-//            policyCheckIn.setTimeInMillis(attendanceRecord.getDate());
-//            policyCheckOut.setTimeInMillis(attendanceRecord.getDate());
-//
-//            policyCheckIn.set(Calendar.HOUR_OF_DAY, organizationCheckInHour);
-//            policyCheckIn.set(Calendar.MINUTE, organizationCheckInMinutes);
-//
-//            policyCheckOut.set(Calendar.HOUR_OF_DAY, organizationCheckOutHour);
-//            policyCheckOut.set(Calendar.MINUTE, organizationCheckOutMinutes);
-//
-//            long policyCheckOutTimeStamp = policyCheckOut.getTime().getTime();
-//            long policyCheckInTimeStamp = policyCheckIn.getTime().getTime();
-//
-//            long totalWorkingHoursTimeStamp = policyCheckOutTimeStamp - policyCheckInTimeStamp;
-//
-//            List<Long> checkIns = new ArrayList<>(attendanceRecord.getCheckIns());
-//            List<Long> checkOuts = new ArrayList<>(attendanceRecord.getCheckOuts());
-//
-//            long checkIn = 0;
-//            long checkOut = 0;
-//            if (!checkIns.isEmpty()) {
-//                checkIn = checkIns.removeFirst();
-//            }
-//            if (!checkOuts.isEmpty()) {
-//                checkOut = checkOuts.removeFirst();
-//            }
-//            int previousPoint = 0;
-//            boolean first = true;
-//
-//            if (checkIn == 0 && attendanceRecord.getStatus() == AttendanceStatus.ABSENT) {
-//                drawRectangleTillEnd(scoreGraphics, previousPoint, red);
-//            } else if (checkIn == 0 && attendanceRecord.getStatus() == AttendanceStatus.ON_LEAVE) {
-//                drawRectangleTillEnd(scoreGraphics, previousPoint, cyan);
-//            }
-//
-//            while (checkIn != 0 || checkOut != 0) {
-//                if (first) {
-//                    if (checkIn > policyCheckInTimeStamp + lateAttendanceToleranceTimeInMillis) {
-//                        previousPoint = drawRectangle(scoreGraphics, previousPoint, policyCheckInTimeStamp, checkIn, totalWorkingHoursTimeStamp, red);
-//                        if (checkIns.isEmpty()) {
-//                            if (checkOut == 0) {
-//                                if (checkIn + organizationRetakeAttendancePolicyInMillis > policyCheckOutTimeStamp) {
-//                                    drawRectangle(scoreGraphics, previousPoint, checkIn, policyCheckOutTimeStamp, totalWorkingHoursTimeStamp, green);
-//                                } else {
-//                                    int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkIn + organizationRetakeAttendancePolicyInMillis, totalWorkingHoursTimeStamp, green);
-//                                    previousPoint = previousPoint + newPoint;
-//                                    drawRectangleTillEnd(scoreGraphics, previousPoint, red);
-//                                }
-//                            } else {
-//                                int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkOut, totalWorkingHoursTimeStamp, green);
-//                                previousPoint = previousPoint + newPoint;
-//                            }
-//                            checkIn = 0;
-//                        } else {
-//                            checkIn = checkIns.removeFirst();
-//                        }
-//                    } else {
-//                        int newPoint = drawRectangle(scoreGraphics, previousPoint, policyCheckInTimeStamp, checkIn, totalWorkingHoursTimeStamp, green);
-//                        previousPoint = previousPoint + newPoint;
-//                    }
-//                    first = false;
-//                } else {
-//                    if (checkIn != 0 && checkOut == 0) {
-//                        if ((checkIn + organizationRetakeAttendancePolicyInMillis) > policyCheckOutTimeStamp) {
-//                            drawRectangle(scoreGraphics, previousPoint, checkIn, policyCheckOutTimeStamp, totalWorkingHoursTimeStamp, green);
-//                        } else {
-//                            int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkIn + organizationRetakeAttendancePolicyInMillis, totalWorkingHoursTimeStamp, green);
-//                            previousPoint = previousPoint + newPoint;
-//                            drawRectangleTillEnd(scoreGraphics, previousPoint, red);
-//                        }
-//                        checkIn = 0;
-//                    }
-//                    if (checkIn == 0 && checkOut != 0) {
-//                        drawRectangleTillEnd(scoreGraphics, previousPoint, red);
-//                        checkOut = 0;
-//                    }
-//                    if (checkOut != 0) {
-//                        if (checkOut > checkIn) {
-//                            int newPoint = drawRectangle(scoreGraphics, previousPoint, checkIn, checkOut, totalWorkingHoursTimeStamp, green);
-//                            previousPoint = previousPoint + newPoint;
-//                            if (checkIns.isEmpty()) {
-//                                checkIn = 0;
-//                            } else {
-//                                checkIn = checkIns.removeFirst();
-//                            }
-//                        } else {
-//                            int newPoint = drawRectangle(scoreGraphics, previousPoint, checkOut, checkIn, totalWorkingHoursTimeStamp, red);
-//                            previousPoint = previousPoint + newPoint;
-//                            if (checkOuts.isEmpty()) {
-//                                checkOut = 0;
-//                            } else {
-//                                checkOut = checkOuts.removeFirst();
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//
-//            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-//            ImageIO.write(scoreImage, "jpg", byteArrayOutputStream);
-//            attendanceRecord.setScore(byteArrayOutputStream.toByteArray());
-//        }
-        return attendanceTableRecords;
-    }
 
     private int drawRectangle(Graphics scoreGraphics, int previousPoint, long startTime, long endTime, long totalTime, Color color) {
         double colorPercentage = (double) (endTime - startTime) / totalTime;
@@ -360,69 +217,6 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
-    public List<UserAttendanceDTO> getMonthlyUserAttendanceOverview(int month, int year, Long userId) throws NoStatsAvailableException, UserDoesntExistException {
-        Date[] startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
-        List<UserAttendanceDTO> attendances = attendanceRepository.getAttendanceOverviewOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userId);
-
-        if (attendances.isEmpty()) {
-            throw new NoStatsAvailableException();
-        }
-
-        for (UserAttendanceDTO attendance : attendances) {
-            attendance.setCheckIns(checkInServices.getCheckInTimesByAttendanceId(attendance.getId()));
-            attendance.setCheckOuts(checkOutService.getCheckOutTimesByAttendanceId(attendance.getId()));
-        }
-
-        return attendances;
-    }
-
-    @Override
-    public AttendanceSnapshotDTO getUserAttendanceSnapshots(int year, int month, int day, Long userId) throws NoStatsAvailableException {
-        Calendar startCalendar = new GregorianCalendar(year, month, day, 0, 0);
-        Date startDate = startCalendar.getTime();
-        Calendar endCalendar = new GregorianCalendar(year, month, day, 23, 59);
-        Date endDate = endCalendar.getTime();
-
-        Optional<Long> attendanceId = attendanceRepository.getAttendanceIdOfUserBetweenDates(startDate, endDate, userId);
-
-        if (attendanceId.isEmpty()) {
-            throw new NoStatsAvailableException();
-        }
-
-        AttendanceSnapshotDTO attendanceSnapshot = AttendanceSnapshotDTO.builder().attendanceStatus(attendanceRepository.getAttendanceStatusOfAttendance(attendanceId.get())).dayTime(startDate.getTime()).data(new ArrayList<>()).build();
-
-        attendanceSnapshot.addAttendanceSnapshotDTOData(checkInServices.getCheckInSnapshotsOfAttendance(attendanceId.get()));
-        attendanceSnapshot.addAttendanceSnapshotDTOData(checkOutService.getCheckOutSnapshotsOfAttendance(attendanceId.get()));
-
-        return attendanceSnapshot;
-    }
-
-    @Override
-    public Page<UserAttendanceDTO> getYearlyUserAttendanceTable(Pageable pageRequest, int year, Long userId) {
-        Date[] startAndEndDate = getStartAndEndDateOfYear(year);
-        Page<UserAttendanceDTO> attendancePage = attendanceRepository.getUserAttendancePageBetweenDate(userId, startAndEndDate[0], startAndEndDate[1], pageRequest);
-
-        return attendancePage.map(attendance -> {
-            attendance.setCheckIns(checkInServices.getCheckInTimesByAttendanceId(attendance.getId()));
-            attendance.setCheckOuts(checkOutService.getCheckOutTimesByAttendanceId(attendance.getId()));
-            return attendance;
-        });
-    }
-
-    @Override
-    public List<MonthlyAttendanceCalendarRecordDTO> getYearlyUserAttendanceCalendar(int year, String userName) {
-        Date[] startAndEndDate;
-        AttendanceCountDTO attendanceCount;
-        List<MonthlyAttendanceCalendarRecordDTO> attendanceCalendarRecords = new ArrayList<>();
-        for (int month = 0; month < 12; month++) {
-            startAndEndDate = getStartAndEndDateOfMonthOfYear(year, month);
-            attendanceCount = attendanceRepository.getAttendanceCountOfUserBetweenDates(startAndEndDate[0], startAndEndDate[1], userName);
-            attendanceCalendarRecords.add(MonthlyAttendanceCalendarRecordDTO.builder().attendanceCount(attendanceCount).month(month).build());
-        }
-        return attendanceCalendarRecords;
-    }
-
-    @Override
     public void sendLiveAttendanceFeed(Long organizationId, AttendanceLiveFeedDTO attendanceLiveFeedDTO) {
         String destination = "/topic/attendance-feed/" + organizationId;
         messagingTemplate.convertAndSend(destination, attendanceLiveFeedDTO);
@@ -431,166 +225,21 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public List<AttendanceLiveFeedDTO> getRecentAttendancesOfOrganization(long organizationId) {
         List<Long> userIds = userService.getAllUserIdsOfOrganization(organizationId);
-        Date[] dates = getStartAndEndDateOfToday();
-        List<Long> attendanceIds = attendanceRepository.getAllAttendanceIdsOfTodaysPresentUsers(userIds, dates[0]);
+        String timeZone = organizationService.getOrganizationTimeZone(organizationId);
+        Instant date = DateUtils.getStartDateOfToday(timeZone);
+        List<Long> attendanceIds = attendanceRepository.getAllAttendanceIdsOfPresentUsersOfDate(userIds, date);
 
         return checkInServices.getFirstCheckInsOfAttendanceIdsForLiveAttendanceFeed(attendanceIds);
     }
 
-    @Override
-    public List<DepartmentAttendanceDTO> getOrganizationDepartmentsAttendance(Long organizationId, int year, int month, int day) throws DepartmentDoesntExistException {
-        List<Long> departmentIds = departmentService.getDepartmentIdsOfOrganization(organizationId);
-        List<DepartmentAttendanceDTO> departmentAttendances = new ArrayList<>();
-        Date[] dates = getStartAndEndDateOfDate(year, month, day);
-        for (Long departmentId : departmentIds) {
-            DepartmentAttendanceDTO departmentAttendance = attendanceRepository.getDepartmentAttendance(departmentId, dates[0], dates[1]);
-            departmentAttendance.setDepartmentName(departmentService.getDepartmentName(departmentId));
-            departmentAttendance.setTotal(userService.getTotalUsersOfDepartment(departmentId));
-            departmentAttendance.setId(departmentId);
-            departmentAttendances.add(departmentAttendance);
-        }
-        return departmentAttendances;
-    }
 
     @Override
-    public Page<DailyUserAttendanceDTO> getDailyUserAttendances(Long organizationId, AttendanceType attendanceType, AttendanceStatusFilter attendanceStatus, String userName, List<Long> departmentIds, Pageable pageable) throws IOException {
-        Specification<Attendance> specification = (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            Join<Attendance, User> attendanceUserJoin = root.join("user", JoinType.INNER);
-            Join<User, Department> attendanceUserDepartmentJoin = attendanceUserJoin.join("department", JoinType.INNER);
-            Join<Department, Organization> attendanceUserDepartmentOrganizationJoin = attendanceUserDepartmentJoin.join("organization", JoinType.INNER);
-            Calendar now = GregorianCalendar.getInstance();
-            now.set(Calendar.HOUR_OF_DAY, 0);
-            now.set(Calendar.MINUTE, 0);
-            now.set(Calendar.SECOND, 0);
-            now.set(Calendar.MILLISECOND, 0);
-
-            predicates.add(criteriaBuilder.equal(attendanceUserDepartmentOrganizationJoin.get("id"), organizationId));
-            predicates.add(criteriaBuilder.equal(root.get("date"), now.getTime().getTime()));
-            if (attendanceType != null) {
-                predicates.add(criteriaBuilder.equal(root.get("currentAttendanceStatus"), attendanceType));
-            }
-            if (attendanceStatus != null) {
-                switch (attendanceStatus) {
-                    case PRESENT ->
-                            predicates.add(criteriaBuilder.or(criteriaBuilder.equal(root.get("status"), AttendanceStatus.ON_TIME), criteriaBuilder.equal(root.get("status"), AttendanceStatus.LATE)));
-                    case ON_TIME -> predicates.add(criteriaBuilder.equal(root.get("status"), AttendanceStatus.ON_TIME));
-                    case LATE -> predicates.add(criteriaBuilder.equal(root.get("status"), AttendanceStatus.LATE));
-                    case ABSENT -> predicates.add(criteriaBuilder.equal(root.get("status"), AttendanceStatus.ABSENT));
-                    case ON_LEAVE ->
-                            predicates.add(criteriaBuilder.equal(root.get("status"), AttendanceStatus.ON_LEAVE));
-                }
-            }
-            if (userName != null) {
-                String fullNameLower = userName.toLowerCase();
-                predicates.add(criteriaBuilder.or(criteriaBuilder.like(criteriaBuilder.lower(attendanceUserJoin.get("firstName")), "%" + fullNameLower + "%"), criteriaBuilder.like(criteriaBuilder.lower(attendanceUserJoin.get("secondName")), "%" + fullNameLower + "%"), criteriaBuilder.like(criteriaBuilder.lower(criteriaBuilder.concat(attendanceUserJoin.get("firstName"), criteriaBuilder.concat(" ", attendanceUserJoin.get("secondName")))), "%" + fullNameLower + "%")));
-            }
-            if (departmentIds != null && !departmentIds.isEmpty()) {
-                predicates.add(attendanceUserDepartmentJoin.get("id").in(departmentIds));
-            }
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
-        return attendanceRepository.getDailyUserAttendances(specification, pageable);
-    }
-
-    @Override
-    public List<DailyAttendanceGraphDataDTO> getOrganizationAttendanceGraphsData(Long organizationId, int year, int month) {
-        Date[] dates = getStartAndEndDateOfMonthOfYear(year, month);
-        return attendanceRepository.getOrganizationAttendanceChartInfo(organizationId, dates[0], dates[1]);
-    }
-
-    @Override
-    public MonthlyAttendanceGraphDataDTO getUserMonthlyAttendanceGraphData(Long userId, int year, int month) {
-        Optional<MonthlyAttendanceGraphDataDTO> userAttendanceGraphData = attendanceRepository.getUserAttendanceGraphData(userId, year, month);
-        return userAttendanceGraphData.orElseGet(() -> MonthlyAttendanceGraphDataDTO.builder().month(month).presentCount(0L).absentCount(0L).lateCount(0L).leaveCount(0L).build());
-    }
-
-    @Override
-    public List<MonthlyAttendanceGraphDataDTO> getUserYearlyAttendanceGraphData(Long userId, int year) {
-        return attendanceRepository.getUserYearlyAttendanceGraphData(userId, year);
-    }
-
-    @Override
-    public void markLeaveOfUserOnDate(Long userId, Date date) {
+    public void markLeaveOfUserOnDate(Long userId, Instant date) {
         Attendance attendance = Attendance.builder().user(User.builder().id(userId).build()).date(date).status(AttendanceStatus.ON_LEAVE).build();
-
         attendanceRepository.saveAndFlush(attendance);
     }
 
-    @Override
-    public OrganizationAttendanceStatisticsDTO getCurrentDayOrganizationAttendanceStatistics(Long organizationId) {
-        Date today = getDateOfToday();
-        return attendanceRepository.getOrganizationAttendanceStatisticsForDate(organizationId, today);
-    }
-
-    @Override
-    public Page<OrganizationUserAttendanceDTO> getOrganizationMonthlyUserAttendances(Pageable pageRequest, int year, int month, String fullName, Long departmentId, Long organizationId) {
-        Specification<Attendance> specification = (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            Join<Attendance, User> attendanceUserJoin = root.join("user", JoinType.INNER);
-            Join<User, Department> attendanceUserDepartmentJoin = attendanceUserJoin.join("department", JoinType.INNER);
-            Join<Department, Organization> attendanceUserDepartmentOrganizationJoin = attendanceUserDepartmentJoin.join("organization", JoinType.INNER);
-
-            Date[] dates = getStartAndEndDateOfMonthOfYear(year, month);
-
-            if (fullName != null) {
-                String fullNameLower = fullName.toLowerCase();
-                predicates.add(criteriaBuilder.or(criteriaBuilder.like(criteriaBuilder.lower(attendanceUserJoin.get("firstName")), "%" + fullNameLower + "%"), criteriaBuilder.like(criteriaBuilder.lower(attendanceUserJoin.get("secondName")), "%" + fullNameLower + "%"), criteriaBuilder.like(criteriaBuilder.lower(criteriaBuilder.concat(attendanceUserJoin.get("firstName"), criteriaBuilder.concat(" ", attendanceUserJoin.get("secondName")))), "%" + fullNameLower + "%")));
-            }
-            if (departmentId != null) {
-                predicates.add(criteriaBuilder.equal(attendanceUserDepartmentJoin.get("id"), departmentId));
-            }
-
-            predicates.add(criteriaBuilder.between(root.get("date"), dates[0].getTime(), dates[1].getTime()));
-            predicates.add(criteriaBuilder.equal(attendanceUserDepartmentOrganizationJoin.get("id"), organizationId));
-
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
-        return attendanceRepository.getOrganizationMonthlyUserAttendances(specification, pageRequest);
-    }
-
-    private AttendanceStatsDTO generateAttendanceStatsDTO(Date startDate, Date endDate, Long userId) throws NoStatsAvailableException {
-        AttendanceCountDTO attendanceCount = attendanceRepository.getAttendanceCountOfUserBetweenDates(startDate, endDate, userId);
-        List<Long> attendanceIds = attendanceRepository.getAttendanceIdsOfUserBetweenDates(startDate, endDate, userId);
-        String averageCheckIns = "-";
-        String averageCheckOuts = "-";
-        try {
-            averageCheckIns = checkInServices.getAverageCheckInOfAttendances(attendanceIds);
-            averageCheckOuts = checkOutService.getAverageCheckOutOfAttendances(attendanceIds);
-        } catch (NoStatsAvailableException exception) {
-            if (attendanceCount.getDaysAbsent() > 0) {
-                return new AttendanceStatsDTO(attendanceCount, averageCheckIns, averageCheckOuts);
-            } else {
-                throw new NoStatsAvailableException();
-            }
-        }
-        return new AttendanceStatsDTO(attendanceCount, averageCheckIns, averageCheckOuts);
-    }
-
-    private Optional<Attendance> getUserAttendanceFromDayStartTillDate(Long userId, Date endDate) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(endDate);
-        Date startDate = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).getTime();
-        return attendanceRepository.getAttendanceByUserIdAndDate(userId, startDate, endDate);
-    }
-
-    private Date maxCheckOut(List<CheckOut> checkOuts) {
-        Date maxCheckOut = checkOuts.getFirst().getDate();
-        for (CheckOut checkOut : checkOuts) {
-            if (checkOut.getDate().after(maxCheckOut)) {
-                maxCheckOut = checkOut.getDate();
-            }
-        }
-        return maxCheckOut;
-    }
-
-    private Date maxCheckIn(List<CheckIn> checkIns) {
-        Date maxCheckIn = checkIns.getFirst().getDate();
-        for (CheckIn checkIn : checkIns) {
-            if (checkIn.getDate().after(maxCheckIn)) {
-                maxCheckIn = checkIn.getDate();
-            }
-        }
-        return maxCheckIn;
+    private Optional<Attendance> getUserAttendanceFromDayStartTillDate(Long userId, Instant[] startAndEndDate) {
+        return attendanceRepository.getAttendanceByUserIdAndDate(userId, startAndEndDate[0], startAndEndDate[1]);
     }
 }

@@ -31,7 +31,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     @Override
-    public NotificationCountDTO getNonReadNotificationsCountOfUserNotification(Long userId) {
+    public NotificationCountDTO getNonReadNotificationCountOfUser(Long userId) {
         return userNotificationRepository.getNonReadNotificationsCountOfUserNotification(userId);
     }
 

@@ -8,27 +8,27 @@ import com.main.face_recognition_resource_server.DTOS.export.UserAttendancePieCh
 import java.util.List;
 
 public interface ExportService {
-    List<AttendanceExcelDataDTO> getDepartmentAttendanceExcelData(List<Long> userIds, Long fromDate, Long toDate);
+    List<AttendanceExcelDataDTO> getDepartmentAttendanceExcelData(List<Long> userIds, Long fromDate, Long toDate, Long organizationId);
 
-    List<AttendanceExcelDataDTO> getDepartmentAttendanceExcelData(List<Long> userIds, int month, int year);
+    List<AttendanceExcelDataDTO> getDepartmentAttendanceExcelData(List<Long> userIds, int month, int year, Long organizationId);
 
-    List<AttendanceExcelDataDTO> getDepartmentAttendanceExcelData(List<Long> departmentIds, Long singleDate);
+    List<AttendanceExcelDataDTO> getDepartmentAttendanceExcelData(List<Long> departmentIds, Long singleDate, Long organizationId);
 
-    List<AttendanceExcelDataDTO> getUserAttendanceExcelData(List<Long> userIds, Long fromDate, Long toDate);
+    List<AttendanceExcelDataDTO> getUserAttendanceExcelData(List<Long> userIds, Long fromDate, Long toDate, Long organizationId);
 
-    List<AttendanceExcelDataDTO> getUserAttendanceExcelData(List<Long> userIds, int month, int year);
+    List<AttendanceExcelDataDTO> getUserAttendanceExcelData(List<Long> userIds, int month, int year, Long organizationId);
 
-    List<AttendanceExcelDataDTO> getUserAttendanceExcelData(List<Long> userIds, Long singleDate);
+    List<AttendanceExcelDataDTO> getUserAttendanceExcelData(List<Long> userIds, Long singleDate, Long organizationId);
 
-    List<DepartmentAttendanceLineChartDTO> getDepartmentsAttendanceLineChartData(List<Long> departmentIds, Long toDate, Long fromDate);
+    List<DepartmentAttendanceLineChartDTO> getDepartmentsAttendanceLineChartData(List<Long> departmentIds, Long toDate, Long fromDate, Long organizationId);
 
-    List<DepartmentAttendanceLineChartDTO> getDepartmentsAttendanceLineChartData(List<Long> departmentIds, int month, int year);
+    List<DepartmentAttendanceLineChartDTO> getDepartmentsAttendanceLineChartData(List<Long> departmentIds, int month, int year, Long organizationId);
 
-    List<UserAttendancePieChartDTO> getUserAttendancePieChartData(List<Long> userIds, Long fromDate, Long toDate);
+    List<UserAttendancePieChartDTO> getUserAttendancePieChartData(List<Long> userIds, Long fromDate, Long toDate, Long organizationId);
 
-    List<UserAttendancePieChartDTO> getUserAttendancePieChartData(List<Long> userIds, int month, int year);
+    List<UserAttendancePieChartDTO> getUserAttendancePieChartData(List<Long> userIds, int month, int year, Long organizationId);
 
-    List<UserAttendancePieChartDTO> getUserAttendancePieChartData(List<Long> userIds, Long singleDate);
+    List<UserAttendancePieChartDTO> getUserAttendancePieChartData(List<Long> userIds, Long singleDate, Long organizationId);
 
     List<AttendanceExcelDataDTO> getOrganizationExcelData(Long organizationId, Long fromDate, Long toDate);
 
@@ -42,5 +42,5 @@ public interface ExportService {
 
     List<DepartmentAttendancePieChartDTO> getOrganizationPieChartData(Long organizationId, Long singleDate);
 
-    List<DepartmentAttendancePieChartDTO> getDepartmentAttendancePieChartData(List<Long> departmentIds, Long singleDate);
+    List<DepartmentAttendancePieChartDTO> getDepartmentAttendancePieChartData(List<Long> departmentIds, Long singleDate, Long organizationId);
 }

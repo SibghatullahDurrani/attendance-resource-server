@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.Instant;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,7 +14,7 @@ import java.util.Date;
 public class FlatAttendanceExcelChartDTO {
     private Long departmentId;
     private String departmentName;
-    private Date date;
+    private Instant date;
     private Long onTime;
     private Long late;
     private Long absent;

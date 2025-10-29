@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.List;
 
 public interface AttendanceExportStrategy<T extends ExcelChartDTO> {
-    ByteArrayResource attendanceWorkbook(List<AttendanceExcelDataDTO> attendanceExcelData, List<T> attendanceChartData, ExportAttendanceOptions exportAttendanceOptions) throws IOException;
+    ByteArrayResource attendanceWorkbook(List<AttendanceExcelDataDTO> attendanceExcelData, List<T> attendanceChartData, ExportAttendanceOptions exportAttendanceOptions, String timeZone) throws IOException;
 
     Class<T> getExcelChartDTOClass();
 }

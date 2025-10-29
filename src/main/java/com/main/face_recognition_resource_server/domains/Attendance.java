@@ -1,5 +1,6 @@
 package com.main.face_recognition_resource_server.domains;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatus;
 import com.main.face_recognition_resource_server.constants.attendance.AttendanceType;
 import jakarta.persistence.*;
@@ -8,7 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 @Builder
@@ -16,7 +17,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "attendances")
+@Table(
+        name = "attendances",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "date"})
+)
 public class Attendance {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "attendance_id_generator")
@@ -27,17 +31,19 @@ public class Attendance {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private Date date;
+    @Column(nullable = false, columnDefinition = "timestamptz")
+    private Instant date;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AttendanceStatus status;
 
-    @OneToMany(mappedBy = "attendance")
+    @OneToMany(mappedBy = "attendance", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<CheckIn> checkIns;
 
-    @OneToMany(mappedBy = "attendance")
+    @OneToMany(mappedBy = "attendance", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<CheckOut> checkOuts;
 
     @Enumerated(EnumType.STRING)

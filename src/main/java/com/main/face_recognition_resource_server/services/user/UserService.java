@@ -2,7 +2,7 @@ package com.main.face_recognition_resource_server.services.user;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.main.face_recognition_resource_server.DTOS.department.DepartmentDTO;
-import com.main.face_recognition_resource_server.DTOS.leave.RemainingLeavesDTO;
+import com.main.face_recognition_resource_server.DTOS.leave.RemainingUserLeavesCountDTO;
 import com.main.face_recognition_resource_server.DTOS.organization.OrganizationDTO;
 import com.main.face_recognition_resource_server.DTOS.user.*;
 import com.main.face_recognition_resource_server.constants.user.UserRole;
@@ -49,7 +49,7 @@ public interface UserService {
 
     User saveUser(User user);
 
-    RemainingLeavesDTO getRemainingLeavesOfUser(String username);
+    RemainingUserLeavesCountDTO getRemainingUserLeavesCount(String username);
 
     String getUserFullNameByUserId(Long userId);
 
@@ -61,9 +61,9 @@ public interface UserService {
 
     Long getTotalUsersOfDepartment(Long departmentId);
 
-    Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest);
+    Page<UsersOfOwnOrganizationRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest);
 
-    Page<AdminUsersTableRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest, String fullName, Long departmentId, String designation, Boolean isSourceFaceRegistered, String identificationNumber);
+    Page<UsersOfOwnOrganizationRecordDTO> getUsersPageOfOrganization(Long organizationId, Pageable pageRequest, String fullName, Long departmentId, String designation, Boolean isSourceFaceRegistered, String identificationNumber);
 
     UserDataDTO getUserData(Long userId);
 
@@ -84,4 +84,6 @@ public interface UserService {
     void registerUserViaCSV(String content, Long organizationId) throws IOException, UserAlreadyExistsWithIdentificationNumberException, SQLException, UserAlreadyExistsException;
 
     String getUserCheckInTime(Long userId);
+
+    String getUserTimeZone(Long userId);
 }

@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:17:///testdb   # Testcontainers JDBC URL
+    username: test
+    password: test
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: false
+    hibernate:
+      ddl-auto: create-drop  # or 'create-drop' if you want a clean schema each time
+    show-sql: false
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+keySetURI: http://localhost/fake-key-set
+
+front-end-url: http://localhost:3000
+shift-control-acknowledgement-queue-name: test-shift-queue
+user-control-acknowledgement-queue-name: test-user-queue
