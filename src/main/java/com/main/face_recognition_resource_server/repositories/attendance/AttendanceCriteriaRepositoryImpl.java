@@ -3,6 +3,7 @@ package com.main.face_recognition_resource_server.repositories.attendance;
 import com.main.face_recognition_resource_server.DTOS.attendance.*;
 import com.main.face_recognition_resource_server.constants.attendance.AttendanceStatus;
 import com.main.face_recognition_resource_server.domains.*;
+import com.main.face_recognition_resource_server.projections.attendance.AttendanceAnalyticsReportAttendanceProjection;
 import com.main.face_recognition_resource_server.projections.attendance.AttendanceReportUserProjection;
 import com.main.face_recognition_resource_server.projections.attendance.CheckInCheckOutReportAttendanceProjection;
 import jakarta.persistence.EntityManager;
@@ -17,6 +18,9 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class AttendanceCriteriaRepositoryImpl implements AttendanceCriteriaRepository {
@@ -209,7 +213,28 @@ public class AttendanceCriteriaRepositoryImpl implements AttendanceCriteriaRepos
 
     @Override
     public Page<AttendanceAnalyticsReportRecordDTO> getAttendanceAnalyticsReportPage(Specification<Attendance> specification, Pageable pageable) {
-        return null;
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+
+        List<AttendanceReportUserProjection> users = getAttendanceReportUsers(specification, pageable, criteriaBuilder);
+
+        if (users.isEmpty()) {
+            return new PageImpl<>(List.of(), pageable, 0);
+        }
+        List<AttendanceAnalyticsReportRecordDTO> result = getAttendanceAnalyticsReportAttendancesResult(specification, criteriaBuilder, users);
+
+        CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
+        Root<Attendance> countRoot = countQuery.from(Attendance.class);
+        Join<Attendance, User> countUserJoin = countRoot.join("user", JoinType.INNER);
+
+        Predicate countPredicate = specification.toPredicate(countRoot, countQuery, criteriaBuilder);
+        if (countPredicate != null) {
+            countQuery.where(countPredicate);
+        }
+
+        countQuery.select(criteriaBuilder.countDistinct(countUserJoin.get("id")));
+        Long total = entityManager.createQuery(countQuery).getSingleResult();
+
+        return new PageImpl<>(result, pageable, total);
     }
 
     private List<AttendanceReportUserProjection> getAttendanceReportUsers(Specification<Attendance> specification, Pageable pageable, CriteriaBuilder criteriaBuilder) {
@@ -268,7 +293,8 @@ public class AttendanceCriteriaRepositoryImpl implements AttendanceCriteriaRepos
 
         List<Long> userIds = users.stream()
                 .map(AttendanceReportUserProjection::getUserId)
-                .collect(java.util.stream.Collectors.toList());
+                .toList();
+
         Predicate userIdPredicate = attendanceUserJoin.get("id").in(userIds);
 
         if (attendancePredicate != null) {
@@ -301,7 +327,6 @@ public class AttendanceCriteriaRepositoryImpl implements AttendanceCriteriaRepos
                     List<CheckInCheckOutReportAttendance> reportAttendances = attendanceData.stream()
                             .filter(attendanceProjection -> userId.equals(attendanceProjection.getUserId()))
                             .map(attendanceProjection -> {
-                                Long attendanceId = attendanceProjection.getAttendanceId();
                                 Instant attendanceDate = attendanceProjection.getDate();
                                 AttendanceStatus status = attendanceProjection.getAttendanceStatus();
                                 Instant firstCheckIn = attendanceProjection.getFirstCheckIn();
@@ -315,7 +340,7 @@ public class AttendanceCriteriaRepositoryImpl implements AttendanceCriteriaRepos
                                         .build();
                             })
                             .sorted(java.util.Comparator.comparing(CheckInCheckOutReportAttendance::getDate))
-                            .collect(java.util.stream.Collectors.toList());
+                            .toList();
 
                     return CheckInCheckOutReportRecordDTO.builder()
                             .firstName(firstName)
@@ -323,6 +348,60 @@ public class AttendanceCriteriaRepositoryImpl implements AttendanceCriteriaRepos
                             .division(division)
                             .designation(designation)
                             .reportAttendances(reportAttendances)
+                            .build();
+                })
+                .toList();
+    }
+
+    private List<AttendanceAnalyticsReportRecordDTO> getAttendanceAnalyticsReportAttendancesResult(Specification<Attendance> specification, CriteriaBuilder criteriaBuilder, List<AttendanceReportUserProjection> users) {
+        CriteriaQuery<AttendanceAnalyticsReportAttendanceProjection> attendanceQuery = criteriaBuilder.createQuery(AttendanceAnalyticsReportAttendanceProjection.class);
+        Root<Attendance> attendanceRoot = attendanceQuery.from(Attendance.class);
+        Join<Attendance, User> attendanceUserJoin = attendanceRoot.join("user", JoinType.INNER);
+
+        Predicate attendancePredicate = specification.toPredicate(attendanceRoot, attendanceQuery, criteriaBuilder);
+        List<Long> userIds = users.stream()
+                .map(AttendanceReportUserProjection::getUserId)
+                .toList();
+        Predicate userIdPredicate = attendanceUserJoin.get("id").in(userIds);
+
+        if (attendancePredicate != null) {
+            attendanceQuery.where(criteriaBuilder.and(attendancePredicate, userIdPredicate));
+        } else {
+            attendanceQuery.where(userIdPredicate);
+        }
+
+        attendanceQuery.orderBy(criteriaBuilder.asc(attendanceRoot.get("date")));
+
+        attendanceQuery.multiselect(
+                attendanceUserJoin.get("id"),
+                attendanceRoot.get("id"),
+                attendanceRoot.get("date"),
+                attendanceRoot.get("status")
+        );
+        List<AttendanceAnalyticsReportAttendanceProjection> attendanceData = entityManager.createQuery(attendanceQuery).getResultList();
+
+        return users.stream()
+                .map(user -> {
+                    Long userId = user.getUserId();
+                    String firstName = user.getFirstName();
+                    String secondName = user.getSecondName();
+                    String division = user.getDivisionName();
+                    String designation = user.getDesignation();
+
+                    Map<Long, AttendanceStatus> attendanceMap = attendanceData.stream()
+                            .filter(attendanceProjection -> userId.equals(attendanceProjection.getUserId()))
+                            .collect(Collectors.toMap(
+                                    attendanceProjection -> attendanceProjection.getDate().toEpochMilli(),
+                                    AttendanceAnalyticsReportAttendanceProjection::getAttendanceStatus,
+                                    (oldValue, _) -> oldValue,
+                                    TreeMap::new
+                            ));
+                    return AttendanceAnalyticsReportRecordDTO.builder()
+                            .firstName(firstName)
+                            .secondName(secondName)
+                            .division(division)
+                            .designation(designation)
+                            .attendances(attendanceMap)
                             .build();
                 })
                 .toList();
